@@ -203,8 +203,6 @@ body {
 /* container that holds the left text column and the carousel */
 .ThirdPage .features-container {
   display: flex;
-  align-items: center;
-  gap: 3rem;
   padding: 6rem 10%;
 }
 
