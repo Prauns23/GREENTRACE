@@ -49,3 +49,48 @@ window.addEventListener("DOMContentLoaded", function () {
     updateActiveFeat("cardsContainer", "featRow");
   });
 });
+
+// Floating Login Script
+
+const floatingContainer = document.getElementById("floatingContainer");
+const overlay = document.getElementById("overlay");
+const body = document.body;
+
+// SHOW login - makes background unclickable
+function showLogin() {
+  floatingContainer.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active"); 
+  
+}
+
+// HIDE login - makes background clickable again
+function hideLogin() {
+  floatingContainer.classList.remove("active");
+  overlay.classList.remove("active");
+  body.classList.remove("login-active"); 
+  // This restores background clicks
+}
+
+// Make sure elements exist before adding event listeners
+if (overlay) {
+  overlay.addEventListener("click", hideLogin);
+}
+
+// ESC key to close
+document.addEventListener("keydown", function (e) {
+  if (
+    e.key === "Escape" &&
+    floatingContainer &&
+    floatingContainer.classList.contains("active")
+  ) {
+    hideLogin();
+  }
+});
+
+// Make showLogin available globally (for onclick in HTML)
+window.showLogin = showLogin;
+window.hideLogin = hideLogin;
+
+// Debug - check if functions are working
+console.log("Login functions loaded:", { showLogin, hideLogin });

@@ -17,6 +17,12 @@
     <title>Green Trace</title>
 </head>
 
+<!-- floating Login -->
+<div class="overlay" id="overlay"></div>
+<div class="floating-container" id="floatingContainer">
+    <iframe src="pages/login.html" class="floating-iframe"></iframe>
+</div>
+
 <body>
     <!-- Navigation Bar -->
     <div class="navigation">
@@ -27,7 +33,7 @@
                 <li><a href="#">Features</a></li>
                 <li><a href="#">Volunteer</a></li>
             </ul>
-            <img src="components/icons/person.svg" alt="" class="profile">
+            <img src="components/icons/person.svg" alt="" class="profile" onclick="showLogin()">
         </nav>
     </div>
 
@@ -194,7 +200,98 @@
     </div>
 
     <!-- Fourth Page -->
+    <!-- Fourth Page -->
+    <div class="FourthPage">
+        <div class="fourth-background">
+            <div class="fourth-content">
+                <div class="fourth-content-wrapper">
 
+                    <p class="join-tag">JOIN US BY SIGNING UP</p>
+
+
+                    <div class="center-content">
+                        <h2 class="fourth-title">Be Part of the Greening Activities</h2>
+                        <p class="fourth-description">Join thousands of volunteers and organizations working together to
+                            restore the
+                            Philippines' forests and create a sustainable future for generations to come.</p>
+                        <div class="fourth-buttons">
+                            <button class="btn-primary">
+                                Start Volunteering
+                                <img src="components/icons/arrow-forward-white (2).svg" alt="">
+                            </button>
+                            <button class="btn-secondary">
+                                Learn More
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <!-- Left Section -->
+            <div class="footer-left">
+                <div class="footer-brand">
+                    <h3 class="footer-title">GreenTrace</h3>
+                </div>
+                <p class="footer-description">Empowering communities to restore nature through technology, transparency,
+                    and collective action.</p>
+
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <img src="components/icons/location-white.svg" alt="Location">
+                        <span>Morong, Bataan, Philippines</span>
+                    </div>
+                    <div class="contact-item">
+                        <img src="components/icons/mail.svg" alt="Email">
+                        <span>greentraceph@gmail.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <img src="components/icons/phone.svg" alt="Phone">
+                        <span>+6391 763 67803</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section  -->
+            <div class="footer-right">
+                <div class="footer-column">
+                    <h4>PROGRAMS</h4>
+                    <ul>
+                        <li><a href="#">Reforestation</a></li>
+                        <li><a href="#">Information</a></li>
+                        <li><a href="#">Carbon Offsetting</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>PLATFORM</h4>
+                    <ul>
+                        <li><a href="#">AR Planning</a></li>
+                        <li><a href="#">2D Mapping</a></li>
+                        <li><a href="#">Volunteering Platform</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>ABOUT</h4>
+                    <ul>
+                        <li><a href="#">News</a></li>
+                        <li><a href="#">Partners</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Bottom - outside footer-content but inside footer -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 GreenTrace. All rights reserved.</p>
+        </div>
+    </div>
+    <div class="report-btn">
+        <button class="reportBtn"></button>
+    </div>
     <script src="app.js"></script>
 </body>
 

@@ -1,0 +1,248 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  display: block; /* Changed from flex to block */
+  min-height: 0; /* Remove min-height */
+}
+
+.login-container {
+  width: 100%;
+  max-width: 1200px;
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  margin: 0 auto; 
+}
+
+/* Two-column grid layout */
+.login-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 600px; 
+}
+
+/* LEFT COLUMN - Form */
+.form-column {
+  padding: 5px 0 0 65px; /* Slightly reduced padding */
+  position: relative;
+  overflow-y: auto; /* Only scroll if content overflows */
+}
+
+/* RIGHT COLUMN - Image */
+.image-column {
+  position: relative;
+  background: white;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.side-image {
+  width: 70%;
+  height: auto;
+  max-height: 70%;
+  object-fit: contain;
+  display: block;
+  transform: scaleX(-1);
+  padding-bottom: 20%;
+}
+
+/* Close button */
+.close-btn {
+  font-size: 42px;
+  cursor: pointer;
+  color: #474747;
+  margin-bottom: 16px; /* Reduced margin */
+  display: inline-block;
+  transition: color 0.2s;
+  padding-top: 24px;
+  padding-left: 46px;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+/* Header */
+h1 {
+  font-size: 30px; /* Slightly smaller */
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px; /* Reduced margin */
+  font-style: italic;
+}
+
+/* Form groups */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px; /* Reduced margin */
+}
+
+.form-group {
+  margin-bottom: 16px; /* Reduced margin */
+}
+
+label {
+  display: block;
+  font-size: 13px; /* Slightly smaller */
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px; /* Reduced margin */
+}
+
+.required {
+  color: #e53e3e;
+  margin-left: 2px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 14px; /* Reduced padding */
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px; /* Slightly smaller radius */
+  font-size: 13px; /* Smaller font */
+  font-family: "Inter", sans-serif;
+  transition: all 0.2s;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2e7d32;
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
+input::placeholder {
+  color: #999;
+  font-size: 12px;
+}
+
+/* Phone input with country code */
+.phone-input {
+  display: flex;
+  gap: 8px; /* Reduced gap */
+}
+
+.country-code {
+  width: 70px; /* Slightly smaller */
+  padding: 12px 8px; /* Reduced padding */
+  background: #f5f5f5;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #333;
+  text-align: center;
+  font-weight: 600;
+}
+
+.phone-input input {
+  flex: 1;
+}
+
+/* Terms text */
+.terms {
+  font-size: 11px; /* Smaller */
+  color: #666;
+  line-height: 1.5;
+  margin: 20px 0 16px; /* Reduced margins */
+}
+
+.terms a {
+  color: #2e7d32;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.terms a:hover {
+  text-decoration: underline;
+}
+
+/* Create account button */
+.create-btn {
+  width: 100%;
+  padding: 14px; /* Reduced padding */
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px; /* Slightly smaller */
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px; /* Reduced margin */
+}
+
+.create-btn:hover {
+  background: #1b5e20;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(46, 125, 50, 0.2);
+}
+
+/* Sign in link */
+.signin-link {
+  text-align: center;
+  font-size: 13px; /* Smaller */
+  color: #666;
+}
+
+.signin-link a {
+  color: #2e7d32;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.signin-link a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile responsive */
+@media (max-width: 900px) {
+  .login-grid {
+    grid-template-columns: 1fr;
+    min-height: auto; /* Auto height on mobile */
+  }
+
+  .image-column {
+    display: none; /* Hide image on mobile */
+  }
+
+  .form-column {
+    padding: 32px;
+  }
+
+  .login-container {
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .form-column {
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+}
