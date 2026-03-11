@@ -47,10 +47,17 @@
                         <input type="email" placeholder="Email Account">
                     </div>
 
-                    <!-- Password -->
+                    <!-- Password section -->
                     <div class="form-group">
                         <label>Password <span class="required">*</span></label>
-                        <input type="password" placeholder="Password">
+                        <div class="password-input-wrapper" id="signupPasswordWrapper">
+                            <input type="password" placeholder="Password" class="password-input" id="signupPassword">
+                            <button class="toggle-password" type="button" onclick="togglePassword(this)"
+                                style="display: none;">
+                                <img src="eye-off.svg" alt="Hide" class="eye-icon eye-off">
+                                <img src="eye.svg" alt="Show" class="eye-icon eye-on" style="display: none;">
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Phone Number -->
@@ -58,7 +65,7 @@
                         <label>Phone Number <span class="required">*</span></label>
                         <div class="phone-input">
                             <span class="country-code">PHIL</span>
-                            <input type="tel" placeholder="09XX-XXX-YYYY">
+                            <input type="tel" placeholder="09XX-XXX-YYYY" class="phone-field">
                         </div>
                     </div>
 
@@ -73,7 +80,8 @@
 
                     <!-- Sign In Link -->
                     <div class="signin-link">
-                        Already have an account? <a href="#">Sign in</a>
+                        Already have an account? <a href="#"
+                            onclick="parent.switchToSignIn && parent.switchToSignIn()">Sign in</a>
                     </div>
                 </form>
             </div>
@@ -85,6 +93,7 @@
             </div>
         </div>
     </div>
+    <script src="password-toggle.js"></script>
 </body>
 
 </html>

@@ -52,45 +52,144 @@ window.addEventListener("DOMContentLoaded", function () {
 
 // Floating Login Script
 
-const floatingContainer = document.getElementById("floatingContainer");
 const overlay = document.getElementById("overlay");
 const body = document.body;
 
-// SHOW login - makes background unclickable
-function showLogin() {
-  floatingContainer.classList.add("active");
+// Add these missing container variables
+const signUpContainer = document.getElementById("floatingLoginContainer"); // For sign up
+const signInContainer = document.getElementById("floatingSignInContainer"); // For sign in
+
+let activeContainer = null;
+
+// Update the resetFormFields function in app.js
+function resetFormFields(iframeId) {
+  const iframe = document.getElementById(iframeId);
+  if (iframe && iframe.contentWindow) {
+    try {
+      // Call the reset function inside the iframe
+      if (iframe.contentWindow.resetPasswordToggle) {
+        if (iframeId === "loginFrame") {
+          iframe.contentWindow.resetPasswordToggle("signupPasswordWrapper");
+        } else if (iframeId === "signInFrame") {
+          iframe.contentWindow.resetPasswordToggle("signinPasswordWrapper");
+        }
+      }
+
+      // Reset all input fields
+      const inputs = iframe.contentWindow.document.querySelectorAll("input");
+      inputs.forEach((input) => {
+        if (input.type !== "submit" && input.type !== "button") {
+          input.value = "";
+        }
+      });
+    } catch (e) {
+      console.log("Could not reset iframe fields:", e);
+    }
+  }
+}
+
+// Update showSignUp function
+function showSignUp() {
+  closeAllFloating();
+  signUpContainer.classList.add("active");
   overlay.classList.add("active");
-  body.classList.add("login-active"); 
-  
+  body.classList.add("login-active");
+  activeContainer = signUpContainer;
+
+  // Reset fields in sign up form
+  setTimeout(() => {
+    resetFormFields("loginFrame");
+  }, 200); // Increased timeout to ensure iframe is loaded
 }
 
-// HIDE login - makes background clickable again
-function hideLogin() {
-  floatingContainer.classList.remove("active");
+// Update showSignIn function
+function showSignIn() {
+  closeAllFloating();
+  signInContainer.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = signInContainer;
+
+  // Reset fields in sign in form
+  setTimeout(() => {
+    resetFormFields("signInFrame");
+  }, 200); // Increased timeout to ensure iframe is loaded
+}
+
+// SHOW Sign Up
+function showSignUp() {
+  closeAllFloating();
+  signUpContainer.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = signUpContainer;
+
+  // Reset fields in sign up form
+  setTimeout(() => {
+    resetFormFields("loginFrame");
+  }, 100);
+}
+
+// SHOW Sign In
+function showSignIn() {
+  closeAllFloating();
+  signInContainer.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = signInContainer;
+
+  // Reset fields in sign in form
+  setTimeout(() => {
+    resetFormFields("signInFrame");
+  }, 100);
+}
+
+// HIDE floating
+function hideFloating() {
+  if (activeContainer) {
+    activeContainer.classList.remove("active");
+  }
   overlay.classList.remove("active");
-  body.classList.remove("login-active"); 
-  // This restores background clicks
+  body.classList.remove("login-active");
+  activeContainer = null;
 }
 
-// Make sure elements exist before adding event listeners
+// Close all floating containers
+function closeAllFloating() {
+  if (signUpContainer) signUpContainer.classList.remove("active");
+  if (signInContainer) signInContainer.classList.remove("active");
+}
+
+// Switch functions (fix typo)
+function switchToSignIn() {
+  hideFloating();
+  showSignIn();
+}
+
+function switchToSignUp() {
+  hideFloating();
+  showSignUp();
+}
+
+// Event listeners
 if (overlay) {
-  overlay.addEventListener("click", hideLogin);
+  overlay.addEventListener("click", hideFloating);
 }
 
 // ESC key to close
 document.addEventListener("keydown", function (e) {
-  if (
-    e.key === "Escape" &&
-    floatingContainer &&
-    floatingContainer.classList.contains("active")
-  ) {
-    hideLogin();
+  if (e.key === "Escape" && activeContainer) {
+    hideFloating();
   }
 });
 
-// Make showLogin available globally (for onclick in HTML)
-window.showLogin = showLogin;
-window.hideLogin = hideLogin;
+// Make functions available globally
+window.showSignUp = showSignUp;
+window.showSignIn = showSignIn;
+window.hideFloating = hideFloating;
+window.switchToSignIn = switchToSignIn;
+window.switchToSignUp = switchToSignUp;
 
-// Debug - check if functions are working
-console.log("Login functions loaded:", { showLogin, hideLogin });
+// For backward compatibility
+window.showLogin = showSignUp;
+window.hideLogin = hideFloating;
