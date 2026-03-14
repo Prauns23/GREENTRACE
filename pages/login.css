@@ -256,8 +256,8 @@ input::placeholder {
   color: white;
   border: none;
   border-radius: 10px;
-  font-size: 15px; /* Slightly smaller */
-  font-weight: 500;
+  font-size: 14px; /* Slightly smaller */
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 16px; /* Reduced margin */

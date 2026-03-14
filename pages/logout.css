@@ -89,7 +89,7 @@ p {
   border: none;
   border-radius: 12px;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -97,7 +97,6 @@ p {
 .confirm-btn:hover {
   background: #1b5e20;
   transform: translateY(-1px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
 }
 
 .cancel-btn {
@@ -108,7 +107,7 @@ p {
   border: 1px solid #6666668e;
   border-radius: 12px;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }

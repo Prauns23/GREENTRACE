@@ -2,44 +2,104 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
         rel="stylesheet">
-
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=release_alert" />
     <link rel="stylesheet" href="index.css">
-
-    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css" /> -->
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Green Trace</title>
 </head>
 
-<!-- floating overlays -->
-<div class="overlay" id="overlay"></div>
-
-<div class="floating-container" id="floatingLoginContainer">
-    <iframe src="pages/login.html" class="floating-iframe" id="loginFrame"></iframe>
-</div>
-
-<div class="floating-container" id="floatingSignInContainer">
-    <iframe src="pages/sign-in.html" class="floating-iframe" id="signInFrame"></iframe>
-</div>
-
 <body>
+    <!-- floating overlays -->
+    <div class="overlay" id="overlay"></div>
+
+    <div class="floating-container" id="floatingLoginContainer">
+        <iframe src="pages/login.html" class="floating-iframe" id="loginFrame"></iframe>
+    </div>
+
+    <div class="floating-container" id="floatingSignInContainer">
+        <iframe src="pages/sign-in.html" class="floating-iframe" id="signInFrame"></iframe>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
-            <img src="components/icons/menu.svg" alt="" class="menu">
+            <img src="components/icons/menu.svg" alt="" class="menu" id="menuIcon">
             <ul class="nav-links">
-                <li><a href="#">About</a></li>
-                <li><a href="#">Features</a></li>
-                <li><a href="#">Volunteer</a></li>
+                <li><a href="#about-section">About</a></li>
+                <li><a href="#feature-section">Features</a></li>
+                <li><a href="#volunteer-section">Volunteer</a></li>
             </ul>
             <img src="components/icons/person.svg" alt="" class="profile" onclick="showLogin()">
         </nav>
+    </div>
+    
+    <!-- SideBar Nav - Collapsible with menu icon -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="components/icons/menu.svg" alt="Menu" class="sidebar-menu-icon" id="sidebarToggle">
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="active">
+                    <a href="#">
+                        <i class="fa-solid fa-house"></i>
+                        <span class="label">Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa-solid fa-map"></i>
+                        <span class="label">Forest Map</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa-solid fa-camera"></i>
+                        <span class="label">AR Camera</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa-solid fa-tree"></i>
+                        <span class="label">Tree Species</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa-solid fa-hand-holding-heart"></i>
+                        <span class="label">Volunteer</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="sidebar-report">
+            <button class="report-activity">
+                <span class="material-symbols-rounded">release_alert</span>
+                <span class="label">Report an activity</span>
+            </button>
+        </div>
+        
+        <!-- Profile Section at BOTTOM -->
+        <div class="sidebar-profile">
+            <div class="profile-avatar" id="userProfile">
+                <img src="components/icons/person.svg" alt="Profile">
+            </div>
+            <div class="profile-info">
+                <h3 id="userName">Franz Harvey Bautista</h3>
+                <span>View profile</span>
+            </div>
+        </div>
     </div>
 
     <!-- Landing Page -->
@@ -56,7 +116,7 @@
     </div>
 
     <!-- 2nd Page -->
-    <div class="SecondPage">
+    <div class="SecondPage" id="about-section">
         <h3 class="about-title">ABOUT US</h3>
 
         <div class="top">
@@ -86,7 +146,7 @@
 
         <div class="bottom">
             <p>TECHNOLOGY AND <span class="green">NATURE</span> COLLABORATION</p>
-            <button class="joinBtn">
+            <button onclick="showLogin()" class="joinBtn">
                 Join us
                 <img src="components/icons/double-arrow.svg" alt="">
             </button>
@@ -94,7 +154,7 @@
     </div>
 
     <!-- Third Page -->
-    <div class="ThirdPage">
+    <div class="ThirdPage" id="feature-section">
         <h3 class="features-title">FEATURES</h3>
         <!-- Left features -->
         <div class="left-features">
@@ -147,7 +207,7 @@
                         <span>FEATURE 02</span>
                     </div>
                     <div class="card-content">
-                        <h3>Tree Space & Canopy Estimation</h3>
+                        <h3>Tree Space Estimation</h3>
                         <p>Estimates the mature height and canopy spread of a tree and visually projects the space it
                             will occupy.</p>
                         <button class="explore">
@@ -193,7 +253,7 @@
             </div>
         </div>
 
-        <!-- Swiper nav - SEPARATE div at ThirdPage level (outside right-features) -->
+        <!-- Swiper nav -->
         <div class="ThirdPage-nav">
             <button class="nav-btn" id="scrollLeft">
                 <img src="components/icons/arrow-back.svg" alt="">
@@ -204,21 +264,16 @@
         </div>
     </div>
 
-    <!-- Fourth Page -->
-    <!-- Fourth Page -->
-    <div class="FourthPage">
+    <!-- FourthPage -->
+    <div class="FourthPage" id="volunteer-section">
         <div class="fourth-background">
             <div class="fourth-content">
                 <div class="fourth-content-wrapper">
-
                     <p class="join-tag">JOIN US BY SIGNING UP</p>
-
-
                     <div class="center-content">
                         <h2 class="fourth-title">Be Part of the Greening Activities</h2>
                         <p class="fourth-description">Join thousands of volunteers and organizations working together to
-                            restore the
-                            Philippines' forests and create a sustainable future for generations to come.</p>
+                            restore the Philippines' forests and create a sustainable future for generations to come.</p>
                         <div class="fourth-buttons">
                             <button class="btn-primary">
                                 Start Volunteering
@@ -233,6 +288,7 @@
             </div>
         </div>
     </div>
+    
     <!-- Footer -->
     <div class="footer">
         <div class="footer-content">
@@ -260,7 +316,7 @@
                 </div>
             </div>
 
-            <!-- Right Section  -->
+            <!-- Right Section -->
             <div class="footer-right">
                 <div class="footer-column">
                     <h4>PROGRAMS</h4>
@@ -289,15 +345,14 @@
             </div>
         </div>
 
-        <!-- Footer Bottom - outside footer-content but inside footer -->
+        <!-- Footer Bottom -->
         <div class="footer-bottom">
             <p>&copy; 2026 GreenTrace. All rights reserved.</p>
         </div>
     </div>
-    <div class="report-btn">
-        <button class="reportBtn"></button>
-    </div>
+    
     <script src="app.js"></script>
+    <script src="nav.js"></script>
 </body>
 
 </html>

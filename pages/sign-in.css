@@ -26,7 +26,7 @@ body {
 .signIn-grid {
   display: grid;
   grid-template-columns: 1fr 0.9fr;  
-  min-height: 520px; 
+  min-height: 440px; 
 }
 
 /* LEFT COLUMN */
@@ -55,7 +55,7 @@ body {
   max-height: 65%;
   object-fit: contain;
   display: block;
-  padding-bottom: 20%;
+  padding-bottom: 10%;
 }
 
 
@@ -188,12 +188,12 @@ input::placeholder {
   color: white;
   border: none;
   border-radius: 10px;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   margin: 15px 0 18px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .login-btn:hover {
