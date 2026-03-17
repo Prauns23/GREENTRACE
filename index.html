@@ -29,6 +29,13 @@
         <iframe src="pages/sign-in.html" class="floating-iframe" id="signInFrame"></iframe>
     </div>
 
+    <div class="floating-container" id="floatingReportContainer">
+        <iframe src="pages/report.html" class="floating-iframe" id="reportFrame"></iframe>
+    </div>
+
+    
+
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
@@ -41,7 +48,7 @@
             <img src="components/icons/person.svg" alt="" class="profile" onclick="showLogin()">
         </nav>
     </div>
-    
+
     <!-- SideBar Nav - Collapsible with menu icon -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -82,14 +89,14 @@
                 </li>
             </ul>
         </nav>
-        
+
         <div class="sidebar-report">
-            <button class="report-activity">
+            <button class="report-activity" onclick="showReport()">
                 <span class="material-symbols-rounded">release_alert</span>
                 <span class="label">Report an activity</span>
             </button>
         </div>
-        
+
         <!-- Profile Section at BOTTOM -->
         <div class="sidebar-profile">
             <div class="profile-avatar" id="userProfile">
@@ -273,7 +280,8 @@
                     <div class="center-content">
                         <h2 class="fourth-title">Be Part of the Greening Activities</h2>
                         <p class="fourth-description">Join thousands of volunteers and organizations working together to
-                            restore the Philippines' forests and create a sustainable future for generations to come.</p>
+                            restore the Philippines' forests and create a sustainable future for generations to come.
+                        </p>
                         <div class="fourth-buttons">
                             <button class="btn-primary">
                                 Start Volunteering
@@ -288,7 +296,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Footer -->
     <div class="footer">
         <div class="footer-content">
@@ -350,7 +358,7 @@
             <p>&copy; 2026 GreenTrace. All rights reserved.</p>
         </div>
     </div>
-    
+
     <script src="app.js"></script>
     <script src="nav.js"></script>
 </body>

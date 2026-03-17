@@ -15,7 +15,7 @@ body {
 
 .signIn-container {
   width: 100%;
-  max-width: 1000px; 
+  max-width: 1000px;
   background-color: white;
   border-radius: 18px;
   overflow: hidden;
@@ -25,14 +25,14 @@ body {
 
 .signIn-grid {
   display: grid;
-  grid-template-columns: 1fr 0.9fr;  
-  min-height: 440px; 
+  grid-template-columns: 1fr 0.9fr;
+  min-height: 440px;
 }
 
 /* LEFT COLUMN */
 
 .form-column {
-  padding: 35px 30px 35px 65px; 
+  padding: 35px 30px 35px 65px;
   position: relative;
   overflow-y: auto;
   display: flex;
@@ -57,7 +57,6 @@ body {
   display: block;
   padding-bottom: 10%;
 }
-
 
 .close-btn {
   font-size: 42px;
@@ -193,7 +192,7 @@ input::placeholder {
   cursor: pointer;
   transition: all 0.3s;
   margin: 15px 0 18px;
-  letter-spacing: 0.3px;
+  font-family: "Inter", sans-serif;
 }
 
 .login-btn:hover {
@@ -223,7 +222,6 @@ input::placeholder {
   color: #1b5e20;
 }
 
-
 /* Desktop (992px - 1199px) */
 @media (max-width: 1199px) {
   .signIn-container {
@@ -234,34 +232,33 @@ input::placeholder {
 /* Tablet Landscape (768px - 991px) */
 @media (max-width: 991px) {
   .signIn-container {
-    max-width: 550px;  /* Centered form on tablet */
+    max-width: 550px; /* Centered form on tablet */
   }
-  
+
   .signIn-grid {
-    grid-template-columns: 1fr;  /* Stack columns */
+    grid-template-columns: 1fr; /* Stack columns */
     min-height: auto;
   }
-  
+
   .image-column {
-    display: none;  /* Hide image on tablet */
+    display: none; /* Hide image on tablet */
   }
-  
+
   .form-column {
     padding: 40px;
     max-width: 100%;
   }
-  
+
   h1 {
     font-size: 28px;
     text-align: center;
   }
-  
+
   .subtitle {
     text-align: center;
     max-width: 100%;
     margin: 0 auto 25px;
   }
-  
 }
 
 /* Mobile Landscape (480px - 767px) */
@@ -269,24 +266,25 @@ input::placeholder {
   .signIn-container {
     max-width: 95%;
   }
-  
+
   .form-column {
     padding: 30px 25px;
   }
-  
+
   h1 {
     font-size: 24px;
   }
-  
+
   .subtitle {
     font-size: 13px;
     margin-bottom: 20px;
   }
-  
-  input, .password-input {
+
+  input,
+  .password-input {
     padding: 11px 13px;
   }
-  
+
   .login-btn {
     padding: 13px;
     font-size: 14px;
@@ -298,35 +296,36 @@ input::placeholder {
   .form-column {
     padding: 25px 20px;
   }
-  
+
   h1 {
     font-size: 22px;
   }
-  
+
   .subtitle {
     font-size: 12px;
     margin-bottom: 15px;
   }
-  
+
   .close-btn {
     font-size: 30px;
   }
-  
-  input, .password-input {
+
+  input,
+  .password-input {
     padding: 10px 12px;
     font-size: 13px;
   }
-  
+
   .toggle-password {
     width: 30px;
     height: 30px;
   }
-  
+
   .login-btn {
     padding: 12px;
     font-size: 13px;
   }
-  
+
   .signin-link {
     font-size: 12px;
   }

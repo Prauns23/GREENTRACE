@@ -58,6 +58,7 @@ const body = document.body;
 // Add these missing container variables
 const signUpContainer = document.getElementById("floatingLoginContainer"); // For sign up
 const signInContainer = document.getElementById("floatingSignInContainer"); // For sign in
+const reportContainer = document.getElementById("floatingReportContainer");
 
 let activeContainer = null;
 
@@ -144,6 +145,19 @@ function showSignIn() {
   }, 100);
 }
 
+// SHOW Report
+function showReport() {
+  closeAllFloating();
+  reportContainer.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = reportContainer;
+
+  setTimeout(() => {
+    resetFormFields("reportFrame");
+  }, 100);
+}
+
 // HIDE floating
 function hideFloating() {
   if (activeContainer) {
@@ -160,7 +174,7 @@ function closeAllFloating() {
   if (signInContainer) signInContainer.classList.remove("active");
 }
 
-// Switch functions (fix typo)
+// Switch functions
 function switchToSignIn() {
   hideFloating();
   showSignIn();
@@ -189,6 +203,7 @@ window.showSignIn = showSignIn;
 window.hideFloating = hideFloating;
 window.switchToSignIn = switchToSignIn;
 window.switchToSignUp = switchToSignUp;
+window.showReport = showReport;
 
 // For backward compatibility
 window.showLogin = showSignUp;

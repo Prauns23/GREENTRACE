@@ -23,12 +23,12 @@ body.login-active {
   height: 100%;
   justify-content: center;
   align-items: center;
-  z-index: 1002;
+  z-index: 1003;
   display: none;
 }
 
 .floating-container.active {
-  display: flex; /* Show when active */
+  display: flex; 
 }
 
 .floating-iframe {
@@ -37,7 +37,7 @@ body.login-active {
   border: none;
   background: transparent;
   position: relative;
-  z-index: 1003;
+  z-index: 1004;
 }
 
 .overlay {
@@ -46,10 +46,22 @@ body.login-active {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #00000080; /* Slightly darker for better effect */
+  background-color: #00000080;
   backdrop-filter: blur(1px);
   display: none;
   z-index: 1002;
+}
+
+#floatingReportContainer .floating-iframe {
+  width: 1200px;
+  height: 950px;
+}
+
+
+#floatingLoginContainer .floating-iframe,
+#floatingSignInContainer .floating-iframe {
+  width: 1400px;
+  height: 695px;
 }
 
 .overlay.active {
@@ -63,8 +75,8 @@ body.overlay-active .SecondPage,
 body.overlay-active .ThirdPage,
 body.overlay-active .FourthPage,
 body.overlay-active .footer {
-  pointer-events: none; /* Prevents clicks on all main content */
-  user-select: none; /* Prevents text selection */
+  pointer-events: none;
+  user-select: none;
 }
 
 /*Navigation Bar*/
@@ -76,7 +88,7 @@ body.overlay-active .footer {
   border-bottom: 1px solid #0000002c;
   margin-bottom: 2px;
   position: sticky;
-  z-index: 1000;
+  z-index: 998;
   top: 0;
 }
 .navbar {
@@ -112,7 +124,7 @@ body.overlay-active .footer {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  z-index: 1003;
+  z-index: 999;
   display: none;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -132,7 +144,7 @@ body.overlay-active .footer {
   height: 100%;
   background: white;
   box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
-  z-index: 1004;
+  z-index: 1000;
   transition:
     left 0.25s ease,
     width 0.2s ease;
@@ -204,7 +216,7 @@ body.overlay-active .footer {
   align-items: center;
   gap: 12px;
   padding: 24px 0px 24px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #e4e4e4;
   margin-bottom: 10px;
 }
 
@@ -306,6 +318,7 @@ body.overlay-active .footer {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: "Inter", sans-serif;
 }
 
 .report-activity:hover {
@@ -434,13 +447,14 @@ body.sidebar-open {
   gap: 1.5rem;
   background-color: rgba(255, 255, 255, 0.9);
   border: none;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
   font-size: 16px;
   font-weight: 500;
   color: #494949;
   transition: ease 0.2s;
+  font-family: "Inter", sans-serif;
 }
 
 .start-planting:hover {
@@ -540,6 +554,7 @@ body.sidebar-open {
   background-color: #fff;
   color: #494949d3;
   transition: ease 0.2s;
+  font-family: "Inter", sans-serif;
 }
 
 .joinBtn:hover {
@@ -882,7 +897,6 @@ body.sidebar-open {
   margin-bottom: 8rem;
   font-weight: 300;
   grid-row: 1;
-
   align-self: flex-start;
   width: 100%;
   text-align: center;
@@ -936,6 +950,7 @@ body.sidebar-open {
   color: #3b3b3bbe;
   transition: all 0.2s ease;
   margin-right: 2rem;
+  font-family: "Inter", sans-serif;
 }
 
 .btn-primary:hover {
@@ -974,6 +989,7 @@ body.sidebar-open {
   transition: all 0.2s ease;
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2x);
+  font-family: "Inter", sans-serif;
 }
 
 .btn-secondary:hover {
@@ -1103,7 +1119,6 @@ body.sidebar-open {
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.9rem;
 }
-
 
 /* Media Queries */
 
@@ -1363,7 +1378,6 @@ body.sidebar-open {
   .card-content p {
     font-size: 0.9rem;
   }
-
 }
 
 /* Mobile Landscape (480px - 599px) */
@@ -1612,7 +1626,6 @@ body.sidebar-open {
     width: 2.5rem;
     height: 2.5rem;
   }
-
 }
 
 /* Fix for very small devices (below 360px) */
