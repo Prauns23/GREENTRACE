@@ -57,6 +57,10 @@ body.login-active {
   height: 950px;
 }
 
+#floatingLogoutContainer .floating-iframe {
+    width: 450px;
+    height: 550px;
+}
 
 #floatingLoginContainer .floating-iframe,
 #floatingSignInContainer .floating-iframe {

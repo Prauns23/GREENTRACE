@@ -56,9 +56,10 @@ const overlay = document.getElementById("overlay");
 const body = document.body;
 
 // Add these missing container variables
-const signUpContainer = document.getElementById("floatingLoginContainer"); // For sign up
+const signUpContainer = document.getElementById("floatingSignUpContainer"); // For sign up
 const signInContainer = document.getElementById("floatingSignInContainer"); // For sign in
 const reportContainer = document.getElementById("floatingReportContainer");
+const logoutContainer = document.getElementById("floatingLogoutContainer");
 
 let activeContainer = null;
 
@@ -69,7 +70,7 @@ function resetFormFields(iframeId) {
     try {
       // Call the reset function inside the iframe
       if (iframe.contentWindow.resetPasswordToggle) {
-        if (iframeId === "loginFrame") {
+        if (iframeId === "signupFrame") {
           iframe.contentWindow.resetPasswordToggle("signupPasswordWrapper");
         } else if (iframeId === "signInFrame") {
           iframe.contentWindow.resetPasswordToggle("signinPasswordWrapper");
@@ -99,7 +100,7 @@ function showSignUp() {
 
   // Reset fields in sign up form
   setTimeout(() => {
-    resetFormFields("loginFrame");
+    resetFormFields("signupFrame");
   }, 200); // Increased timeout to ensure iframe is loaded
 }
 
@@ -145,6 +146,16 @@ function showSignIn() {
   }, 100);
 }
 
+// SHOW Logout
+
+function showLogout() {
+  closeAllFloating();
+  logoutContainer.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = logoutContainer;
+}
+
 // SHOW Report
 function showReport() {
   closeAllFloating();
@@ -172,7 +183,8 @@ function hideFloating() {
 function closeAllFloating() {
   if (signUpContainer) signUpContainer.classList.remove("active");
   if (signInContainer) signInContainer.classList.remove("active");
-}
+  if (logoutContainer) logoutContainer.classList.remove("active");
+} 
 
 // Switch functions
 function switchToSignIn() {
@@ -203,6 +215,7 @@ window.showSignIn = showSignIn;
 window.hideFloating = hideFloating;
 window.switchToSignIn = switchToSignIn;
 window.switchToSignUp = switchToSignUp;
+window.showLogout = showLogout;
 window.showReport = showReport;
 
 // For backward compatibility

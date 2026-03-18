@@ -1,3 +1,5 @@
+<?php session_start(); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,19 +23,23 @@
     <!-- floating overlays -->
     <div class="overlay" id="overlay"></div>
 
-    <div class="floating-container" id="floatingLoginContainer">
-        <iframe src="pages/login.html" class="floating-iframe" id="loginFrame"></iframe>
+    <div class="floating-container" id="floatingSignUpContainer">
+        <iframe src="pages/sign-up.php" class="floating-iframe" id="signupFrame"></iframe>
     </div>
 
     <div class="floating-container" id="floatingSignInContainer">
-        <iframe src="pages/sign-in.html" class="floating-iframe" id="signInFrame"></iframe>
+        <iframe src="pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
     </div>
 
     <div class="floating-container" id="floatingReportContainer">
-        <iframe src="pages/report.html" class="floating-iframe" id="reportFrame"></iframe>
+        <iframe src="pages/report.php" class="floating-iframe" id="reportFrame"></iframe>
     </div>
 
-    
+    <div class="floating-container" id="floatingLogoutContainer">
+        <iframe src="pages/logout.php" class="floating-iframe" id="logoutFrame"></iframe>
+    </div>
+
+
 
 
     <!-- Navigation Bar -->
@@ -45,7 +51,8 @@
                 <li><a href="#feature-section">Features</a></li>
                 <li><a href="#volunteer-section">Volunteer</a></li>
             </ul>
-            <img src="components/icons/person.svg" alt="" class="profile" onclick="showLogin()">
+            <img src="components/icons/person.svg" alt="" class="profile"
+                onclick="<?php echo isset($_SESSION['first_name']) ? 'showLogout()' : 'showLogin()'; ?>">
         </nav>
     </div>
 
@@ -103,7 +110,9 @@
                 <img src="components/icons/person.svg" alt="Profile">
             </div>
             <div class="profile-info">
-                <h3 id="userName">Franz Harvey Bautista</h3>
+                <h3 id="userName">
+                    <?php echo isset($_SESSION['first_name']) ? $_SESSION['first_name'] . ' ' . $_SESSION['last_name'] : 'Franz Harvey Bautista'; ?>
+                </h3>
                 <span>View profile</span>
             </div>
         </div>

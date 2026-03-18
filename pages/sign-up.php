@@ -1,3 +1,26 @@
+<?php 
+
+session_start();
+
+$errors = [
+    'login' => $_SESSION['login_error'] ?? '',
+    'register' => $_SESSION['register_error'] ?? ''
+];
+$activeForm = $_SESSION['active_form'] ?? 'sign-up';
+
+session_unset();
+
+function showError($error) {
+    return !empty($error) ? "<p class= 'error-message'>$error</p>" : '';
+}
+
+function isActiveForm($formName, $activeForm) {
+    return $formName === $activeForm ? 'active' : '';
+}
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,11 +33,11 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="sign-up.css">
 </head>
 
 <body>
-    <div class="login-container">
+    <div class="login-container" <?= isActiveForm('sign-up', $activeForm); ?>>
         <!-- Two-column layout -->
         <span class="close-btn" onclick="parent.hideLogin && parent.hideLogin()">×</span>
 
@@ -27,30 +50,31 @@
                 <p class="subtitle">Every tree begins with one step — yours.</p>
 
                 <!-- Form -->
-                <form>
+                <form action="../login_register.php" method="post" target="_parent">
+                    <?= showError($errors['login']);  ?>
                     <!-- First Name & Last Name row -->
                     <div class="form-row">
                         <div class="form-group">
                             <label>First Name <span class="required">*</span></label>
-                            <input type="text" placeholder="First Name">
+                            <input type="text" name="first_name" placeholder="First Name">
                         </div>
                         <div class="form-group">
                             <label>Last Name <span class="required">*</span></label>
-                            <input type="text" placeholder="Last Name">
+                            <input type="text" name="last_name" placeholder="Last Name">
                         </div>
                     </div>
 
                     <!-- Email Address -->
                     <div class="form-group">
                         <label>Email Address <span class="required">*</span></label>
-                        <input type="email" placeholder="Email Account">
+                        <input type="email" name="email" placeholder="Email Account">
                     </div>
 
                     <!-- Password section -->
                     <div class="form-group">
                         <label>Password <span class="required">*</span></label>
                         <div class="password-input-wrapper" id="signupPasswordWrapper">
-                            <input type="password" placeholder="Password" class="password-input" id="signupPassword">
+                            <input type="password" name="password" placeholder="Password" class="password-input" id="signupPassword">
                             <button class="toggle-password" type="button" onclick="togglePassword(this)"
                                 style="display: none;">
                                 <img src="eye-off.svg" alt="Hide" class="eye-icon eye-off">
@@ -64,7 +88,7 @@
                         <label>Phone Number <span class="required">*</span></label>
                         <div class="phone-input">
                             <span class="country-code">PHIL</span>
-                            <input type="tel" placeholder="09XX-XXX-YYYY" class="phone-field">
+                            <input type="tel" name="phone_num" placeholder="09XX-XXX-YYYY" class="phone-field">
                         </div>
                     </div>
 
@@ -75,7 +99,7 @@
                     </div>
 
                     <!-- Create Account Button -->
-                    <button type="submit" class="create-btn">Create Account</button>
+                    <button type="submit" name="sign-up" class="create-btn">Create Account</button>
 
                     <!-- Sign In Link -->
                     <div class="signin-link">

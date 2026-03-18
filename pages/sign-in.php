@@ -1,3 +1,27 @@
+<?php 
+
+session_start();
+
+$errors = [
+    'login' => $_SESSION['login_error'] ?? '',
+    'register' => $_SESSION['register_error'] ?? ''
+];
+
+$activeForm = $_SESSION['active_form'] ?? 'sign-in';
+
+session_unset();
+
+function showError($error) {
+    return !empty($error) ? "<p class= 'error-message'>$error</p>" : '';
+}
+
+function isActiveForm($formName, $activeForm) {
+    return $formName === $activeForm ? 'active' : '';
+}
+
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,7 +38,7 @@
 </head>
 
 <body>
-    <div class="signIn-container">
+    <div class="signIn-container" <?= isActiveForm('sign-in', $activeForm); ?>>
 
         <span class="close-btn" onclick="parent.hideLogin && parent.hideLogin()">×</span>
 
@@ -27,18 +51,18 @@
                 <p class="subtitle">Let's keep planting the future, your forest is waiting</p>
 
 
-                <form>
-
+                <form action="../login_register.php" method="post" target="_parent">
+                    <?= showError($errors['login']);  ?>
                     <div class="form-group">
                         <label>Email Address</label>
-                        <input type="email" placeholder="Email Account">
+                        <input type="email" name="email" placeholder="Email Account">
                     </div>
 
 
                     <div class="form-group">
                         <label>Password</label>
                         <div class="password-input-wrapper" id="signinPasswordWrapper">
-                            <input type="password" placeholder="Password" class="password-input" id="signinPassword">
+                            <input type="password" name="password" placeholder="Password" class="password-input" id="signinPassword">
                             <button class="toggle-password" type="button" onclick="togglePassword(this)"
                                 style="display: none;">
                                 <img src="eye-off.svg" alt="Hide" class="eye-icon eye-off">
@@ -47,7 +71,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="login-btn">Login Account</button>
+                    <button type="submit" name="sign-in" class="login-btn">Login Account</button>
 
                     <div class="signin-link">
                         Don't have an account? <a href="#"
