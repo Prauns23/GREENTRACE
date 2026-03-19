@@ -9,9 +9,8 @@ if (isset($_POST['sign-up'])) {
     $email   = $_POST['email'];
     $phone   = $_POST['phone_num'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role    = $_POST['role'] ?? 'user';   // default role
+    $role    = $_POST['role'] ?? 'user';
 
-    // Check if email exists (using prepared statement)
     $stmt = $conn->prepare("SELECT email FROM users_tbl WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -20,7 +19,6 @@ if (isset($_POST['sign-up'])) {
         $_SESSION['register_error'] = 'Email is already registered!';
         $_SESSION['active_form'] = 'sign-up';
     } else {
-        // Insert new user
         $stmt = $conn->prepare("INSERT INTO users_tbl (fname, lname, email, phone_no, password, role) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssss", $fname, $lname, $email, $phone, $password, $role);
         $stmt->execute();
@@ -47,16 +45,18 @@ if (isset($_POST['sign-in'])) {
             $_SESSION['email']      = $user['email'];
             $_SESSION['role']       = $user['role'];
 
-            // Redirect (same page for now, but you can differentiate by role)
+            // Success Message
+            $_SESSION['login_success'] = "Welcome back, " . $user['fname'] . "!";
+
             header("Location: index.php");
             exit();
         }
     }
 
-    // If we reach here, login failed
+
+    // Login failed
     $_SESSION['login_error'] = 'Incorrect email or password';
     $_SESSION['active_form'] = 'sign-in';
     header("Location: index.php");
     exit();
 }
-?>

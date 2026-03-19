@@ -288,16 +288,6 @@ input::placeholder {
   text-decoration: underline;
 }
 
-.error-message {
-  padding: 12px;
-  background: #ffff;
-  border-radius: 6px;
-  font-size: 15px;
-  color: #e53e3e;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
 /* Mobile responsive */
 @media (max-width: 900px) {
   .login-grid {

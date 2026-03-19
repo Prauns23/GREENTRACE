@@ -120,30 +120,27 @@ function showSignIn() {
 
 // SHOW Sign Up
 function showSignUp() {
-  closeAllFloating();
-  signUpContainer.classList.add("active");
-  overlay.classList.add("active");
-  body.classList.add("login-active");
-  activeContainer = signUpContainer;
-
-  // Reset fields in sign up form
-  setTimeout(() => {
-    resetFormFields("loginFrame");
-  }, 100);
+    closeAllFloating();
+    signUpContainer.classList.add("active");
+    overlay.classList.add("active");
+    body.classList.add("login-active");
+    activeContainer = signUpContainer;
+    setTimeout(() => resetFormFields("signupFrame"), 200);
 }
 
-// SHOW Sign In
-function showSignIn() {
-  closeAllFloating();
-  signInContainer.classList.add("active");
-  overlay.classList.add("active");
-  body.classList.add("login-active");
-  activeContainer = signInContainer;
-
-  // Reset fields in sign in form
-  setTimeout(() => {
-    resetFormFields("signInFrame");
-  }, 100);
+// SHOW Sign In 
+function showSignIn(errorMsg = '') {
+    closeAllFloating();
+    const iframe = document.getElementById("signInFrame");
+    if (errorMsg) {
+        // Add error as hash, then reload iframe
+        iframe.src = 'pages/sign-in.php#error=' + encodeURIComponent(errorMsg);
+    }
+    signInContainer.classList.add("active");
+    overlay.classList.add("active");
+    body.classList.add("login-active");
+    activeContainer = signInContainer;
+    setTimeout(() => resetFormFields("signInFrame"), 200);
 }
 
 // SHOW Logout
@@ -184,7 +181,7 @@ function closeAllFloating() {
   if (signUpContainer) signUpContainer.classList.remove("active");
   if (signInContainer) signInContainer.classList.remove("active");
   if (logoutContainer) logoutContainer.classList.remove("active");
-} 
+}
 
 // Switch functions
 function switchToSignIn() {
@@ -208,6 +205,26 @@ document.addEventListener("keydown", function (e) {
     hideFloating();
   }
 });
+
+// Show toast if message exists
+function showToast(message, duration = 3000) {
+  const toast = document.getElementById("toast");
+  const toastMessage = document.getElementById("toast-message");
+  if (!toast || !toastMessage) return;
+
+  toastMessage.textContent = message;
+  toast.classList.remove("hidden");
+
+  // Auto hide after duration
+  setTimeout(() => {
+    hideToast();
+  }, duration);
+}
+
+function hideToast() {
+  const toast = document.getElementById("toast");
+  if (toast) toast.classList.add("hidden");
+}
 
 // Make functions available globally
 window.showSignUp = showSignUp;

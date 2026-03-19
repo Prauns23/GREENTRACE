@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 session_start();
 
@@ -11,15 +11,18 @@ $activeForm = $_SESSION['active_form'] ?? 'sign-in';
 
 session_unset();
 
-function showError($error) {
+function showError($error)
+{
     return !empty($error) ? "<p class= 'error-message'>$error</p>" : '';
 }
 
-function isActiveForm($formName, $activeForm) {
+function isActiveForm($formName, $activeForm)
+{
     return $formName === $activeForm ? 'active' : '';
 }
 
 ?>
+
 
 
 <!DOCTYPE html>
@@ -52,7 +55,7 @@ function isActiveForm($formName, $activeForm) {
 
 
                 <form action="../login_register.php" method="post" target="_parent">
-                    <?= showError($errors['login']);  ?>
+
                     <div class="form-group">
                         <label>Email Address</label>
                         <input type="email" name="email" placeholder="Email Account">
@@ -87,7 +90,33 @@ function isActiveForm($formName, $activeForm) {
             </div>
         </div>
     </div>
+
     <script src="password-toggle.js"></script>
+
+    <script>
+        if (window.location.hash.startsWith('#error=')) {
+            const errorMsg = decodeURIComponent(window.location.hash.substring(7));
+            let errorDiv = document.querySelector('.error-message');
+            const form = document.querySelector('form');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+            }
+            errorDiv.textContent = errorMsg;
+            errorDiv.style.display = 'block';
+
+            
+            const passwordGroup = document.querySelector('.password-input-wrapper')?.closest('.form-group');
+            if (passwordGroup) {
+                passwordGroup.insertAdjacentElement('afterend', errorDiv);
+            } else {
+                form.appendChild(errorDiv); 
+            }
+
+            history.replaceState(null, null, window.location.pathname);
+        }
+    </script>
+
 </body>
 
 </html>

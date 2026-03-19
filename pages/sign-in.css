@@ -203,6 +203,7 @@ input::placeholder {
 }
 
 /* Sign in link */
+
 .signin-link {
   text-align: center;
   font-size: 13px;
@@ -221,6 +222,20 @@ input::placeholder {
 .signin-link a:hover {
   text-decoration: underline;
   color: #1b5e20;
+}
+
+.error-message {
+    display: block;
+    padding: 14px;
+    background: #ffddddb2;
+    /* border: 1px solid #e53935; */
+    opacity: 0.8;
+    color: #e53935;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    border-radius: 8px;
+    margin-bottom: 15px;
 }
 
 /* Desktop (992px - 1199px) */

@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 session_start();
 
@@ -10,11 +10,13 @@ $activeForm = $_SESSION['active_form'] ?? 'sign-up';
 
 session_unset();
 
-function showError($error) {
+function showError($error)
+{
     return !empty($error) ? "<p class= 'error-message'>$error</p>" : '';
 }
 
-function isActiveForm($formName, $activeForm) {
+function isActiveForm($formName, $activeForm)
+{
     return $formName === $activeForm ? 'active' : '';
 }
 
@@ -51,7 +53,8 @@ function isActiveForm($formName, $activeForm) {
 
                 <!-- Form -->
                 <form action="../login_register.php" method="post" target="_parent">
-                    <?= showError($errors['login']);  ?>
+
+                    <?= showError($errors['register']); ?>
                     <!-- First Name & Last Name row -->
                     <div class="form-row">
                         <div class="form-group">
@@ -88,7 +91,7 @@ function isActiveForm($formName, $activeForm) {
                         <label>Phone Number <span class="required">*</span></label>
                         <div class="phone-input">
                             <span class="country-code">PHIL</span>
-                            <input type="tel" name="phone_num" placeholder="09XX-XXX-YYYY" class="phone-field">
+                            <input type="tel" name="phone_num" placeholder="09XX-XXX-YYYY" class="phone-field" maxlength="11" inputmode="numeric">
                         </div>
                     </div>
 
@@ -117,6 +120,26 @@ function isActiveForm($formName, $activeForm) {
         </div>
     </div>
     <script src="password-toggle.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneField = document.querySelector('.phone-field');
+            if (phoneField) {
+                phoneField.addEventListener('input', function(e) {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+
+
+                phoneField.addEventListener('focus', function() {
+                    if (this.value === '') {
+                        this.value = '09';
+                        // Move cursor to the end (after "09")
+                        this.setSelectionRange(this.value.length, this.value.length);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
