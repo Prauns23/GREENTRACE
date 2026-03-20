@@ -287,7 +287,8 @@ body.overlay-active .footer {
 }
 
 .page-content {
-    padding-top: 80px; 
+  padding-top: 80px;
+  background-color: #ffff;
 }
 
 /* Navigation Links */

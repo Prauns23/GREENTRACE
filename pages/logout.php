@@ -11,7 +11,6 @@
 </head>
 <body>
     <div class="logout-container">
-        <span class="close-btn" onclick="parent.hideFloating()">×</span>
         <div class="logout-content">
             <h1>Do you want to logout?</h1>
             <p>Together, we continue restoring tomorrow</p>
