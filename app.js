@@ -51,24 +51,20 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 
 // Floating Login Script
-
 const overlay = document.getElementById("overlay");
 const body = document.body;
 
-// Add these missing container variables
-const signUpContainer = document.getElementById("floatingSignUpContainer"); // For sign up
-const signInContainer = document.getElementById("floatingSignInContainer"); // For sign in
+const signUpContainer = document.getElementById("floatingSignUpContainer");
+const signInContainer = document.getElementById("floatingSignInContainer");
 const reportContainer = document.getElementById("floatingReportContainer");
 const logoutContainer = document.getElementById("floatingLogoutContainer");
 
 let activeContainer = null;
 
-// Update the resetFormFields function in app.js
 function resetFormFields(iframeId) {
   const iframe = document.getElementById(iframeId);
   if (iframe && iframe.contentWindow) {
     try {
-      // Call the reset function inside the iframe
       if (iframe.contentWindow.resetPasswordToggle) {
         if (iframeId === "signupFrame") {
           iframe.contentWindow.resetPasswordToggle("signupPasswordWrapper");
@@ -76,8 +72,6 @@ function resetFormFields(iframeId) {
           iframe.contentWindow.resetPasswordToggle("signinPasswordWrapper");
         }
       }
-
-      // Reset all input fields
       const inputs = iframe.contentWindow.document.querySelectorAll("input");
       inputs.forEach((input) => {
         if (input.type !== "submit" && input.type !== "button") {
@@ -90,60 +84,27 @@ function resetFormFields(iframeId) {
   }
 }
 
-// Update showSignUp function
 function showSignUp() {
   closeAllFloating();
   signUpContainer.classList.add("active");
   overlay.classList.add("active");
   body.classList.add("login-active");
   activeContainer = signUpContainer;
-
-  // Reset fields in sign up form
-  setTimeout(() => {
-    resetFormFields("signupFrame");
-  }, 200); // Increased timeout to ensure iframe is loaded
+  setTimeout(() => resetFormFields("signupFrame"), 200);
 }
 
-// Update showSignIn function
-function showSignIn() {
+function showSignIn(errorMsg = '') {
   closeAllFloating();
+  const iframe = document.getElementById("signInFrame");
+  if (errorMsg) {
+    iframe.src = 'pages/sign-in.php#error=' + encodeURIComponent(errorMsg);
+  }
   signInContainer.classList.add("active");
   overlay.classList.add("active");
   body.classList.add("login-active");
   activeContainer = signInContainer;
-
-  // Reset fields in sign in form
-  setTimeout(() => {
-    resetFormFields("signInFrame");
-  }, 200); // Increased timeout to ensure iframe is loaded
+  setTimeout(() => resetFormFields("signInFrame"), 200);
 }
-
-// SHOW Sign Up
-function showSignUp() {
-    closeAllFloating();
-    signUpContainer.classList.add("active");
-    overlay.classList.add("active");
-    body.classList.add("login-active");
-    activeContainer = signUpContainer;
-    setTimeout(() => resetFormFields("signupFrame"), 200);
-}
-
-// SHOW Sign In 
-function showSignIn(errorMsg = '') {
-    closeAllFloating();
-    const iframe = document.getElementById("signInFrame");
-    if (errorMsg) {
-        // Add error as hash, then reload iframe
-        iframe.src = 'pages/sign-in.php#error=' + encodeURIComponent(errorMsg);
-    }
-    signInContainer.classList.add("active");
-    overlay.classList.add("active");
-    body.classList.add("login-active");
-    activeContainer = signInContainer;
-    setTimeout(() => resetFormFields("signInFrame"), 200);
-}
-
-// SHOW Logout
 
 function showLogout() {
   closeAllFloating();
@@ -153,20 +114,15 @@ function showLogout() {
   activeContainer = logoutContainer;
 }
 
-// SHOW Report
 function showReport() {
   closeAllFloating();
   reportContainer.classList.add("active");
   overlay.classList.add("active");
   body.classList.add("login-active");
   activeContainer = reportContainer;
-
-  setTimeout(() => {
-    resetFormFields("reportFrame");
-  }, 100);
+  setTimeout(() => resetFormFields("reportFrame"), 100);
 }
 
-// HIDE floating
 function hideFloating() {
   if (activeContainer) {
     activeContainer.classList.remove("active");
@@ -176,14 +132,12 @@ function hideFloating() {
   activeContainer = null;
 }
 
-// Close all floating containers
 function closeAllFloating() {
   if (signUpContainer) signUpContainer.classList.remove("active");
   if (signInContainer) signInContainer.classList.remove("active");
   if (logoutContainer) logoutContainer.classList.remove("active");
 }
 
-// Switch functions
 function switchToSignIn() {
   hideFloating();
   showSignIn();
@@ -194,31 +148,23 @@ function switchToSignUp() {
   showSignUp();
 }
 
-// Event listeners
 if (overlay) {
   overlay.addEventListener("click", hideFloating);
 }
 
-// ESC key to close
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape" && activeContainer) {
     hideFloating();
   }
 });
 
-// Show toast if message exists
 function showToast(message, duration = 3000) {
   const toast = document.getElementById("toast");
   const toastMessage = document.getElementById("toast-message");
   if (!toast || !toastMessage) return;
-
   toastMessage.textContent = message;
   toast.classList.remove("hidden");
-
-  // Auto hide after duration
-  setTimeout(() => {
-    hideToast();
-  }, duration);
+  setTimeout(() => hideToast(), duration);
 }
 
 function hideToast() {
@@ -226,7 +172,6 @@ function hideToast() {
   if (toast) toast.classList.add("hidden");
 }
 
-// Make functions available globally
 window.showSignUp = showSignUp;
 window.showSignIn = showSignIn;
 window.hideFloating = hideFloating;
@@ -234,7 +179,5 @@ window.switchToSignIn = switchToSignIn;
 window.switchToSignUp = switchToSignUp;
 window.showLogout = showLogout;
 window.showReport = showReport;
-
-// For backward compatibility
 window.showLogin = showSignUp;
 window.hideLogin = hideFloating;

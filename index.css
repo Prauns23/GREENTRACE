@@ -286,6 +286,10 @@ body.overlay-active .footer {
   transition: opacity 0.2s;
 }
 
+.page-content {
+    padding-top: 80px; 
+}
+
 /* Navigation Links */
 .sidebar-nav {
   flex: 1;

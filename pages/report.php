@@ -1,3 +1,7 @@
+<?php  
+require_once '../init_session.php'; 
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 

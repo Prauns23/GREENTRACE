@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'init_session.php';
 require_once 'config.php';
 
 // Sign Up
@@ -52,7 +52,6 @@ if (isset($_POST['sign-in'])) {
             exit();
         }
     }
-
 
     // Login failed
     $_SESSION['login_error'] = 'Incorrect email or password';
