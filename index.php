@@ -167,7 +167,7 @@
                     <p class="fourth-description">Join thousands of volunteers and organizations working together to
                         restore the Philippines' forests and create a sustainable future for generations to come.</p>
                     <div class="fourth-buttons">
-                        <button class="btn-primary">Start Volunteering <img src="components/icons/arrow-forward-white (2).svg" alt=""></button>
+                        <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='volunteer.php'" : "showLogin()"; ?>"  class="btn-primary">Start Volunteering <img src="components/icons/arrow-forward-white (2).svg" alt=""></button>
                         <button class="btn-secondary">Learn More</button>
                     </div>
                 </div>
