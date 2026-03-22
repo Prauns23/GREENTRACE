@@ -44,7 +44,7 @@ if (isset($_POST['sign-in'])) {
             $_SESSION['last_name']  = $user['lname'];
             $_SESSION['email']      = $user['email'];
             $_SESSION['role']       = $user['role'];
-
+            $_SESSION['user_id']    = $user['id'];
             // Success Message
             $_SESSION['login_success'] = "Welcome back, " . $user['fname'] . "!";
 
