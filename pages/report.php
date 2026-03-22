@@ -18,19 +18,7 @@ $is_logged_in = isset($_SESSION['first_name']);
 
 <body>
     <div class="report-container">
-        <?php if (!$is_logged_in): ?>
-            <!-- Not logged in – show login prompt -->
-            <div class="report-header">
-                <h3>Login Required</h3>
-                <p>Please log in to report an environmental issue.</p>
-            </div>
-            <div class="button-group">
-                <button class="submit-btn" onclick="parent.hideFloating(); parent.showSignUp();">
-                    Sign In / Sign Up
-                </button>
-                <button class="cancel-btn" onclick="parent.hideFloating();">Cancel</button>
-            </div>
-        <?php else: ?>
+
             <!-- Logged in – show report form -->
             <div class="report-header">
                 <h3>Report Environment Issue</h3>
@@ -119,7 +107,6 @@ $is_logged_in = isset($_SESSION['first_name']);
                 <button type="button" class="cancel-btn" onclick="parent.hideFloating();">Cancel</button>
             </div>
             </form>
-        <?php endif; ?>
     </div>
 
     <!-- Image Modal (clickable) -->

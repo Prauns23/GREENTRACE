@@ -69,7 +69,8 @@
             </ul>
         </nav>
         <div class="sidebar-report">
-            <button class="report-activity" onclick="showReport()">
+            <button class="report-activity"
+                onclick="<?php echo isset($_SESSION['first_name']) ? 'showReport()' : 'showSignUp()'; ?>">
                 <span class="material-symbols-rounded">release_alert</span>
                 <span class="label">Report an activity</span>
             </button>
