@@ -3,6 +3,8 @@
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,6 +12,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=release_alert,volunteer_activism" />
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="volunteer.css">
+    <link rel="stylesheet" href="information.css">
+    
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,7 +64,7 @@
                 </li>
                 <li><a href="#"><i class="fa-solid fa-map"></i><span class="label">Forest Map</span></a></li>
                 <li><a href="#"><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
-                <li><a href="#"><i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
+                <li><a href="information.php"> <i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
                 <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'volunteer.php' ? 'active' : ''; ?>">
                     <a href="volunteer.php"><i class="fa-solid fa-hand-holding-heart"></i><span class="label">Volunteer</span></a>
                 </li>

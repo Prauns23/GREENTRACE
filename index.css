@@ -1221,9 +1221,7 @@ body.sidebar-open {
     overflow-x: hidden;
   }
 
-  .sign-
-
-  .nav-links {
+  .sign- .nav-links {
     gap: 2rem;
 
     .feature-card {
@@ -1769,6 +1767,9 @@ body.sidebar-open {
   .btn-secondary {
     font-size: 12px;
   }
+  .nav-links {
+    display: none;
+  }
 }
 
 /* Fix for very small devices (below 360px) */
@@ -1792,6 +1793,10 @@ body.sidebar-open {
 
   .card-content p {
     font-size: 0.8rem;
+  }
+
+  .nav-links {
+    display: none;
   }
 }
 
