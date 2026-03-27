@@ -110,6 +110,12 @@ body.login-active {
   height: 695px;
 }
 
+#floatingSpeciesContainer .floating-iframe {
+  width: 800px;
+  height: 815px;
+  border-radius: 16px;
+}
+
 .overlay.active {
   display: block; /* Show when active */
 }

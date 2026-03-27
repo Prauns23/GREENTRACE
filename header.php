@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="volunteer.css">
     <link rel="stylesheet" href="information.css">
-    
+
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,6 +36,9 @@
     </div>
     <div class="floating-container" id="floatingLogoutContainer">
         <iframe src="pages/logout.php" class="floating-iframe" id="logoutFrame"></iframe>
+    </div>
+    <div class="floating-container" id="floatingSpeciesContainer">
+        <iframe src="" class="floating-iframe" id="speciesFrame"></iframe>
     </div>
 
     <!-- Navigation Bar -->

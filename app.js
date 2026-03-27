@@ -93,11 +93,11 @@ function showSignUp() {
   setTimeout(() => resetFormFields("signupFrame"), 200);
 }
 
-function showSignIn(errorMsg = '') {
+function showSignIn(errorMsg = "") {
   closeAllFloating();
   const iframe = document.getElementById("signInFrame");
   if (errorMsg) {
-    iframe.src = 'pages/sign-in.php#error=' + encodeURIComponent(errorMsg);
+    iframe.src = "pages/sign-in.php#error=" + encodeURIComponent(errorMsg);
   }
   signInContainer.classList.add("active");
   overlay.classList.add("active");
@@ -172,6 +172,17 @@ function hideToast() {
   if (toast) toast.classList.add("hidden");
 }
 
+function showSpeciesDetail(id) {
+  closeAllFloating();
+  const speciesContainer = document.getElementById("floatingSpeciesContainer");
+  const iframe = document.getElementById("speciesFrame");
+  iframe.src = "species_detail.php?id=" + id;
+  speciesContainer.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = speciesContainer;
+}
+
 window.showSignUp = showSignUp;
 window.showSignIn = showSignIn;
 window.hideFloating = hideFloating;
@@ -181,3 +192,4 @@ window.showLogout = showLogout;
 window.showReport = showReport;
 window.showLogin = showSignUp;
 window.hideLogin = hideFloating;
+window.showSpeciesDetail = showSpeciesDetail;

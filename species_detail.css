@@ -1,0 +1,119 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: #eef0ed;
+  padding: 10px 40px;
+  max-height: 100%;
+  overflow-y: hidden;
+}
+
+.close-btn {
+  font-size: 32px;
+  cursor: pointer;
+  color: #474747;
+  display: block;
+  text-align: right;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+.close-btn:hover {
+  color: #333;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  margin-top: 30px;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.scientific {
+  font-style: italic;
+  color: #666;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.badge.native {
+  background: #3f7c42;
+  color: white;
+}
+
+.badge.introduced {
+  background: #e5e5e5;
+  color: #3f3f3f;
+}
+
+.image-container {
+  width: 100%;
+  height: 350px;
+  margin: 12px 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.section {
+  margin: 15px 0;
+}
+.section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1a1a1a;
+}
+.section p {
+  color: #444;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.importance-list {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+.importance-list li {
+  margin-bottom: 4px;
+  line-height: 1.4;
+  font-size: 13px;
+}
+.fun-fact {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 20px;
+  border: 1px solid #57975ad7;
+}
+.fun-fact strong {
+  font-size: 15px;
+  text-transform: uppercase;
+  color: #2e7d32;
+}
+.fun-fact span {
+  color: #3f7c42c7;
+  margin-right: 8px;
+  font-size: 12px;
+}

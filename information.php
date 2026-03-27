@@ -68,7 +68,7 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
                 </div>
             <?php else: ?>
                 <?php foreach ($species as $item): ?>
-                    <div class="species-card">
+                    <div class="species-card" data-id="<?php echo $item['id']; ?>">
                         <?php if (!empty($item['image_url'])): ?>
                             <img src="<?php echo htmlspecialchars($item['image_url']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
                         <?php else: ?>
@@ -97,13 +97,22 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
             let debounceTimer;
 
             if (searchInput && searchForm) {
-                searchInput.addEventListener('keyup', function() {
+                searchInput.addEventListener('input', function() {
                     clearTimeout(debounceTimer);
                     debounceTimer = setTimeout(() => {
                         searchForm.submit();
                     }, 400);
                 });
             }
+        });
+    </script>
+
+    <script>
+        document.querySelectorAll('.species-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const id = card.dataset.id;
+                if (id && window.showSpeciesDetail) showSpeciesDetail(id);
+            });
         });
     </script>
 
