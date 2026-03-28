@@ -65,7 +65,11 @@
                 <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">
                     <a href="index.php"><i class="fa-solid fa-house"></i><span class="label">Home</span></a>
                 </li>
-                <li><a href="#"><i class="fa-solid fa-map"></i><span class="label">Forest Map</span></a></li>
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'forest_map.php' ? 'active' : ''; ?>">
+                        <a href="#"><i class="fa-solid fa-map"></i><span class="label">Forest Map</span></a>
+                    </li>
+                <?php endif; ?>
                 <li><a href="#"><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
                 <li><a href="information.php"> <i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
                 <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'volunteer.php' ? 'active' : ''; ?>">

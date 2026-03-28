@@ -1,11 +1,21 @@
 <?php
 require_once 'init_session.php';
+require_once 'config.php';
 
 if (!isset($_SESSION['first_name'])) {
     $_SESSION['open_signup_modal'] = true;
     header('Location: index.php');
     exit();
 }
+
+// Fetch the user's phone number from the database
+$user_id = $_SESSION['user_id'];
+$stmt = $conn->prepare("SELECT phone_no FROM users_tbl WHERE id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+$phone = $user['phone_no'] ?? '';
 
 include 'header.php';
 ?>
@@ -24,7 +34,7 @@ include 'header.php';
             </div>
         </div>
 
-        <form id="volunteerForm" method="post">
+        <form id="volunteerForm" method="post" action="submit_volunteer.php">
             <!-- Full Name -->
             <div class="form-group">
                 <label for="fullname">Full Name <span class="required">*</span></label>
@@ -90,5 +100,34 @@ include 'header.php';
         </form>
     </div>
 </div>
+
+<script>
+    // Pass user data from PHP to JavaScript
+    const userData = {
+        fullname: "<?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>",
+        email: "<?php echo htmlspecialchars($_SESSION['email']); ?>",
+        mobile: "<?php echo htmlspecialchars($phone); ?>"
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const fullnameInput = document.getElementById('fullname');
+        const emailInput = document.getElementById('email');
+        const mobileInput = document.getElementById('mobile');
+
+        // Function to fill field on focus if empty
+        function fillOnFocus(input, value) {
+            if (!input) return;
+            input.addEventListener('focus', function() {
+                if (this.value === '' && value) {
+                    this.value = value;
+                }
+            });
+        }
+
+        fillOnFocus(fullnameInput, userData.fullname);
+        fillOnFocus(emailInput, userData.email);
+        fillOnFocus(mobileInput, userData.mobile);
+    });
+</script>
 
 <?php include 'footer.php'; ?>
