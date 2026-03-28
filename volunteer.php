@@ -8,7 +8,7 @@ if (!isset($_SESSION['first_name'])) {
     exit();
 }
 
-// Fetch the user's phone number from the database
+// Fetch user data for pre‑fill on focus
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT phone_no FROM users_tbl WHERE id = ?");
 $stmt->bind_param("i", $user_id);
@@ -16,6 +16,18 @@ $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $phone = $user['phone_no'] ?? '';
+
+$check_profile = $conn->prepare("SELECT id FROM volunteer_profiles WHERE user_id = ?");
+
+$check_profile->bind_param("i", $user_id);
+$check_profile->execute();
+$result = $check_profile->get_result();
+
+if ($result->num_rows > 0) {
+    // Already registered, redirect to activities
+    header('Location: activities.php');
+    exit();
+}
 
 include 'header.php';
 ?>
@@ -34,7 +46,7 @@ include 'header.php';
             </div>
         </div>
 
-        <form id="volunteerForm" method="post" action="submit_volunteer.php">
+        <form id="volunteerForm">
             <!-- Full Name -->
             <div class="form-group">
                 <label for="fullname">Full Name <span class="required">*</span></label>
@@ -102,31 +114,59 @@ include 'header.php';
 </div>
 
 <script>
-    // Pass user data from PHP to JavaScript
-    const userData = {
-        fullname: "<?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>",
-        email: "<?php echo htmlspecialchars($_SESSION['email']); ?>",
-        mobile: "<?php echo htmlspecialchars($phone); ?>"
-    };
+    // User data for auto‑fill on focus
+    const userFullName = "<?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>";
+    const userEmail = "<?php echo htmlspecialchars($_SESSION['email']); ?>";
+    const userPhone = "<?php echo htmlspecialchars($phone); ?>";
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const fullnameInput = document.getElementById('fullname');
-        const emailInput = document.getElementById('email');
-        const mobileInput = document.getElementById('mobile');
-
-        // Function to fill field on focus if empty
-        function fillOnFocus(input, value) {
-            if (!input) return;
-            input.addEventListener('focus', function() {
-                if (this.value === '' && value) {
+    function fillOnFocus(fieldId, value) {
+        const field = document.getElementById(fieldId);
+        if (field && value) {
+            field.addEventListener('focus', function() {
+                if (this.value === '') {
                     this.value = value;
                 }
             });
         }
+    }
 
-        fillOnFocus(fullnameInput, userData.fullname);
-        fillOnFocus(emailInput, userData.email);
-        fillOnFocus(mobileInput, userData.mobile);
+    fillOnFocus('fullname', userFullName);
+    fillOnFocus('email', userEmail);
+    fillOnFocus('mobile', userPhone);
+
+    // AJAX form submission
+    const form = document.getElementById('volunteerForm');
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('submit_volunteer.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                // Redirect to activities.php
+                window.location.href = 'activities.php';
+            } else {
+                // Show error toast
+                if (typeof showToast === 'function') {
+                    showToast(data.error || 'An error occurred.', 4000);
+                } else {
+                    alert(data.error || 'An error occurred.');
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            if (typeof showToast === 'function') {
+                showToast('An error occurred. Please try again.', 4000);
+            } else {
+                alert('An error occurred. Please try again.');
+            }
+        }
     });
 </script>
 

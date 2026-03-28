@@ -27,6 +27,7 @@ if (isset($_POST['sign-up'])) {
     exit();
 }
 
+
 // Sign In
 if (isset($_POST['sign-in'])) {
     $email    = $_POST['email'];
