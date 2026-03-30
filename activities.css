@@ -1,0 +1,198 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.activities-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 30px;
+}
+
+/* Header */
+.activities-header {
+  margin-bottom: 48px;
+  text-align: start;
+}
+
+.activities-header h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.activities-header span {
+  font-size: 1rem;
+  color: #666;
+  max-width: 800px;
+  display: inline-block;
+  line-height: 1.5;
+}
+
+/* Activities Grid */
+.activities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 2rem;
+  margin-top: 40px;
+}
+
+/* Activity Card – similar to species-card */
+.activity-card {
+  background: #eef0eda8;
+  border: 1px solid #c7c7c7;
+  overflow: hidden;
+  border-radius: 12px;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.activity-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Activity image placeholder – matches species-card image style */
+.activity-prev {
+  width: 100%;
+  height: 220px;
+  background: #e9e9e9;
+  background-image:
+    linear-gradient(45deg, #ddd 25%, transparent 25%),
+    linear-gradient(-45deg, #ddd 25%, transparent 25%);
+  background-size: 20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Card content area */
+.activity-card .card-content {
+  padding: 20px;
+}
+
+/* Badges row – horizontal above title */
+.badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.activity-badge {
+  display: inline-block;
+  background: #f0f0f0;
+  color: #555;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* First badge */
+.activity-badge.primary {
+  background: #d5eed7;
+  color: #2e7d32;
+}
+
+/* Title */
+.activity-card h3 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 20px 0px;
+}
+
+/* Description */
+.activity-card p {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #444;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Bottom content (date & participants) */
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.bottom-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.bottom-content i,
+.bottom-content .material-symbols-rounded {
+  font-size: 18px;
+  color: #666;
+}
+
+.bottom-content .fa-regular {
+  margin-bottom: 2px;
+}
+
+.bottom-content .material-symbols-rounded {
+  font-size: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .activities-page {
+    padding: 20px 16px;
+  }
+
+  .activities-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .activities-header span {
+    font-size: 0.9rem;
+  }
+
+  .activities-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .activity-prev {
+    height: 180px;
+  }
+
+  .activity-card h3 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .activities-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .activity-card .card-content {
+    padding: 16px;
+  }
+
+  .activity-badge {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+  }
+  .meta-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

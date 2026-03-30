@@ -116,6 +116,12 @@ body.login-active {
   border-radius: 16px;
 }
 
+#floatingActivityContainer .floating-iframe {
+  width: 740px;
+  height: 900px;
+  border-radius: 20px;
+}
+
 .overlay.active {
   display: block; /* Show when active */
 }
@@ -1332,6 +1338,11 @@ body.sidebar-open {
     justify-content: center;
     margin-right: 0;
     margin-left: auto;
+  }
+
+  #floatingActivityContainer .floating-iframe {
+    width: 95%;
+    height: 90%;
   }
 }
 

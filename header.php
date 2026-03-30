@@ -9,10 +9,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,300,0,0&icon_names=release_alert,volunteer_activism" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="volunteer.css">
     <link rel="stylesheet" href="information.css">
+    <link rel="stylesheet" href="activities.css">
+
+
 
 
     <meta charset="UTF-8">
@@ -39,6 +42,9 @@
     </div>
     <div class="floating-container" id="floatingSpeciesContainer">
         <iframe src="" class="floating-iframe" id="speciesFrame"></iframe>
+    </div>
+    <div class="floating-container" id="floatingActivityContainer">
+        <iframe src="pages/activity_details.php" class="floating-iframe" id="activityFrame"></iframe>
     </div>
 
     <!-- Navigation Bar -->

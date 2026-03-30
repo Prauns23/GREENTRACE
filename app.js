@@ -183,6 +183,18 @@ function showSpeciesDetail(id) {
   activeContainer = speciesContainer;
 }
 
+function showActivityDetails(activityId) {
+    closeAllFloating();
+    const container = document.getElementById("floatingActivityContainer");
+    const iframe = document.getElementById("activityFrame");
+    iframe.src = "pages/activity_details.php?id=" + activityId;
+    container.classList.add("active");
+    overlay.classList.add("active");
+    body.classList.add("login-active");
+    activeContainer = container;
+}
+
+window.showActivityDetails = showActivityDetails;
 window.showSignUp = showSignUp;
 window.showSignIn = showSignIn;
 window.hideFloating = hideFloating;
