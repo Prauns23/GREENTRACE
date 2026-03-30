@@ -32,7 +32,7 @@ include 'header.php';
 
 <div class="activities-page">
     <div class="activities-header">
-        <h1>Get Involved — Pick an Activity and Show Up</h1>
+        <h1>Get Involved — Pick an Activity and Show Up.</h1>
         <span>Browse upcoming planting events, workshops, and restoration projects. Join an activity to make an impact</span>
     </div>
 
@@ -80,15 +80,13 @@ include 'header.php';
 </div>
 
 <script>
-    // Toast for volunteer success (same as before)
-    <?php if (isset($_SESSION['volunteer_success'])): ?>
+    <?php if (isset($_SESSION['activity_message'])): ?>
         window.addEventListener('DOMContentLoaded', function() {
             if (typeof showToast === 'function') {
-                showToast("<?php echo addslashes($_SESSION['volunteer_success']); ?>");
+                showToast("<?php echo addslashes($_SESSION['activity_message']); ?>");
             }
         });
-    <?php unset($_SESSION['volunteer_success']);
-    endif; ?>
+    <?php unset($_SESSION['activity_message']); endif; ?>
 </script>
 
 <?php include 'footer.php'; ?>

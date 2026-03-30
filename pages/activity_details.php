@@ -14,6 +14,16 @@ if (!$activity) {
     echo '<div class="error">Activity not found.</div>';
     exit;
 }
+
+$already_joined = false;
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $check_join = $conn->prepare("SELECT id FROM volunteer_participations WHERE user_id = ? AND activity_id = ?");
+    $check_join->bind_param("ii", $user_id, $id);
+    $check_join->execute();
+    $already_joined = ($check_join->get_result()->num_rows > 0);
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,7 +40,6 @@ if (!$activity) {
 
 <body>
     <div class="activity-detail-container">
-        <span class="close-btn" onclick="parent.hideFloating()">×</span>
         <!-- Image -->
         <div class="activity-prev">
             <?php if (!empty($activity['image_url'])): ?>
@@ -91,7 +100,7 @@ if (!$activity) {
                 <div class="detail-icon"><span class="material-symbols-rounded">group</span></div>
                 <div class="detail-content">
                     <div class="detail-label">Participants</div>
-                    <div class="detail-value"><?php echo $activity['participants_count']; ?> registered</div>
+                    <div class="detail-value" id="participantCount"><?php echo $activity['participants_count']; ?> registered</div>
                 </div>
             </div>
         </div>
@@ -110,12 +119,54 @@ if (!$activity) {
         <!-- Join button -->
         <div class="bottom-button">
             <button class="close-button" onclick="parent.hideFloating()">Close</button>
-            <button class="join-btn" onclick="alert('Join functionality coming soon!')">
-                Join Activity
+            <button class="join-btn" id="actionBtn" data-joined="<?php echo $already_joined ? 'true' : 'false'; ?>">
+                <?php echo $already_joined ? 'Leave Activity' : 'Join Activity'; ?>
             </button>
         </div>
 
     </div>
+
+    <script>
+        document.getElementById('actionBtn').addEventListener('click', function() {
+            const btn = this;
+            const activityId = <?php echo $activity['id']; ?>;
+            const isJoined = btn.getAttribute('data-joined') === 'true';
+            const url = isJoined ? '../unjoin_activity.php' : '../join_activity.php';
+
+            // Disable button during request
+            btn.disabled = true;
+            btn.textContent = isJoined ? 'Leaving...' : 'Joining...';
+
+            fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'activity_id=' + activityId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Close the modal first
+                        if (typeof parent.hideFloating === 'function') {
+                            parent.hideFloating();
+                        }
+                        // Then reload the parent page
+                        parent.location.reload();
+                    } else {
+                        // Show error message (toast or alert)
+                        if (typeof parent.showToast === 'function') {
+                            parent.showToast(data.error);
+                        } else {
+                            alert(data.error);
+                        }
+                        btn.disabled = false;
+                        btn.textContent = isJoined ? 'Leave Activity' : 'Join Activity';
+                    }
+                });
+        });
+    </script>
+
 </body>
 
 </html>

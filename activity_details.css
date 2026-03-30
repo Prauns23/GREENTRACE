@@ -7,21 +7,12 @@
 body {
   font-family: "Inter", sans-serif;
   max-height: 100%;
-  overflow-y: hidden;
   margin-top: 60px;
+  overflow-y: auto;
 }
 
-.close-btn {
-  font-size: 32px;
-  cursor: pointer;
-  color: #474747;
-  display: block;
-  text-align: right;
-  margin-bottom: 24px;
-  transition: color 0.2s;
-}
-.close-btn:hover {
-  color: #333;
+::-webkit-scrollbar {
+  background: transparent; 
 }
 
 .activity-detail-container {
@@ -162,7 +153,9 @@ h1 {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s ease;
+  transition:
+    background 0.2s,
+    transform 0.2s ease;
   font-family: "Inter", sans-serif;
 }
 
