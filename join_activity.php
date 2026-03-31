@@ -20,7 +20,7 @@ if (!$activity_id) {
     exit;
 }
 
-// Check profile exists
+// Check if user has a volunteer profile
 $check_profile = $conn->prepare("SELECT full_name FROM volunteer_profiles WHERE user_id = ?");
 $check_profile->bind_param("i", $user_id);
 $check_profile->execute();
@@ -32,7 +32,7 @@ if ($profile_result->num_rows === 0) {
 $profile = $profile_result->fetch_assoc();
 $full_name = $profile['full_name'];
 
-// Check if already joined
+// Check if already joined (optional, but prevents duplicate error messages)
 $check_join = $conn->prepare("SELECT id FROM volunteer_participations WHERE user_id = ? AND activity_id = ?");
 $check_join->bind_param("ii", $user_id, $activity_id);
 $check_join->execute();
@@ -44,17 +44,24 @@ if ($check_join->get_result()->num_rows > 0) {
 $conn->begin_transaction();
 
 try {
-    // Insert participation
+    // Atomic update: increment participants_count only if capacity not exceeded
+    $update = $conn->prepare("UPDATE activities SET participants_count = participants_count + 1 WHERE id = ? AND participants_count < capacity");
+    $update->bind_param("i", $activity_id);
+    $update->execute();
+
+    if ($update->affected_rows === 0) {
+        // No rows updated → either activity doesn't exist or capacity reached
+        $conn->rollback();
+        echo json_encode(['error' => 'This activity is full or no longer available.']);
+        exit;
+    }
+
+    // Insert participation record
     $insert = $conn->prepare("INSERT INTO volunteer_participations (user_id, activity_id, full_name) VALUES (?, ?, ?)");
     $insert->bind_param("iis", $user_id, $activity_id, $full_name);
     $insert->execute();
 
-    // Increment participants_count
-    $update = $conn->prepare("UPDATE activities SET participants_count = participants_count + 1 WHERE id = ?");
-    $update->bind_param("i", $activity_id);
-    $update->execute();
-
-    // Get new count
+    // Fetch the new participants count (optional, but used for response)
     $select = $conn->prepare("SELECT participants_count FROM activities WHERE id = ?");
     $select->bind_param("i", $activity_id);
     $select->execute();
@@ -65,7 +72,6 @@ try {
 
     $message = 'Thanks for participating!';
     $_SESSION['activity_message'] = $message;
-    $_SESSION['activity_type'] = 'success';
 
     echo json_encode([
         'success' => true,
@@ -77,4 +83,3 @@ try {
     $conn->rollback();
     echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 }
-?>

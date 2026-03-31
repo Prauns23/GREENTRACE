@@ -15,6 +15,8 @@ if (!$activity) {
     exit;
 }
 
+$is_full = ($activity['participants_count'] >= $activity['capacity']);
+
 $already_joined = false;
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
@@ -100,7 +102,7 @@ if (isset($_SESSION['user_id'])) {
                 <div class="detail-icon"><span class="material-symbols-rounded">group</span></div>
                 <div class="detail-content">
                     <div class="detail-label">Participants</div>
-                    <div class="detail-value" id="participantCount"><?php echo $activity['participants_count']; ?> registered</div>
+                    <div class="detail-value" id="participantCount"><?php echo $activity['participants_count']; ?> / <?php echo $activity['capacity']; ?> registered</div>
                 </div>
             </div>
         </div>
@@ -119,8 +121,12 @@ if (isset($_SESSION['user_id'])) {
         <!-- Join button -->
         <div class="bottom-button">
             <button class="close-button" onclick="parent.hideFloating()">Close</button>
-            <button class="join-btn" id="actionBtn" data-joined="<?php echo $already_joined ? 'true' : 'false'; ?>">
-                <?php echo $already_joined ? 'Leave Activity' : 'Join Activity'; ?>
+            <button class="join-btn" id="actionBtn" data-joined="<?php echo $already_joined ? 'true' : 'false'; ?>" <?php echo $is_full && !$already_joined ? 'disabled style="background:#9e9e9e; cursor:not-allowed;"' : ''; ?>>
+                <?php
+                if ($already_joined) echo 'Leave Activity';
+                elseif ($is_full) echo 'Full';
+                else echo 'Join Activity';
+                ?>
             </button>
         </div>
 
