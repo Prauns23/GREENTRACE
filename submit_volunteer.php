@@ -62,7 +62,7 @@ if ($result->num_rows == 0) {
     $is_new_profile = true;
     $message = 'Volunteer registration successful!';
 } else {
-    // Profile already exists – this shouldn't happen with current flow, but just in case
+    // Profile already exists 
     $message = 'Thank you for volunteering again!';
 }
 

@@ -27,24 +27,33 @@
 
     <!-- floating overlays -->
     <div class="overlay" id="overlay"></div>
-
+    <!-- Sign up Popup -->
     <div class="floating-container" id="floatingSignUpContainer">
         <iframe src="pages/sign-up.php" class="floating-iframe" id="signupFrame"></iframe>
     </div>
+    <!-- Login Popup -->
     <div class="floating-container" id="floatingSignInContainer">
         <iframe src="pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
     </div>
+    <!-- Report popup -->
     <div class="floating-container" id="floatingReportContainer">
         <iframe src="pages/report.php" class="floating-iframe" id="reportFrame"></iframe>
     </div>
+    <!-- Logout -->
     <div class="floating-container" id="floatingLogoutContainer">
         <iframe src="pages/logout.php" class="floating-iframe" id="logoutFrame"></iframe>
     </div>
+    <!-- Tree Species Popup -->
     <div class="floating-container" id="floatingSpeciesContainer">
         <iframe src="" class="floating-iframe" id="speciesFrame"></iframe>
     </div>
+    <!-- Activity Details Modal -->
     <div class="floating-container" id="floatingActivityContainer">
         <iframe src="pages/activity_details.php" class="floating-iframe" id="activityFrame"></iframe>
+    </div>
+    <!-- Add Marker Modal -->
+    <div class="floating-container" id="floatingAddMarkerContainer">
+        <iframe src="modals/add_marker_modal.php" class="floating-iframe" id="addMarkerFrame"></iframe>
     </div>
 
     <!-- Navigation Bar -->

@@ -398,11 +398,6 @@
   color: white;
 }
 
-.archived-marker {
-  background: #9e9e9e;
-  color: white;
-}
-
 /* Popup Styles */
 .popup-content {
   font-family: "Inter", sans-serif;
@@ -512,11 +507,6 @@
   }
 }
 
-.activity-item {
-  animation: fadeIn 0.3s ease;
-}
-
-/* Responsive */
 @media (max-width: 1024px) {
   .forestmap-page {
     padding: 20px;
@@ -525,30 +515,244 @@
   .map-layout {
     flex-direction: column;
     height: auto;
+    min-height: auto;
+    gap: 20px;
   }
 
   .info-panel {
     width: 100%;
-    max-height: 400px;
+    max-height: none;
+    margin: 0;
   }
 
   .map-panel {
     height: 500px;
+    min-height: 400px;
+    width: 100%;
+  }
+
+  #forestMap {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+  }
+
+  /* Recent Activity - make it columned (vertical stack) */
+  .recent-activity {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .activity-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
   }
 }
 
 @media (max-width: 768px) {
+  .forestmap-page {
+    padding: 16px;
+  }
+
+  .forestmap-header h1 {
+    font-size: 1.5rem;
+  }
+
   .stats-cards {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-card i {
+    display: none;
+  }
+
+  .stat-number {
+    font-size: 20px;
+  }
+
+  .stat-label {
+    font-size: 12px;
   }
 
   .filter-buttons {
     justify-content: center;
+    gap: 8px;
+  }
+
+  .filter-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .map-panel {
+    height: 400px;
+    min-height: 350px;
+  }
+
+  #forestMAp {
+    min-height: 350px;
+  }
+
+  .info-header h3 {
+    font-size: 1rem;
+  }
+
+  .recent-activity {
+    max-width: 100%;
+  }
+
+  .activity-item {
+    padding: 8px;
+  }
+
+  .activity-name {
+    font-size: 12px;
+  }
+
+  .activity-location {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .map-control-btn i {
+    font-size: 16px;
   }
 }
 
 @media (max-width: 480px) {
+  .forestmap-page {
+    padding: 12px;
+  }
+
+  .forestmap-header {
+    margin-bottom: 20px;
+  }
+
+  .forestmap-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .forestmap-header p {
+    font-size: 0.75rem;
+  }
+
+  .search-bar input {
+    padding: 10px 12px 10px 36px;
+    font-size: 13px;
+  }
+
+  .search-bar i {
+    font-size: 14px;
+    left: 12px;
+  }
+
+  .stats-cards {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .stat-card {
+    padding: 8px;
+  }
+
+  .stat-card i {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+
+  .stat-number {
+    font-size: 18px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .filter-buttons {
+    gap: 6px;
+  }
+
+  .filter-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+  }
+
+  .map-panel {
+    height: 350px;
+    min-height: 300px;
+  }
+
+  #forestMap {
+    min-height: 300px;
+  }
+
+  .map-controls {
+    bottom: 10px;
+    right: 10px;
+    gap: 6px;
+  }
+
+  .map-control-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .map-control-btn i {
+    font-size: 14px;
+  }
+
+  .popup-content h4 {
+    font-size: 12px;
+  }
+
+  .popup-content p {
+    font-size: 10px;
+  }
+
+  .popup-content button {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .map-layout {
+    flex-direction: row;
+    height: auto;
+  }
+
+  .info-panel {
+    width: 280px;
+    max-height: 450px;
+    overflow-y: auto;
+  }
+
+  .map-panel {
+    height: 450px;
+    flex: 1;
+  }
+
   .stats-cards {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
 }

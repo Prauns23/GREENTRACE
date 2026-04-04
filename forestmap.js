@@ -283,9 +283,27 @@ window.zoomOut = function() {
     if (map) map.zoomOut();
 };
 
-// Add new marker (for forest areas)
+
+// Add new marker (opens modal)
 window.addNewMarker = function() {
-    alert('Add new forest area functionality will be implemented soon!');
+    closeAllFloating();
+    const container = document.getElementById("floatingAddMarkerContainer");
+    const iframe = document.getElementById("addMarkerFrame");
+    if (iframe) {
+        iframe.src = "modals/add_marker_modal.php";
+    }
+    if (container) {
+        container.classList.add("active");
+        if (typeof overlay !== 'undefined' && overlay) {
+            overlay.classList.add("active");
+        }
+        if (typeof body !== 'undefined' && body) {
+            body.classList.add("login-active");
+        }
+        if (typeof activeContainer !== 'undefined') {
+            activeContainer = container;
+        }
+    }
 };
 
 // Close modal

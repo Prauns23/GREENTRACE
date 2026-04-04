@@ -85,7 +85,7 @@
                     <h3>2D Mapping and GPS</h3>
                     <p>Displays GPS-tagged planting sites and reported areas on an interactive map. Allows filtering
                         by species, project, or planting date for monitoring and planning.</p>
-                    <button class="explore">
+                    <button class="explore" onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='forestmap.php'" : "showLogin()"; ?>">
                         Explore
                         <img src="components/icons/double-arrow.svg" alt="">
                     </button>
@@ -119,7 +119,7 @@
                     <h3>Community Reports</h3>
                     <p>Enables administrators to review environmental reports (e.g., illegal logging, forest damage)
                         submitted by users, including GPS location and photo evidence.</p>
-                    <button class="explore">
+                    <button class="explore" onclick="<?php echo isset($_SESSION['first_name']) ? 'showReport()' : 'showSignUp()'; ?>">
                         Explore
                         <img src="components/icons/double-arrow.svg" alt="">
                     </button>
@@ -136,7 +136,7 @@
                     <h3>Educational Information Pages</h3>
                     <p>Provides informative content about forest conservation, tree growth cycles, native vs
                         introduced species, and sustainable reforestation practices.</p>
-                    <button class="explore">
+                    <button class="explore" onclick="window.location.href='information.php'">
                         Explore
                         <img src="components/icons/double-arrow.svg" alt="">
                     </button>
@@ -167,7 +167,7 @@
                     <p class="fourth-description">Join thousands of volunteers and organizations working together to
                         restore the Philippines' forests and create a sustainable future for generations to come.</p>
                     <div class="fourth-buttons">
-                        <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='volunteer.php'" : "showLogin()"; ?>"  class="btn-primary">Start Volunteering <img src="components/icons/arrow-forward-white (2).svg" alt=""></button>
+                        <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='volunteer.php'" : "showLogin()"; ?>" class="btn-primary">Start Volunteering <img src="components/icons/arrow-forward-white (2).svg" alt=""></button>
                         <button class="btn-secondary">Learn More</button>
                     </div>
                 </div>

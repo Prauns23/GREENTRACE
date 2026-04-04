@@ -70,7 +70,6 @@ while ($row = $reports_result->fetch_assoc()) {
                     <button class="filter-btn active" data-filter="all">All</button>
                     <button class="filter-btn" data-filter="reports">Reports</button>
                     <button class="filter-btn" data-filter="forests">Reforestation Areas</button>
-                    <button class="filter-btn" data-filter="archived">Archived</button>
                 </div>
             </div>
             <div class="info-header">
