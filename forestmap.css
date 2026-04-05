@@ -537,24 +537,9 @@
     min-height: 400px;
   }
 
-  /* Recent Activity - make it columned (vertical stack) */
   .recent-activity {
+    grid-template-columns: repeat(1, 1fr);
     width: 100%;
-    padding: 16px;
-  }
-
-  .activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .activity-item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px;
   }
 }
 

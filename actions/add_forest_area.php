@@ -49,7 +49,7 @@ if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) 
     exit;
 }
 
-// Insert into database 
+// Insert into database 000
 $stmt = $conn->prepare("INSERT INTO forest_areas (name, location_name, latitude, longitude, date_established, status, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("ssddsss", $name, $location_name, $latitude, $longitude, $date_established, $status, $description);
 
