@@ -55,6 +55,12 @@
     <div class="floating-container" id="floatingAddMarkerContainer">
         <iframe src="modals/add_marker_modal.php" class="floating-iframe" id="addMarkerFrame"></iframe>
     </div>
+    <div class="floating-container" id="floatingEditForestContainer">
+        <div class="floating-overlay" onclick="hideFloating()"></div>
+        <div class="floating-content">
+            <iframe id="editForestFrame" class="floating-iframe" src="" frameborder="0"></iframe>
+        </div>
+    </div>
 
     <!-- Navigation Bar -->
     <div class="navigation">

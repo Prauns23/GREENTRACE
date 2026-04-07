@@ -14,7 +14,7 @@
 <body>
     <div class="modal-container">
         <div class="modal-header">
-            <h2>Edit Forest Area</h2>
+            <h2>Add Forest Area</h2>
             <p>Customize your marker details below</p>
         </div>
         <div class="modal-body">

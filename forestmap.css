@@ -61,7 +61,6 @@
 .search-bar input:focus {
   outline: none;
   border-color: #2e7d32;
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
 }
 
 .filter-buttons {
@@ -131,15 +130,15 @@
 /* Stats Cards */
 .stats-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  padding: 20px;
+  padding: 10px 0;
 }
 
 .stat-card {
   background: #f8f9fa;
   border-radius: 12px;
-  padding: 12px;
+  padding: 12px 25px;
   text-align: center;
 }
 
@@ -286,7 +285,7 @@
 
 .activity-status {
   font-size: 11px;
-  padding: 2px 8px;
+  padding: 4px 8px;
   border-radius: 12px;
 }
 
@@ -296,8 +295,59 @@
 }
 
 .activity-status.pending {
+  background: #e8f5e9;
+  color: #3fa18c;
+}
+
+.activity-status.reviewed {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.activity-status.ongoing {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+/* Status Badge Styles */
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.status-pending {
   background: #fff3e0;
   color: #f57c00;
+}
+
+.status-reviewed {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-resolved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-dismissed {
+  background: #eeeeee;
+  color: #757575;
+}
+
+/* Restore Button */
+.restore-btn {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.restore-btn:hover {
+  background: #1976d2;
+  color: white;
 }
 
 /* Right Panel - Map */
@@ -320,7 +370,7 @@
   position: absolute;
   bottom: 20px;
   right: 20px;
-  z-index: 1000;
+  z-index: 500;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -400,35 +450,104 @@
 
 /* Popup Styles */
 .popup-content {
+  min-width: 200px;
   font-family: "Inter", sans-serif;
 }
 
 .popup-content h4 {
-  margin: 0 0 5px 0;
-  font-size: 14px;
+  font-size: 1rem;
+  
+}
+.popup-details-link {
+  margin: 10px 0;
+}
+
+.view-details {
+  color: #2e7d32;
+  cursor: pointer;
+  font-size: 13px;
   font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
 
-.popup-content p {
-  margin: 5px 0;
+.view-details:hover {
+  color: #1b5e20;
+  font-size: 14px;
+}
+
+.popup-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.leaflet-popup-close-button {
+  margin-right: 8px;
+  margin-top: 6px;
+}
+
+.leaflet-popup-close-button span {
+  font-size: 18px;
+}
+.popup-buttons button {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
   font-size: 12px;
-  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.popup-content button {
-  margin-top: 8px;
-  padding: 4px 12px;
+.edit-btn {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.edit-btn:hover {
   background: #2e7d32;
   color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: "Inter", sans-serif;
 }
 
-.popup-content button:hover {
-  background: #1b5e20;
+.delete-btn {
+  background: #ffebee;
+  color: #e53935;
+}
+
+.delete-btn:hover {
+  background: #e53935;
+  color: white;
+}
+
+.archive-btn {
+  background: #f3f3f3;
+  color: #7c7c7c;
+}
+
+.archive-btn:hover {
+  background: #696969;
+  color: white;
+}
+
+/* Ensure buttons in popup are clickable */
+.leaflet-popup-content {
+  min-width: 220px;
+}
+
+.leaflet-popup-content-wrapper {
+  box-shadow: none;
+  border: 1px solid #c7c7c7;
+}
+
+.leaflet-popup-content button {
+  pointer-events: auto;
 }
 
 /* Modal */

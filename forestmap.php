@@ -93,11 +93,7 @@ while ($row = $reports_result->fetch_assoc()) {
                     <div class="stat-number" id="activeReports">0</div>
                     <div class="stat-label">Active Reports</div>
                 </div>
-                <div class="stat-card">
-                    <i class="fas fa-archive"></i>
-                    <div class="stat-number" id="archivedCount">0</div>
-                    <div class="stat-label">Archived</div>
-                </div>
+
             </div>
 
             <!-- Legend -->
