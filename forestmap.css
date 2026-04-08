@@ -160,6 +160,7 @@
 }
 
 /* Legend */
+
 /* .legend-section {
     padding: 16px 20px;
     border-bottom: 1px solid #f0f0f0;
@@ -296,7 +297,7 @@
 
 .activity-status.pending {
   background: #e8f5e9;
-  color: #3fa18c;
+  color: #2e7d32;
 }
 
 .activity-status.reviewed {
@@ -312,6 +313,11 @@
 .activity-status.ongoing {
   background: #e3f2fd;
   color: #1976d2;
+}
+
+.activity-status.archived {
+  background: #f1f1f1;
+  color: #666;
 }
 
 /* Status Badge Styles */

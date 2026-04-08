@@ -71,7 +71,7 @@ function addMarkers() {
 
       let shouldShow = false;
       if (currentFilter === "all") shouldShow = !isArchived;
-      else if (currentFilter === "forests") shouldShow = true;
+      else if (currentFilter === "forests") shouldShow = !isArchived;
       else if (currentFilter === "reports") shouldShow = false;
       else if (currentFilter === "archived") shouldShow = isArchived;
 
@@ -86,25 +86,70 @@ function addMarkers() {
         // Create unique ID for this marker's popup content
         const markerId = `forest_${area.id}`;
 
+        // marker.bindPopup(`
+        //   <div class="popup-content" id="popup-${markerId}">
+        //     <h4>${escapeHtml(area.name)}</h4>
+        //     <p>${escapeHtml(area.location_name)}</p>
+        //     <p><strong>Established:</strong> ${area.date_established || "N/A"}</p>
+        //     <p>${area.latitude}, ${area.longitude}</p>
+        //     <div class="popup-details-link">
+        //       <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>
+        //     </div>
+        //     <div class="popup-buttons">
+        //       <button class="edit-btn" onclick="editForestArea(${area.id})">
+        //         <i class="fa-regular fa-pen-to-square"></i> Edit
+        //       </button>
+        //       <button class="archive-btn" onclick="archiveForestArea(${area.id})">
+        //         <i class="fas fa-archive"></i> Archive
+        //       </button>
+        //       <button class="delete-btn" onclick="deleteForestArea(${area.id})">
+        //         <i class="fa-solid fa-trash"></i> Delete
+        //       </button>
+        //     </div>
+        //   </div>
+        // `);
+
+        // Conditional buttons for forest areas
+        let forestButtons = "";
+        if (isArchived) {
+          // Archived forest: Show Restore button (no Edit button)
+          forestButtons = `
+        <button class="restore-btn" onclick="restoreForestArea(${area.id})">
+            <i class="fas fa-undo-alt"></i> Restore
+        </button>
+        <button class="delete-btn" onclick="deleteForestArea(${area.id})">
+            <i class="fa-solid fa-trash"></i> Delete
+        </button>
+    `;
+        } else {
+          // Active forest: Show Edit and Archive buttons
+          forestButtons = `
+        <button class="edit-btn" onclick="editForestArea(${area.id})">
+            <i class="fa-regular fa-pen-to-square"></i> Edit
+        </button>
+        <button class="archive-btn" onclick="archiveForestArea(${area.id})">
+            <i class="fas fa-archive"></i> Archive
+        </button>
+        <button class="delete-btn" onclick="deleteForestArea(${area.id})">
+            <i class="fa-solid fa-trash"></i> Delete
+        </button>
+    `;
+        }
+
         marker.bindPopup(`
-          <div class="popup-content" id="popup-${markerId}">
-            <h4>${escapeHtml(area.name)}</h4>
-            <p>${escapeHtml(area.location_name)}</p>
-            <p><strong>Established:</strong> ${area.date_established || "N/A"}</p>
-            <p>${area.latitude}, ${area.longitude}</p>
-            <div class="popup-details-link">
-              <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>
-            </div>
-            <div class="popup-buttons">
-              <button class="edit-btn" onclick="editForestArea(${area.id})">
-                <i class="fa-regular fa-pen-to-square"></i> Edit
-              </button>
-              <button class="delete-btn" onclick="deleteForestArea(${area.id})">
-                <i class="fa-solid fa-trash"></i> Delete
-              </button>
-            </div>
-          </div>
-        `);
+  <div class="popup-content" id="popup-${markerId}">
+    <h4>${escapeHtml(area.name)}</h4>
+    <p>${escapeHtml(area.location_name)}</p>
+    <p><strong>Established:</strong> ${area.date_established || "N/A"}</p>
+    <p>${area.latitude}, ${area.longitude}</p>
+    <div class="popup-details-link">
+      <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>
+    </div>
+    <div class="popup-buttons">
+      ${forestButtons}
+    </div>
+  </div>
+`);
 
         marker.itemData = { ...area, type: "forest" };
         markers.push(marker);
@@ -142,7 +187,7 @@ function addMarkers() {
         const marker = L.marker([lat, lng], { icon }).addTo(map);
 
         // Conditional buttons: Restore for archived, Archive for non-archived
-        const popupButtons = isArchived 
+        const popupButtons = isArchived
           ? `<button class="restore-btn" onclick="restoreReport(${report.id})">
                  <i class="fas fa-undo-alt"></i> Restore
              </button>
@@ -361,6 +406,62 @@ window.editForestArea = function (id) {
   }
 };
 
+// Archive Forest Area
+window.archiveForestArea = function (id) {
+  if (confirm("Archive this forest area?")) {
+    fetch("actions/archive_forest.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "id=" + id,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof showToast === "function") {
+            showToast("Forest area archived successfully");
+          } else {
+            alert("Forest area archived successfully!");
+          }
+          location.reload();
+        } else {
+          alert(data.error || "Failed to archive forest area.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+      });
+  }
+};
+
+// Restore Forest Area
+window.restoreForestArea = function (id) {
+  if (confirm("Restore this forest area? It will reappear on the main map.")) {
+    fetch("actions/restore_forest.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "id=" + id,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof showToast === "function") {
+            showToast("Forest area restored successfully");
+          } else {
+            alert("Forest area restored successfully!");
+          }
+          location.reload();
+        } else {
+          alert(data.error || "Failed to restore forest area.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+      });
+  }
+};
+
 // Delete Forest Area
 window.deleteForestArea = function (id) {
   if (
@@ -395,7 +496,7 @@ window.deleteForestArea = function (id) {
   }
 };
 
-// Archive Report (soft archive)
+// Archive Report
 window.archiveReport = function (reportId) {
   if (
     confirm(
@@ -427,7 +528,7 @@ window.archiveReport = function (reportId) {
   }
 };
 
-// Delete Report (permanent)
+// Delete Report
 window.deleteReport = function (id) {
   if (
     confirm(
@@ -475,7 +576,7 @@ window.deleteReport = function (id) {
   }
 };
 
-// Restore report (set archived = 0)
+// Restore report
 window.restoreReport = function (reportId) {
   if (confirm("Restore this report? It will reappear on the map.")) {
     fetch("actions/restore_report.php", {
