@@ -27,7 +27,7 @@ while ($row = $forest_result->fetch_assoc()) {
 }
 
 // Fetch reports (with user info for non-anonymous)
-$report_query = "SELECT r.*, u.fname, u.lname, u.phone_no FROM reports r LEFT JOIN users_tbl u ON r.user_id = u.id ORDER BY r.created_at DESC";
+$report_query = "SELECT r.*, u.fname, u.lname, u.phone_no, r.archived FROM reports r LEFT JOIN users_tbl u ON r.user_id = u.id ORDER BY r.created_at DESC";
 
 $reports_result = $conn->query($report_query);
 
@@ -70,6 +70,7 @@ while ($row = $reports_result->fetch_assoc()) {
                     <button class="filter-btn active" data-filter="all">All</button>
                     <button class="filter-btn" data-filter="reports">Reports</button>
                     <button class="filter-btn" data-filter="forests">Reforestation Areas</button>
+                    <button class="filter-btn" data-filter="archived">Archived</button>
                 </div>
             </div>
             <div class="info-header">

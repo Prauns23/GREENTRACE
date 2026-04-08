@@ -8,6 +8,7 @@ body {
   font-family: "Inter", sans-serif;
   padding: 0;
   margin: 0;
+  overflow: hidden;
 }
 
 .modal-container {
@@ -101,6 +102,11 @@ body {
   color: #333;
   margin-bottom: 8px;
   display: block;
+}
+
+.map-label .required {
+  font-size: 13px;
+  color: #e53935;
 }
 
 .map-hint {

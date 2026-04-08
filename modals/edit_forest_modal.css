@@ -63,7 +63,7 @@ body {
 
 .form-group label .required {
   color: #e53935;
-  margin-left: 2px;
+  margin-left: 4px;
 }
 
 .form-group input,
@@ -101,6 +101,11 @@ body {
   color: #333;
   margin-bottom: 8px;
   display: block;
+}
+
+.map-label .required{
+  font-size: 13px;
+  color: #e53935;
 }
 
 .map-hint {

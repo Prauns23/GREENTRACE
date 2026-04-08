@@ -68,9 +68,9 @@ function addMarkers() {
   if (forestAreas && forestAreas.length > 0) {
     forestAreas.forEach((area) => {
       const isArchived = area.status === "archived";
-      
+
       let shouldShow = false;
-      if (currentFilter === "all") shouldShow = true;
+      if (currentFilter === "all") shouldShow = !isArchived;
       else if (currentFilter === "forests") shouldShow = true;
       else if (currentFilter === "reports") shouldShow = false;
       else if (currentFilter === "archived") shouldShow = isArchived;
@@ -85,12 +85,13 @@ function addMarkers() {
 
         // Create unique ID for this marker's popup content
         const markerId = `forest_${area.id}`;
-        
+
         marker.bindPopup(`
           <div class="popup-content" id="popup-${markerId}">
             <h4>${escapeHtml(area.name)}</h4>
             <p>${escapeHtml(area.location_name)}</p>
             <p><strong>Established:</strong> ${area.date_established || "N/A"}</p>
+            <p>${area.latitude}, ${area.longitude}</p>
             <div class="popup-details-link">
               <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>
             </div>
@@ -117,21 +118,43 @@ function addMarkers() {
   // Process reports
   if (reports && reports.length > 0) {
     reports.forEach((report) => {
-      const isResolved = report.status === "resolved" || report.status === "dismissed";
-      
+      const isArchived = report.archived == 1; // use the archived flag
+      const isResolvedOrDismissed =
+        report.status === "resolved" || report.status === "dismissed";
+
       let shouldShow = false;
-      if (currentFilter === "all") shouldShow = true;
-      else if (currentFilter === "reports") shouldShow = !isResolved;
-      else if (currentFilter === "forests") shouldShow = false;
-      else if (currentFilter === "archived") shouldShow = isResolved;
+      if (currentFilter === "all") {
+        shouldShow = !isArchived;
+      } else if (currentFilter === "reports") {
+        shouldShow = !isArchived;
+      } else if (currentFilter === "forests") {
+        shouldShow = false;
+      } else if (currentFilter === "archived") {
+        shouldShow = isArchived;
+      }
 
       // Validate coordinates
       const lat = parseFloat(report.latitude);
       const lng = parseFloat(report.longitude);
 
       if (shouldShow && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-        const icon = getMarkerIcon("report", report.status, isResolved);
+        const icon = getMarkerIcon("report", report.status, isArchived);
         const marker = L.marker([lat, lng], { icon }).addTo(map);
+
+        // Conditional buttons: Restore for archived, Archive for non-archived
+        const popupButtons = isArchived 
+          ? `<button class="restore-btn" onclick="restoreReport(${report.id})">
+                 <i class="fas fa-undo-alt"></i> Restore
+             </button>
+             <button class="delete-btn" onclick="deleteReport(${report.id})">
+                 <i class="fa-solid fa-trash"></i> Delete
+             </button>`
+          : `<button class="archive-btn" onclick="archiveReport(${report.id})">
+                 <i class="fas fa-archive"></i> Archive
+             </button>
+             <button class="delete-btn" onclick="deleteReport(${report.id})">
+                 <i class="fa-solid fa-trash"></i> Delete
+             </button>`;
 
         marker.bindPopup(`
           <div class="popup-content">
@@ -143,12 +166,7 @@ function addMarkers() {
               <span class="view-details" onclick="showReportDetails(${report.id})">View Details</span>
             </div>
             <div class="popup-buttons">
-              <button class="archive-btn" onclick="archiveReport(${report.id})">
-                <i class="fas fa-archive"></i> Archive
-              </button>
-              <button class="delete-btn" onclick="deleteReport(${report.id})">
-                <i class="fa-solid fa-trash"></i> Delete
-              </button>
+              ${popupButtons}
             </div>
           </div>
         `);
@@ -198,66 +216,71 @@ function updateStats() {
 // Update recent activity list
 function updateRecentActivity() {
   // All users viewing this page are admins, so show ALL items
-  const forestItems = forestAreas ? forestAreas.map((f) => ({
-    id: f.id,
-    name: f.name,
-    locationName: f.location_name,
-    date: f.date_established || f.created_at,
-    status: f.status === 'archived' ? 'archived' : (f.status || 'active'),
-    type: "forest",
-    description: f.description,
-    isArchived: f.status === 'archived'
-  })) : [];
-  
-  const reportItems = reports ? reports.map((r) => ({
-    id: r.id,
-    name: r.issue_type,
-    locationName: r.location,
-    date: r.created_at,
-    status: r.status,
-    type: "report",
-    description: r.description,
-    isArchived: (r.status === 'resolved' || r.status === 'dismissed')
-  })) : [];
+  const forestItems = forestAreas
+    ? forestAreas.map((f) => ({
+        id: f.id,
+        name: f.name,
+        locationName: f.location_name,
+        date: f.date_established || f.created_at,
+        status: f.status === "archived" ? "archived" : f.status || "active",
+        type: "forest",
+        description: f.description,
+        isArchived: f.status === "archived",
+      }))
+    : [];
+
+  const reportItems = reports
+    ? reports.map((r) => ({
+        id: r.id,
+        name: r.issue_type,
+        locationName: r.location,
+        date: r.created_at,
+        status: r.status,
+        type: "report",
+        description: r.description,
+        isArchived: r.archived == 1,
+      }))
+    : [];
 
   const allItems = [...forestItems, ...reportItems];
   const recentItems = allItems
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 10); // Show up to 10 most recent items
-  
+
   const activityList = document.getElementById("activityList");
   if (activityList) {
     if (recentItems.length === 0) {
-      activityList.innerHTML = '<div class="no-activity">No recent activity</div>';
+      activityList.innerHTML =
+        '<div class="no-activity">No recent activity</div>';
       return;
     }
-    
+
     activityList.innerHTML = recentItems
       .map((item) => {
         // Determine status display
         let statusClass = item.status;
-        let statusIcon = '';
+        let statusIcon = "";
         let statusText = item.status;
-        
-        if (item.type === 'forest') {
-          if (item.status === 'archived') {
+
+        if (item.type === "forest") {
+          if (item.status === "archived") {
             statusIcon = '<i class="fas fa-archive"></i> ';
-            statusClass = 'archived';
+            statusClass = "archived";
           } else {
             statusIcon = '<i class="fas fa-tree"></i> ';
           }
         } else {
-          if (item.status === 'dismissed' || item.status === 'resolved') {
+          if (item.status === "dismissed" || item.status === "resolved") {
             statusIcon = '<i class="fas fa-check-circle"></i> ';
-            statusClass = 'resolved';
-            statusText = 'Archived';
-          } else if (item.status === 'pending') {
+            statusClass = "resolved";
+            statusText = "Archived";
+          } else if (item.status === "pending") {
             statusIcon = '<i class="fas fa-clock"></i> ';
-          } else if (item.status === 'reviewed') {
+          } else if (item.status === "reviewed") {
             statusIcon = '<i class="fas fa-eye"></i> ';
           }
         }
-        
+
         return `
           <div class="activity-item" onclick="showDetails(${item.id}, '${item.type}')">
             <div class="activity-icon ${item.type}">
@@ -286,7 +309,7 @@ window.showForestDetails = function (id) {
 };
 
 // Show report details
-window.showReportDetails = function(id) {
+window.showReportDetails = function (id) {
   closeAllFloating();
   const container = document.getElementById("floatingReportDetailsContainer");
   const iframe = document.getElementById("reportDetailsFrame");
@@ -304,8 +327,8 @@ window.showReportDetails = function(id) {
     if (typeof activeContainer !== "undefined") {
       activeContainer = container;
     }
-  } 
-}
+  }
+};
 
 // Show details based on type
 window.showDetails = function (id, type) {
@@ -317,147 +340,166 @@ window.showDetails = function (id, type) {
 };
 
 // Edit Forest Area
-window.editForestArea = function(id) {
-    closeAllFloating();
-    const container = document.getElementById("floatingEditForestContainer");
-    const iframe = document.getElementById("editForestFrame");
-    if (iframe) {
-        iframe.src = "modals/edit_forest_modal.php?id=" + id;
+window.editForestArea = function (id) {
+  closeAllFloating();
+  const container = document.getElementById("floatingEditForestContainer");
+  const iframe = document.getElementById("editForestFrame");
+  if (iframe) {
+    iframe.src = "modals/edit_forest_modal.php?id=" + id;
+  }
+  if (container) {
+    container.classList.add("active");
+    if (typeof overlay !== "undefined" && overlay) {
+      overlay.classList.add("active");
     }
-    if (container) {
-        container.classList.add("active");
-        if (typeof overlay !== "undefined" && overlay) {
-            overlay.classList.add("active");
-        }
-        if (typeof body !== "undefined" && body) {
-            body.classList.add("login-active");
-        }
-        if (typeof activeContainer !== "undefined") {
-            activeContainer = container;
-        }
+    if (typeof body !== "undefined" && body) {
+      body.classList.add("login-active");
     }
-};
-
-// Delete Forest Area
-window.deleteForestArea = function(id) {
-    if (confirm("Are you sure you want to permanently delete this forest area? This action cannot be undone.")) {
-        // Show loading on button (optional – we'll just use a global indicator)
-        fetch('actions/delete_forest_area.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'id=' + id
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                if (typeof showToast === 'function') {
-                    showToast('Forest area deleted successfully!');
-                } else {
-                    alert('Forest area deleted successfully!');
-                }
-                location.reload();
-            } else {
-                alert(data.error || 'Failed to delete forest area.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        });
+    if (typeof activeContainer !== "undefined") {
+      activeContainer = container;
     }
-};
-
-// Archive Report
-window.archiveReport = function (id) {
-  if (confirm("Archive this report? It will no longer appear in active reports.")) {
-    // Show loading state
-    const btn = event.target.closest('.archive-btn');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Archiving...';
-    }
-
-    fetch('actions/archive_report.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: 'report_id=' + id
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        if (typeof showToast === 'function') {
-          showToast('Report archived successfully');
-        } else {
-          alert('Report archived successfully!');
-        }
-        // Refresh the map and data
-        location.reload();
-      } else {
-        alert(data.error || 'Failed to archive report.');
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-archive"></i> Archive';
-        }
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('An error occurred. Please try again.');
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-archive"></i> Archive';
-      }
-    });
   }
 };
 
-// Delete Report
+// Delete Forest Area
+window.deleteForestArea = function (id) {
+  if (
+    confirm(
+      "Are you sure you want to permanently delete this forest area? This action cannot be undone.",
+    )
+  ) {
+    fetch("actions/delete_forest_area.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "id=" + id,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof showToast === "function") {
+            showToast("Forest area deleted successfully!");
+          } else {
+            alert("Forest area deleted successfully!");
+          }
+          location.reload();
+        } else {
+          alert(data.error || "Failed to delete forest area.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+      });
+  }
+};
+
+// Archive Report (soft archive)
+window.archiveReport = function (reportId) {
+  if (
+    confirm(
+      "Archive this report? It will no longer appear on the map, but will stay in recent activity.",
+    )
+  ) {
+    fetch("actions/archive_report.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "report_id=" + reportId,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof showToast === "function") {
+            showToast("Report archived successfully");
+          } else {
+            alert("Report archived successfully!");
+          }
+          location.reload();
+        } else {
+          alert(data.error || "Failed to archive report.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+      });
+  }
+};
+
+// Delete Report (permanent)
 window.deleteReport = function (id) {
-  if (confirm("Are you sure you want to permanently delete this report? This action cannot be undone.")) {
-    // Show loading state
-    const btn = event.target.closest('.delete-btn');
+  if (
+    confirm(
+      "Are you sure you want to permanently delete this report? This action cannot be undone.",
+    )
+  ) {
+    const btn = event.target.closest(".delete-btn");
     if (btn) {
       btn.disabled = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
     }
-    
-    fetch('actions/delete_report.php', {
-      method: 'POST',
+
+    fetch("actions/delete_report.php", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: 'report_id=' + id
+      body: "report_id=" + id,
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        if (typeof showToast === 'function') {
-          showToast('Report deleted successfully!');
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof showToast === "function") {
+            showToast("Report deleted successfully!");
+          } else {
+            alert("Report deleted successfully!");
+          }
+          location.reload();
         } else {
-          alert('Report deleted successfully!');
+          alert(data.error || "Failed to delete report.");
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete';
+          }
         }
-        // Refresh the map and data
-        location.reload();
-      } else {
-        alert(data.error || 'Failed to delete report.');
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete';
         }
-      }
+      });
+  }
+};
+
+// Restore report (set archived = 0)
+window.restoreReport = function (reportId) {
+  if (confirm("Restore this report? It will reappear on the map.")) {
+    fetch("actions/restore_report.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "report_id=" + reportId,
     })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('An error occurred. Please try again.');
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete';
-      }
-    });
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          if (typeof showToast === "function") {
+            showToast("Report restored successfully");
+          } else {
+            alert("Report restored successfully!");
+          }
+          location.reload();
+        } else {
+          alert(data.error || "Failed to restore report.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred. Please try again.");
+      });
   }
 };
 
@@ -541,14 +583,12 @@ window.closeModal = function () {
 
 // Initialize map
 function initMap() {
-  // Check if map container exists
   const mapContainer = document.getElementById("forestMap");
   if (!mapContainer) {
     console.error("Map container not found");
     return;
   }
 
-  // Default center (Philippines)
   map = L.map("forestMap").setView([14.68, 120.35], 12);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -563,7 +603,6 @@ function initMap() {
 
 // Wait for data and DOM to be ready
 document.addEventListener("DOMContentLoaded", function () {
-  // Get data from PHP
   if (typeof window.forestAreasData !== "undefined") {
     forestAreas = window.forestAreasData;
     console.log("Forest areas loaded:", forestAreas.length);
@@ -578,10 +617,8 @@ document.addEventListener("DOMContentLoaded", function () {
     console.warn("reportsData not found");
   }
 
-  // Initialize map
   initMap();
 
-  // Add event listeners
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
     searchInput.addEventListener("input", searchLocations);

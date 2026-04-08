@@ -32,11 +32,11 @@ $is_logged_in = isset($_SESSION['first_name']);
                         <label>Issue Type <span class="required">*</span></label>
                         <select class="form-select" required>
                             <option value="" disabled selected>Select Issue type</option>
-                            <option value="Illegal-logging">Illegal Logging</option>
-                            <option value="Forest-damage">Forest Damage</option>
+                            <option value="Illegal Logging">Illegal Logging</option>
+                            <option value="Forest Damage">Forest Damage</option>
                             <option value="Wildfire Risk">Wildfire Risk</option>
                             <option value="Wildlife Poaching">Wildlife Poaching</option>
-                            <option value="Pollution">Pollution</option>
+                            <option value="Environmental Pollution">Environmental Pollution</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>
