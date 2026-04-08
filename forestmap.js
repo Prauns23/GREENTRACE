@@ -67,7 +67,7 @@ function addMarkers() {
   // Process forest areas
   if (forestAreas && forestAreas.length > 0) {
     forestAreas.forEach((area) => {
-      const isArchived = area.status === "archived";
+      const isArchived = area.archived == 1; // Use dedicated archived column
 
       let shouldShow = false;
       if (currentFilter === "all") shouldShow = !isArchived;
@@ -86,70 +86,47 @@ function addMarkers() {
         // Create unique ID for this marker's popup content
         const markerId = `forest_${area.id}`;
 
-        // marker.bindPopup(`
-        //   <div class="popup-content" id="popup-${markerId}">
-        //     <h4>${escapeHtml(area.name)}</h4>
-        //     <p>${escapeHtml(area.location_name)}</p>
-        //     <p><strong>Established:</strong> ${area.date_established || "N/A"}</p>
-        //     <p>${area.latitude}, ${area.longitude}</p>
-        //     <div class="popup-details-link">
-        //       <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>
-        //     </div>
-        //     <div class="popup-buttons">
-        //       <button class="edit-btn" onclick="editForestArea(${area.id})">
-        //         <i class="fa-regular fa-pen-to-square"></i> Edit
-        //       </button>
-        //       <button class="archive-btn" onclick="archiveForestArea(${area.id})">
-        //         <i class="fas fa-archive"></i> Archive
-        //       </button>
-        //       <button class="delete-btn" onclick="deleteForestArea(${area.id})">
-        //         <i class="fa-solid fa-trash"></i> Delete
-        //       </button>
-        //     </div>
-        //   </div>
-        // `);
-
         // Conditional buttons for forest areas
         let forestButtons = "";
         if (isArchived) {
           // Archived forest: Show Restore button (no Edit button)
           forestButtons = `
-        <button class="restore-btn" onclick="restoreForestArea(${area.id})">
-            <i class="fas fa-undo-alt"></i> Restore
-        </button>
-        <button class="delete-btn" onclick="deleteForestArea(${area.id})">
-            <i class="fa-solid fa-trash"></i> Delete
-        </button>
-    `;
+            <button class="restore-btn" onclick="restoreForestArea(${area.id})">
+                <i class="fas fa-undo-alt"></i> Restore
+            </button>
+            <button class="delete-btn" onclick="deleteForestArea(${area.id})">
+                <i class="fa-solid fa-trash"></i> Delete
+            </button>
+          `;
         } else {
           // Active forest: Show Edit and Archive buttons
           forestButtons = `
-        <button class="edit-btn" onclick="editForestArea(${area.id})">
-            <i class="fa-regular fa-pen-to-square"></i> Edit
-        </button>
-        <button class="archive-btn" onclick="archiveForestArea(${area.id})">
-            <i class="fas fa-archive"></i> Archive
-        </button>
-        <button class="delete-btn" onclick="deleteForestArea(${area.id})">
-            <i class="fa-solid fa-trash"></i> Delete
-        </button>
-    `;
+            <button class="edit-btn" onclick="editForestArea(${area.id})">
+                <i class="fa-regular fa-pen-to-square"></i> Edit
+            </button>
+            <button class="archive-btn" onclick="archiveForestArea(${area.id})">
+                <i class="fas fa-archive"></i> Archive
+            </button>
+            <button class="delete-btn" onclick="deleteForestArea(${area.id})">
+                <i class="fa-solid fa-trash"></i> Delete
+            </button>
+          `;
         }
 
         marker.bindPopup(`
-  <div class="popup-content" id="popup-${markerId}">
-    <h4>${escapeHtml(area.name)}</h4>
-    <p>${escapeHtml(area.location_name)}</p>
-    <p><strong>Established:</strong> ${area.date_established || "N/A"}</p>
-    <p>${area.latitude}, ${area.longitude}</p>
-    <div class="popup-details-link">
-      <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>
-    </div>
-    <div class="popup-buttons">
-      ${forestButtons}
-    </div>
-  </div>
-`);
+          <div class="popup-content" id="popup-${markerId}">
+            <h4>${escapeHtml(area.name)}</h4>
+            <p>${escapeHtml(area.location_name)}</p>
+            <p><strong>Established:</strong> ${area.date_established || "N/A"}</p>
+            <p>${area.latitude}, ${area.longitude}</p>
+            <div class="popup-details-link">
+              <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>
+            </div>
+            <div class="popup-buttons">
+              ${forestButtons}
+            </div>
+          </div>
+        `);
 
         marker.itemData = { ...area, type: "forest" };
         markers.push(marker);
@@ -163,7 +140,7 @@ function addMarkers() {
   // Process reports
   if (reports && reports.length > 0) {
     reports.forEach((report) => {
-      const isArchived = report.archived == 1; // use the archived flag
+      const isArchived = report.archived == 1;
       const isResolvedOrDismissed =
         report.status === "resolved" || report.status === "dismissed";
 
@@ -219,7 +196,7 @@ function addMarkers() {
         marker.itemData = { ...report, type: "report" };
         markers.push(marker);
         console.log(
-          `Added report marker: ${report.issue_type} at [${lat}, ${lng}]`,
+          `Added report marker: ${report.issue_type} at [${lat}, ${lng}]`
         );
       }
     });
@@ -241,7 +218,7 @@ function addMarkers() {
 // Update statistics
 function updateStats() {
   const activeForests = forestAreas
-    ? forestAreas.filter((f) => f.status !== "archived").length
+    ? forestAreas.filter((f) => f.archived != 1).length
     : 0;
   const activeReports = reports
     ? reports.filter((r) => r.status === "pending" || r.status === "reviewed")
@@ -267,10 +244,10 @@ function updateRecentActivity() {
         name: f.name,
         locationName: f.location_name,
         date: f.date_established || f.created_at,
-        status: f.status === "archived" ? "archived" : f.status || "active",
+        status: f.status, // original status (active, ongoing, completed)
         type: "forest",
         description: f.description,
-        isArchived: f.status === "archived",
+        isArchived: f.archived == 1,
       }))
     : [];
 
@@ -302,27 +279,38 @@ function updateRecentActivity() {
 
     activityList.innerHTML = recentItems
       .map((item) => {
-        // Determine status display
-        let statusClass = item.status;
+        let statusClass = "";
         let statusIcon = "";
-        let statusText = item.status;
+        let statusText = "";
 
         if (item.type === "forest") {
-          if (item.status === "archived") {
+          if (item.isArchived) {
             statusIcon = '<i class="fas fa-archive"></i> ';
             statusClass = "archived";
+            statusText = "Archived";
           } else {
             statusIcon = '<i class="fas fa-tree"></i> ';
+            statusClass = item.status;
+            statusText = item.status.charAt(0).toUpperCase() + item.status.slice(1);
           }
         } else {
-          if (item.status === "dismissed" || item.status === "resolved") {
+          // report
+          if (item.isArchived) {
+            statusIcon = '<i class="fas fa-archive"></i> ';
+            statusClass = "archived";
+            statusText = "Archived";
+          } else if (item.status === "dismissed" || item.status === "resolved") {
             statusIcon = '<i class="fas fa-check-circle"></i> ';
             statusClass = "resolved";
-            statusText = "Archived";
+            statusText = "Resolved";
           } else if (item.status === "pending") {
             statusIcon = '<i class="fas fa-clock"></i> ';
+            statusClass = "pending";
+            statusText = "Pending";
           } else if (item.status === "reviewed") {
             statusIcon = '<i class="fas fa-eye"></i> ';
+            statusClass = "reviewed";
+            statusText = "Reviewed";
           }
         }
 
@@ -348,7 +336,7 @@ window.showForestDetails = function (id) {
   const forest = forestAreas.find((f) => f.id === id);
   if (forest) {
     alert(
-      `🌳 Forest: ${forest.name}\n📍 Location: ${forest.location_name}\n📊 Status: ${forest.status}\n📝 Description: ${forest.description || "No description"}`,
+      `🌳 Forest: ${forest.name}\n📍 Location: ${forest.location_name}\n📊 Status: ${forest.status}\n📝 Description: ${forest.description || "No description"}`
     );
   }
 };
@@ -466,7 +454,7 @@ window.restoreForestArea = function (id) {
 window.deleteForestArea = function (id) {
   if (
     confirm(
-      "Are you sure you want to permanently delete this forest area? This action cannot be undone.",
+      "Are you sure you want to permanently delete this forest area? This action cannot be undone."
     )
   ) {
     fetch("actions/delete_forest_area.php", {
@@ -500,7 +488,7 @@ window.deleteForestArea = function (id) {
 window.archiveReport = function (reportId) {
   if (
     confirm(
-      "Archive this report? It will no longer appear on the map, but will stay in recent activity.",
+      "Archive this report? It will no longer appear on the map, but will stay in recent activity."
     )
   ) {
     fetch("actions/archive_report.php", {
@@ -532,7 +520,7 @@ window.archiveReport = function (reportId) {
 window.deleteReport = function (id) {
   if (
     confirm(
-      "Are you sure you want to permanently delete this report? This action cannot be undone.",
+      "Are you sure you want to permanently delete this report? This action cannot be undone."
     )
   ) {
     const btn = event.target.closest(".delete-btn");
@@ -612,7 +600,7 @@ window.filterMarkers = function (filter) {
     btn.classList.remove("active");
   });
   const activeBtn = document.querySelector(
-    `.filter-btn[data-filter="${filter}"]`,
+    `.filter-btn[data-filter="${filter}"]`
   );
   if (activeBtn) activeBtn.classList.add("active");
 

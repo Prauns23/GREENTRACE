@@ -81,7 +81,6 @@ if (!$forest) {
                         <option value="active" <?php echo $forest['status'] == 'active' ? 'selected' : ''; ?>>Active</option>
                         <option value="ongoing" <?php echo $forest['status'] == 'ongoing' ? 'selected' : ''; ?>>Ongoing</option>
                         <option value="completed" <?php echo $forest['status'] == 'completed' ? 'selected' : ''; ?>>Completed</option>
-                        <option value="archived" <?php echo $forest['status'] == 'archived' ? 'selected' : ''; ?>>Archived</option>
                     </select>
                 </div>
 

@@ -18,7 +18,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 include 'header.php';
 
 // Fetch forest areas
-$forest_query = "SELECT id, name, location_name, latitude, longitude, date_established, status, description FROM forest_areas ORDER BY created_at DESC";
+$forest_query = "SELECT id, name, location_name, latitude, longitude, date_established, status, description, archived FROM forest_areas ORDER BY created_at DESC";
 
 $forest_result = $conn->query($forest_query);
 $forest_areas = [];

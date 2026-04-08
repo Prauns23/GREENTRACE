@@ -19,7 +19,8 @@ if (!$id) {
     exit;
 }
 
-$stmt = $conn->prepare("UPDATE forest_areas SET status = 'archived' WHERE id = ?");
+// Store current status into original_status, then set archived = 1
+$stmt = $conn->prepare("UPDATE forest_areas SET original_status = status, archived = 1 WHERE id = ?");
 $stmt->bind_param("i", $id);
 
 if ($stmt->execute()) {

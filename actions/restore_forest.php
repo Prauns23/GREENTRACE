@@ -19,7 +19,8 @@ if (!$id) {
     exit;
 }
 
-$stmt = $conn->prepare("UPDATE forest_areas SET status = 'active' WHERE id = ?");
+// Restore: set status = original_status, then clear original_status and set archived = 0
+$stmt = $conn->prepare("UPDATE forest_areas SET status = original_status, original_status = NULL, archived = 0 WHERE id = ?");
 $stmt->bind_param("i", $id);
 
 if ($stmt->execute()) {
