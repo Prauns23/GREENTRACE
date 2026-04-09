@@ -55,10 +55,18 @@
     <div class="floating-container" id="floatingAddMarkerContainer">
         <iframe src="modals/add_marker_modal.php" class="floating-iframe" id="addMarkerFrame"></iframe>
     </div>
+    <!-- Edit Forest Marker -->
     <div class="floating-container" id="floatingEditForestContainer">
         <div class="floating-overlay" onclick="hideFloating()"></div>
         <div class="floating-content">
             <iframe id="editForestFrame" class="floating-iframe" src="" frameborder="0"></iframe>
+        </div>
+    </div>
+    <!-- Report Detail Modal -->
+    <div class="floating-container" id="floatingReportDetailsContainer">
+        <div class="floating-overlay" onclick="hideFloating()"></div>
+        <div class="floating-content">
+            <iframe id="reportDetailsFrame" class="floating-iframe" src="" frameborder="0"></iframe>
         </div>
     </div>
 

@@ -196,7 +196,7 @@ function addMarkers() {
         marker.itemData = { ...report, type: "report" };
         markers.push(marker);
         console.log(
-          `Added report marker: ${report.issue_type} at [${lat}, ${lng}]`
+          `Added report marker: ${report.issue_type} at [${lat}, ${lng}]`,
         );
       }
     });
@@ -291,7 +291,8 @@ function updateRecentActivity() {
           } else {
             statusIcon = '<i class="fas fa-tree"></i> ';
             statusClass = item.status;
-            statusText = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+            statusText =
+              item.status.charAt(0).toUpperCase() + item.status.slice(1);
           }
         } else {
           // report
@@ -299,18 +300,34 @@ function updateRecentActivity() {
             statusIcon = '<i class="fas fa-archive"></i> ';
             statusClass = "archived";
             statusText = "Archived";
-          } else if (item.status === "dismissed" || item.status === "resolved") {
-            statusIcon = '<i class="fas fa-check-circle"></i> ';
-            statusClass = "resolved";
-            statusText = "Resolved";
-          } else if (item.status === "pending") {
-            statusIcon = '<i class="fas fa-clock"></i> ';
-            statusClass = "pending";
-            statusText = "Pending";
-          } else if (item.status === "reviewed") {
-            statusIcon = '<i class="fas fa-eye"></i> ';
-            statusClass = "reviewed";
-            statusText = "Reviewed";
+          } else {
+            // Not archived – show actual status
+            switch (item.status) {
+              case "pending":
+                statusIcon = '<i class="fas fa-clock"></i> ';
+                statusClass = "pending";
+                statusText = "Pending";
+                break;
+              case "reviewed":
+                statusIcon = '<i class="fas fa-eye"></i> ';
+                statusClass = "reviewed";
+                statusText = "Reviewed";
+                break;
+              case "resolved":
+                statusIcon = '<i class="fas fa-check-circle"></i> ';
+                statusClass = "resolved";
+                statusText = "Resolved";
+                break;
+              case "dismissed":
+                statusIcon = '<i class="fas fa-times-circle"></i> ';
+                statusClass = "dismissed";
+                statusText = "Dismissed";
+                break;
+              default:
+                statusIcon = "";
+                statusClass = "";
+                statusText = item.status;
+            }
           }
         }
 
@@ -336,7 +353,7 @@ window.showForestDetails = function (id) {
   const forest = forestAreas.find((f) => f.id === id);
   if (forest) {
     alert(
-      `🌳 Forest: ${forest.name}\n📍 Location: ${forest.location_name}\n📊 Status: ${forest.status}\n📝 Description: ${forest.description || "No description"}`
+      `🌳 Forest: ${forest.name}\n📍 Location: ${forest.location_name}\n📊 Status: ${forest.status}\n📝 Description: ${forest.description || "No description"}`,
     );
   }
 };
@@ -347,7 +364,7 @@ window.showReportDetails = function (id) {
   const container = document.getElementById("floatingReportDetailsContainer");
   const iframe = document.getElementById("reportDetailsFrame");
   if (iframe) {
-    iframe.src = "modals/report_details_modal.php?id=" + id;
+    iframe.src = "modals/report_details.php?id=" + id;
   }
   if (container) {
     container.classList.add("active");
@@ -454,7 +471,7 @@ window.restoreForestArea = function (id) {
 window.deleteForestArea = function (id) {
   if (
     confirm(
-      "Are you sure you want to permanently delete this forest area? This action cannot be undone."
+      "Are you sure you want to permanently delete this forest area? This action cannot be undone.",
     )
   ) {
     fetch("actions/delete_forest_area.php", {
@@ -488,7 +505,7 @@ window.deleteForestArea = function (id) {
 window.archiveReport = function (reportId) {
   if (
     confirm(
-      "Archive this report? It will no longer appear on the map, but will stay in recent activity."
+      "Archive this report? It will no longer appear on the map, but will stay in recent activity.",
     )
   ) {
     fetch("actions/archive_report.php", {
@@ -520,7 +537,7 @@ window.archiveReport = function (reportId) {
 window.deleteReport = function (id) {
   if (
     confirm(
-      "Are you sure you want to permanently delete this report? This action cannot be undone."
+      "Are you sure you want to permanently delete this report? This action cannot be undone.",
     )
   ) {
     const btn = event.target.closest(".delete-btn");
@@ -600,7 +617,7 @@ window.filterMarkers = function (filter) {
     btn.classList.remove("active");
   });
   const activeBtn = document.querySelector(
-    `.filter-btn[data-filter="${filter}"]`
+    `.filter-btn[data-filter="${filter}"]`,
   );
   if (activeBtn) activeBtn.classList.add("active");
 

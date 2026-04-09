@@ -310,6 +310,16 @@
   color: #1b5e20;
 }
 
+.activity-status.dismissed {
+  background: #f1f1f1;
+  color: #444;
+}
+
+.activity-status.resolved {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
 .activity-status.ongoing {
   background: #e3f2fd;
   color: #1976d2;
@@ -328,11 +338,6 @@
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
-}
-
-.status-pending {
-  background: #fff3e0;
-  color: #f57c00;
 }
 
 .status-reviewed {
@@ -439,7 +444,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   border: 2px solid white;
   font-size: 14px;
   cursor: pointer;
