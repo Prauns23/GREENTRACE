@@ -237,7 +237,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px;
+  padding: 12px 10px;
   background: #f8f9fa;
   border-radius: 5px;
   cursor: pointer;
@@ -291,7 +291,7 @@
 
 .activity-status {
   font-size: 11px;
-  padding: 4px 8px;
+  padding: 6px 8px;
   border-radius: 12px;
 }
 
@@ -335,14 +335,9 @@
   color: #444;
 }
 
-.activity-status.resolved {
-  background: #e8f5e9;
-  color: #1b5e20;
-}
-
 .activity-status.ongoing {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .activity-status.archived {
@@ -363,11 +358,6 @@
 .status-reviewed {
   background: #e3f2fd;
   color: #1976d2;
-}
-
-.status-resolved {
-  background: #e8f5e9;
-  color: #2e7d32;
 }
 
 .status-dismissed {
@@ -483,6 +473,27 @@
 .report-marker {
   background: #e53935;
   color: white;
+}
+
+
+/* Override all clusters */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: #49b93ed2 !important;
+}
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: #72c96daf !important;
+}
+
+/* Cluster text */
+.marker-cluster span {
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  font-family: Inter, sans-serif;
 }
 
 /* Popup Styles */

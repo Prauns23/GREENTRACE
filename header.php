@@ -69,6 +69,13 @@
             <iframe id="reportDetailsFrame" class="floating-iframe" src="" frameborder="0"></iframe>
         </div>
     </div>
+    <!-- Forest Detail Modal -->
+    <div class="floating-container" id="floatingForestDetailsContainer">
+        <div class="floating-overlay" onclick="hideFloating()"></div>
+        <div class="floating-content">
+            <iframe id="forestDetailsFrame" class="floating-iframe" src="" frameborder="0"></iframe>
+        </div>
+    </div>
 
     <!-- Navigation Bar -->
     <div class="navigation">

@@ -48,6 +48,10 @@ while ($row = $reports_result->fetch_assoc()) {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="forestmap.css">
 
+<!-- Leaflet MarkerCluster CSS (must come after Leaflet CSS) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+
 <div class="forestmap-page">
     <!-- Header -->
     <div class="forestmap-header">
@@ -154,8 +158,10 @@ while ($row = $reports_result->fetch_assoc()) {
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
 <script>
-    // Pass PHP data to JavaScript (use window object for global access)
     window.forestAreasData = <?php echo json_encode($forest_areas); ?>;
     window.reportsData = <?php echo json_encode($reports); ?>;
 </script>
