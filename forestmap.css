@@ -249,6 +249,11 @@
   transform: translateX(4px);
 }
 
+.activity-item.report:hover {
+  background: #ffe5e6;
+  transform: translateX(4px);
+}
+
 .activity-icon {
   width: 32px;
   height: 32px;
@@ -290,6 +295,21 @@
   border-radius: 12px;
 }
 
+.activity-item.report .activity-status.pending {
+  background: #ffe1e1;
+  color: #4d4d4d;
+}
+
+.activity-item.report .activity-status.reviewed {
+  background: #ffe1e1;
+  color: #4d4d4d;
+}
+
+.activity-item.report .activity-status.resolved {
+  background: #f1f1f1;
+  color: #666;
+}
+
 .activity-status.active {
   background: #e8f5e9;
   color: #2e7d32;
@@ -301,8 +321,8 @@
 }
 
 .activity-status.reviewed {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .activity-status.completed {

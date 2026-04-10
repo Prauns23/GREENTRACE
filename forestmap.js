@@ -332,8 +332,8 @@ function updateRecentActivity() {
         }
 
         return `
-          <div class="activity-item" onclick="showDetails(${item.id}, '${item.type}')">
-            <div class="activity-icon ${item.type}">
+         <div class="activity-item ${item.type}" onclick="showDetails(${item.id}, '${item.type}')">
+         <div class="activity-icon ${item.type}">
               <i class="fas ${item.type === "forest" ? "fa-tree" : "fa-exclamation-triangle"}"></i>
             </div>
             <div class="activity-info">
