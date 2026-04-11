@@ -480,12 +480,12 @@
 .marker-cluster-small,
 .marker-cluster-medium,
 .marker-cluster-large {
-  background-color: #49b93ed2 !important;
+  background-color: #4ed442b0 !important;
 }
 .marker-cluster-small div,
 .marker-cluster-medium div,
 .marker-cluster-large div {
-  background-color: #72c96daf !important;
+  background-color: #5fca59d2 !important;
 }
 
 /* Cluster text */
