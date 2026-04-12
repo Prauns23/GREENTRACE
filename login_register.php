@@ -22,6 +22,7 @@ if (isset($_POST['sign-up'])) {
         $stmt = $conn->prepare("INSERT INTO users_tbl (fname, lname, email, phone_no, password, role) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssss", $fname, $lname, $email, $phone, $password, $role);
         $stmt->execute();
+        $_SESSION['register_success'] = "Account created successfully!";
     }
     header("Location: index.php");
     exit();

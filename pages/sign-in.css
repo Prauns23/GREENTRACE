@@ -171,6 +171,23 @@ input::placeholder {
   filter: brightness(0) invert(0);
 }
 
+.forgot-password {
+  padding-top: 15px;
+  display: flex;
+}
+
+.forgot-password label {
+  flex-grow: 1;
+  text-align: end;
+  font-weight: 600;
+}
+
+.forgot-password label:hover {
+  text-decoration: underline;
+  cursor: pointer;
+
+}
+
 .eye-off {
   display: inline; /* Shown by default */
 }

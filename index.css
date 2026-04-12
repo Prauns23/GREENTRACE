@@ -36,6 +36,10 @@ body {
   transform: translateY(0);
 }
 
+.toast.error {
+  background: #d32f2f !important; 
+}
+
 .toast.hidden {
   opacity: 0;
   transform: translateY(-20px);

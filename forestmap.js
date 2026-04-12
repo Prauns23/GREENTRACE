@@ -48,56 +48,56 @@ function getMarkerIcon(type, status, isArchived = false) {
 
 // Add markers to map with clustering + search + filters
 function addMarkers() {
-    if (!map) {
-        console.error("Map not initialized");
-        return;
-    }
+  if (!map) {
+    console.error("Map not initialized");
+    return;
+  }
 
-    if (window.markerCluster) {
-        map.removeLayer(window.markerCluster);
-    }
+  if (window.markerCluster) {
+    map.removeLayer(window.markerCluster);
+  }
 
-    const markerCluster = L.markerClusterGroup({
-        maxClusterRadius: 60,
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false,
-        zoomToBoundsOnClick: true,
-        disableClusteringAtZoom: 18
-    });
+  const markerCluster = L.markerClusterGroup({
+    maxClusterRadius: 60,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    disableClusteringAtZoom: 18,
+  });
 
-    console.log("Forest Areas:", forestAreas);
-    console.log("Reports:", reports);
+  console.log("Forest Areas:", forestAreas);
+  console.log("Reports:", reports);
 
-    // --- Process forest areas ---
-    if (forestAreas && forestAreas.length > 0) {
-        forestAreas.forEach((area) => {
-            const isArchived = area.archived == 1;
+  // --- Process forest areas ---
+  if (forestAreas && forestAreas.length > 0) {
+    forestAreas.forEach((area) => {
+      const isArchived = area.archived == 1;
 
-            // 1) FILTER by archive status
-            let shouldShow = false;
-            if (currentFilter === "all") shouldShow = !isArchived;
-            else if (currentFilter === "forests") shouldShow = !isArchived;
-            else if (currentFilter === "reports") shouldShow = false;
-            else if (currentFilter === "archived") shouldShow = isArchived;
-            if (!shouldShow) return;
+      // 1) FILTER by archive status
+      let shouldShow = false;
+      if (currentFilter === "all") shouldShow = !isArchived;
+      else if (currentFilter === "forests") shouldShow = !isArchived;
+      else if (currentFilter === "reports") shouldShow = false;
+      else if (currentFilter === "archived") shouldShow = isArchived;
+      if (!shouldShow) return;
 
-            // 2) SEARCH filter (case‑insensitive, matches name + location)
-            if (currentSearchTerm !== "") {
-                const searchable = (area.name + " " + area.location_name).toLowerCase();
-                if (!searchable.includes(currentSearchTerm.toLowerCase())) return;
-            }
+      // 2) SEARCH filter (case‑insensitive, matches name + location)
+      if (currentSearchTerm !== "") {
+        const searchable = (area.name + " " + area.location_name).toLowerCase();
+        if (!searchable.includes(currentSearchTerm.toLowerCase())) return;
+      }
 
-            const lat = parseFloat(area.latitude);
-            const lng = parseFloat(area.longitude);
-            if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
+      const lat = parseFloat(area.latitude);
+      const lng = parseFloat(area.longitude);
+      if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
-            const icon = getMarkerIcon("forest", area.status, isArchived);
-            const marker = L.marker([lat, lng], { icon });
-            const markerId = `forest_${area.id}`;
+      const icon = getMarkerIcon("forest", area.status, isArchived);
+      const marker = L.marker([lat, lng], { icon });
+      const markerId = `forest_${area.id}`;
 
-            let forestButtons = "";
-            if (isArchived) {
-                forestButtons = `
+      let forestButtons = "";
+      if (isArchived) {
+        forestButtons = `
                     <button class="restore-btn" onclick="restoreForestArea(${area.id})">
                         <i class="fas fa-undo-alt"></i> Restore
                     </button>
@@ -105,8 +105,8 @@ function addMarkers() {
                         <i class="fa-solid fa-trash"></i> Delete
                     </button>
                 `;
-            } else {
-                forestButtons = `
+      } else {
+        forestButtons = `
                     <button class="edit-btn" onclick="editForestArea(${area.id})">
                         <i class="fa-regular fa-pen-to-square"></i> Edit
                     </button>
@@ -117,9 +117,9 @@ function addMarkers() {
                         <i class="fa-solid fa-trash"></i> Delete
                     </button>
                 `;
-            }
+      }
 
-            marker.bindPopup(`
+      marker.bindPopup(`
                 <div class="popup-content" id="popup-${markerId}">
                     <h4>${escapeHtml(area.name)}</h4>
                     <p>${escapeHtml(area.location_name)}</p>
@@ -134,55 +134,59 @@ function addMarkers() {
                 </div>
             `);
 
-            marker.itemData = { ...area, type: "forest" };
-            markerCluster.addLayer(marker);
-            console.log(`Added forest marker: ${area.name} at [${lat}, ${lng}]`);
-        });
-    } else {
-        console.warn("No forest areas data available");
-    }
+      marker.itemData = { ...area, type: "forest" };
+      markerCluster.addLayer(marker);
+      console.log(`Added forest marker: ${area.name} at [${lat}, ${lng}]`);
+    });
+  } else {
+    console.warn("No forest areas data available");
+  }
 
-    // --- Process reports ---
-    if (reports && reports.length > 0) {
-        reports.forEach((report) => {
-            const isArchived = report.archived == 1;
+  // --- Process reports ---
+  if (reports && reports.length > 0) {
+    reports.forEach((report) => {
+      const isArchived = report.archived == 1;
 
-            // 1) FILTER by archive status
-            let shouldShow = false;
-            if (currentFilter === "all") shouldShow = !isArchived;
-            else if (currentFilter === "reports") shouldShow = !isArchived;
-            else if (currentFilter === "forests") shouldShow = false;
-            else if (currentFilter === "archived") shouldShow = isArchived;
-            if (!shouldShow) return;
+      // 1) FILTER by archive status
+      let shouldShow = false;
+      if (currentFilter === "all") shouldShow = !isArchived;
+      else if (currentFilter === "reports") shouldShow = !isArchived;
+      else if (currentFilter === "forests") shouldShow = false;
+      else if (currentFilter === "archived") shouldShow = isArchived;
+      if (!shouldShow) return;
 
-            // 2) SEARCH filter (matches issue_type + location)
-            if (currentSearchTerm !== "") {
-                const searchable = (report.issue_type + " " + report.location).toLowerCase();
-                if (!searchable.includes(currentSearchTerm.toLowerCase())) return;
-            }
+      // 2) SEARCH filter (matches issue_type + location)
+      if (currentSearchTerm !== "") {
+        const searchable = (
+          report.issue_type +
+          " " +
+          report.location
+        ).toLowerCase();
+        if (!searchable.includes(currentSearchTerm.toLowerCase())) return;
+      }
 
-            const lat = parseFloat(report.latitude);
-            const lng = parseFloat(report.longitude);
-            if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
+      const lat = parseFloat(report.latitude);
+      const lng = parseFloat(report.longitude);
+      if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
-            const icon = getMarkerIcon("report", report.status, isArchived);
-            const marker = L.marker([lat, lng], { icon });
+      const icon = getMarkerIcon("report", report.status, isArchived);
+      const marker = L.marker([lat, lng], { icon });
 
-            const popupButtons = isArchived
-                ? `<button class="restore-btn" onclick="restoreReport(${report.id})">
+      const popupButtons = isArchived
+        ? `<button class="restore-btn" onclick="restoreReport(${report.id})">
                        <i class="fas fa-undo-alt"></i> Restore
                    </button>
                    <button class="delete-btn" onclick="deleteReport(${report.id})">
                        <i class="fa-solid fa-trash"></i> Delete
                    </button>`
-                : `<button class="archive-btn" onclick="archiveReport(${report.id})">
+        : `<button class="archive-btn" onclick="archiveReport(${report.id})">
                        <i class="fas fa-archive"></i> Archive
                    </button>
                    <button class="delete-btn" onclick="deleteReport(${report.id})">
                        <i class="fa-solid fa-trash"></i> Delete
                    </button>`;
 
-            marker.bindPopup(`
+      marker.bindPopup(`
                 <div class="popup-content">
                     <h4>${escapeHtml(report.issue_type)}</h4>
                     <p>${escapeHtml(report.location)}</p>
@@ -197,37 +201,49 @@ function addMarkers() {
                 </div>
             `);
 
-            marker.itemData = { ...report, type: "report" };
-            markerCluster.addLayer(marker);
-            console.log(`Added report marker: ${report.issue_type} at [${lat}, ${lng}]`);
-        });
-    } else {
-        console.warn("No reports data available");
-    }
+      marker.itemData = { ...report, type: "report" };
+      markerCluster.addLayer(marker);
+      console.log(
+        `Added report marker: ${report.issue_type} at [${lat}, ${lng}]`,
+      );
+    });
+  } else {
+    console.warn("No reports data available");
+  }
 
-    map.addLayer(markerCluster);
-    window.markerCluster = markerCluster;
+  map.addLayer(markerCluster);
+  window.markerCluster = markerCluster;
 
-    console.log(`Total markers added to cluster: ${markerCluster.getLayers().length}`);
-    updateStats();
-    updateRecentActivity();
+  console.log(
+    `Total markers added to cluster: ${markerCluster.getLayers().length}`,
+  );
+  updateStats();
+  updateRecentActivity();
 
-    if (markerCluster.getLayers().length > 0) {
-        map.fitBounds(markerCluster.getBounds().pad(0.1));
-    }
+  if (markerCluster.getLayers().length > 0) {
+    map.fitBounds(markerCluster.getBounds().pad(0.1));
+  }
 }
 
 // Update statistics
 function updateStats() {
+  // Active forests: not archived 
   const activeForests = forestAreas
     ? forestAreas.filter((f) => f.archived != 1).length
     : 0;
+
+  // Active reports: not archived AND status pending/reviewed
   const activeReports = reports
-    ? reports.filter((r) => r.status === "pending" || r.status === "reviewed")
-        .length
+    ? reports.filter(
+        (r) =>
+          r.archived != 1 &&
+          (r.status === "pending" || r.status === "reviewed"),
+      ).length
     : 0;
+
   const totalMarkers = activeForests + activeReports;
 
+  // Update DOM elements
   const totalMarkersEl = document.getElementById("totalMarkers");
   const activeForestsEl = document.getElementById("activeForests");
   const activeReportsEl = document.getElementById("activeReports");

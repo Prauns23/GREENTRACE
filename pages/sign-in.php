@@ -7,8 +7,6 @@ $errors = [
 ];
 $activeForm = $_SESSION['active_form'] ?? 'sign-in';
 
-unset($_SESSION['login_error'], $_SESSION['register_error'], $_SESSION['active_form']);
-
 function showError($error)
 {
     return !empty($error) ? "<p class='error-message'>$error</p>" : '';
@@ -51,6 +49,9 @@ function isActiveForm($formName, $activeForm)
                                 <img src="eye-off.svg" alt="Hide" class="eye-icon eye-off">
                                 <img src="eye.svg" alt="Show" class="eye-icon eye-on" style="display: none;">
                             </button>
+                        </div>
+                        <div class="forgot-password">
+                            <label for="">Forgot Password?</label>
                         </div>
                     </div>
                     <button type="submit" name="sign-in" class="login-btn">Login Account</button>

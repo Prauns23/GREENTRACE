@@ -158,12 +158,15 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
-function showToast(message, duration = 3000) {
+function showToast(message, duration = 3000, type = "success") {
   const toast = document.getElementById("toast");
   const toastMessage = document.getElementById("toast-message");
   if (!toast || !toastMessage) return;
   toastMessage.textContent = message;
-  toast.classList.remove("hidden");
+  toast.classList.remove("hidden", "error");
+  if (type === "error") {
+    toast.classList.add("error");
+  }
   setTimeout(() => hideToast(), duration);
 }
 
@@ -184,14 +187,14 @@ function showSpeciesDetail(id) {
 }
 
 function showActivityDetails(activityId) {
-    closeAllFloating();
-    const container = document.getElementById("floatingActivityContainer");
-    const iframe = document.getElementById("activityFrame");
-    iframe.src = "pages/activity_details.php?id=" + activityId;
-    container.classList.add("active");
-    overlay.classList.add("active");
-    body.classList.add("login-active");
-    activeContainer = container;
+  closeAllFloating();
+  const container = document.getElementById("floatingActivityContainer");
+  const iframe = document.getElementById("activityFrame");
+  iframe.src = "pages/activity_details.php?id=" + activityId;
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
 }
 
 window.showActivityDetails = showActivityDetails;
