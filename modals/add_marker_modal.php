@@ -47,7 +47,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="">Date Established</label>
+                    <label for="">Date Started</label>
                     <input type="date" id="dateEstablished" value="<?php echo date('Y-m-d'); ?>">
                 </div>
 

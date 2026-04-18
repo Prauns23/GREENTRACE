@@ -8,17 +8,6 @@ if (!isset($_SESSION['first_name'])) {
     exit();
 }
 
-// Check if volunteer profile exists
-$user_id = $_SESSION['user_id'];
-$check = $conn->prepare("SELECT id FROM volunteer_profiles WHERE user_id = ?");
-$check->bind_param("i", $user_id);
-$check->execute();
-$result = $check->get_result();
-if ($result->num_rows === 0) {
-    header('Location: volunteer.php');
-    exit();
-}
-
 // Fetch upcoming activities
 $today = date('Y-m-d');
 $stmt = $conn->prepare("SELECT * FROM activities WHERE date >= ? ORDER BY date ASC");
@@ -86,7 +75,8 @@ include 'header.php';
                 showToast("<?php echo addslashes($_SESSION['activity_message']); ?>");
             }
         });
-    <?php unset($_SESSION['activity_message']); endif; ?>
+    <?php unset($_SESSION['activity_message']);
+    endif; ?>
 </script>
 
 <?php include 'footer.php'; ?>

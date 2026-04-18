@@ -82,7 +82,7 @@ switch ($forest['status']) {
             <div class="form-group">
                 <label>Date Established</label>
                 <div class="display-value">
-                    <?php echo $forest['date_established'] ? date('F j, Y', strtotime($forest['date_established'])) : 'Not specified'; ?>
+                    <?php echo $forest['date_started'] ? date('F j, Y', strtotime($forest['date_started'])) : 'Not specified'; ?>
                 </div>
             </div>
 

@@ -267,7 +267,6 @@ input::placeholder {
 .create-btn:hover {
   background: #1b5e20;
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(46, 125, 50, 0.2);
 }
 
 /* Sign in link */

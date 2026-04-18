@@ -216,7 +216,6 @@ input::placeholder {
 .login-btn:hover {
   background: #1b5e20;
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.25);
 }
 
 /* Sign in link */

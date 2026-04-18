@@ -123,7 +123,7 @@ function addMarkers() {
                 <div class="popup-content" id="popup-${markerId}">
                     <h4>${escapeHtml(area.name)}</h4>
                     <p>${escapeHtml(area.location_name)}</p>
-                    <p><strong>Established:</strong> ${area.date_established || "N/A"}</p>
+                    <p><strong>Established:</strong> ${area.date_started || "N/A"}</p>
                     <p>${area.latitude}, ${area.longitude}</p>
                     <div class="popup-details-link">
                         <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>
@@ -260,7 +260,7 @@ function updateRecentActivity() {
         id: f.id,
         name: f.name,
         locationName: f.location_name,
-        date: f.date_established || f.created_at,
+        date: f.date_started || f.created_at,
         status: f.status,
         type: "forest",
         description: f.description,

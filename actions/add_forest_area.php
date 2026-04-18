@@ -22,7 +22,7 @@ $name = trim($_POST['name'] ?? '');
 $location_name = trim($_POST['location_name'] ?? '');
 $latitude = isset($_POST['latitude']) ? (float)$_POST['latitude'] : null;
 $longitude = isset($_POST['longitude']) ? (float)$_POST['longitude'] : null;
-$date_established = trim($_POST['date_established'] ?? '');
+$date_started = trim($_POST['date_started'] ?? '');
 $status = trim($_POST['status'] ?? 'active');
 $description = trim($_POST['description'] ?? '');
 
@@ -50,8 +50,8 @@ if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) 
 }
 
 // Insert into database 000
-$stmt = $conn->prepare("INSERT INTO forest_areas (name, location_name, latitude, longitude, date_established, status, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("ssddsss", $name, $location_name, $latitude, $longitude, $date_established, $status, $description);
+$stmt = $conn->prepare("INSERT INTO forest_areas (name, location_name, latitude, longitude, date_started, status, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("ssddsss", $name, $location_name, $latitude, $longitude, $date_started, $status, $description);
 
 if ($stmt->execute()) {
     echo json_encode([

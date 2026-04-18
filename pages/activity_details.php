@@ -2,39 +2,47 @@
 require_once '../init_session.php';
 require_once '../config.php';
 
+// Get activity ID from URL
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+if ($id === 0) {
+    echo '<div class="error">No activity specified. Please go back and try again.</div>';
+    exit;
+}
 
 $stmt = $conn->prepare("SELECT * FROM activities WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
-$result = $stmt->get_result();
-$activity = $result->fetch_assoc();
+$activity = $stmt->get_result()->fetch_assoc();
 
 if (!$activity) {
-    echo '<div class="error">Activity not found.</div>';
+    echo '<div class="error">Activity not found (ID: ' . $id . ').</div>';
     exit;
 }
 
-$is_full = ($activity['participants_count'] >= $activity['capacity']);
-
-$already_joined = false;
+// Get user's latest application status for this activity
+$user_status = null;
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
-    $check_join = $conn->prepare("SELECT id FROM volunteer_participations WHERE user_id = ? AND activity_id = ?");
-    $check_join->bind_param("ii", $user_id, $id);
-    $check_join->execute();
-    $already_joined = ($check_join->get_result()->num_rows > 0);
+    $statusStmt = $conn->prepare("SELECT status FROM volunteer_applications WHERE user_id = ? AND activity_id = ? ORDER BY submitted_at DESC LIMIT 1");
+    $statusStmt->bind_param("ii", $user_id, $id);
+    $statusStmt->execute();
+    $result = $statusStmt->get_result();
+    $app = $result->fetch_assoc();
+    if ($app) {
+        $user_status = $app['status'];
+    }
 }
 
+$is_full = ($activity['participants_count'] >= $activity['capacity']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($activity['title']); ?> - Details</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="../activity_details.css">
@@ -42,15 +50,12 @@ if (isset($_SESSION['user_id'])) {
 
 <body>
     <div class="activity-detail-container">
-        <!-- Image -->
         <div class="activity-prev">
             <?php if (!empty($activity['image_url'])): ?>
-                <img src="../<?php echo htmlspecialchars($activity['image_url']); ?>"
-                    alt="<?php echo htmlspecialchars($activity['title']); ?>">
+                <img src="../<?php echo htmlspecialchars($activity['image_url']); ?>" alt="<?php echo htmlspecialchars($activity['title']); ?>">
             <?php endif; ?>
         </div>
 
-        <!-- Badges -->
         <div class="act-header">
             <h1><?php echo htmlspecialchars($activity['title']); ?></h1>
             <div class="badges-row">
@@ -63,10 +68,8 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </div>
 
-        <!-- Description -->
         <p class="description"><?php echo nl2br(htmlspecialchars($activity['description'])); ?></p>
 
-        <!-- Details grid -->
         <div class="details-grid">
             <div class="detail-item">
                 <div class="detail-icon"><i class="fa-regular fa-calendar"></i></div>
@@ -81,12 +84,8 @@ if (isset($_SESSION['user_id'])) {
                     <div class="detail-content">
                         <div class="detail-label">Time</div>
                         <div class="detail-value">
-                            <?php
-                            echo date('g:i A', strtotime($activity['time_start']));
-                            if (!empty($activity['time_end'])) {
-                                echo ' – ' . date('g:i A', strtotime($activity['time_end']));
-                            }
-                            ?>
+                            <?php echo date('g:i A', strtotime($activity['time_start'])); ?>
+                            <?php if (!empty($activity['time_end'])) echo ' – ' . date('g:i A', strtotime($activity['time_end'])); ?>
                         </div>
                     </div>
                 </div>
@@ -107,7 +106,6 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </div>
 
-        <!-- Meet-up point (full width) -->
         <?php if (!empty($activity['meetup_point'])): ?>
             <div class="meetup-item">
                 <div class="detail-icon"><i class="fa-solid fa-flag-checkered"></i></div>
@@ -118,61 +116,72 @@ if (isset($_SESSION['user_id'])) {
             </div>
         <?php endif; ?>
 
-        <!-- Join button -->
         <div class="bottom-button">
             <button class="close-button" onclick="parent.hideFloating()">Close</button>
-            <button class="join-btn" id="actionBtn" data-joined="<?php echo $already_joined ? 'true' : 'false'; ?>" <?php echo $is_full && !$already_joined ? 'disabled style="background:#9e9e9e; cursor:not-allowed;"' : ''; ?>>
+            <button class="join-btn" id="actionBtn"
+                data-status="<?php echo $user_status; ?>"
+                <?php echo ($user_status === 'pending') ? 'disabled' : ''; ?>>
                 <?php
-                if ($already_joined) echo 'Leave Activity';
-                elseif ($is_full) echo 'Full';
+                if ($user_status === 'pending') echo 'Pending';
+                elseif ($user_status === 'approved') echo 'Leave Activity';
                 else echo 'Join Activity';
                 ?>
             </button>
         </div>
-
     </div>
 
     <script>
-        document.getElementById('actionBtn').addEventListener('click', function() {
-            const btn = this;
-            const activityId = <?php echo $activity['id']; ?>;
-            const isJoined = btn.getAttribute('data-joined') === 'true';
-            const url = isJoined ? '../unjoin_activity.php' : '../join_activity.php';
+        const actionBtn = document.getElementById('actionBtn');
+        const activityId = <?php echo $id; ?>;
+        let userStatus = actionBtn.getAttribute('data-status');
 
-            // Disable button during request
-            btn.disabled = true;
-            btn.textContent = isJoined ? 'Leaving...' : 'Joining...';
+        async function handleJoinLeave() {
+            if (actionBtn.disabled) return;
 
-            fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'activity_id=' + activityId
-                })
-                .then(response => response.json())
-                .then(data => {
+            // Leave (approved → cancel)
+            if (userStatus === 'approved') {
+                if (!confirm('Are you sure you want to leave this activity?')) return;
+                actionBtn.disabled = true;
+                actionBtn.textContent = 'Leaving...';
+                try {
+                    const response = await fetch('../actions/update_application_status.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `activity_id=${activityId}&action=cancel`
+                    });
+                    const data = await response.json();
                     if (data.success) {
-                        // Close the modal first
-                        if (typeof parent.hideFloating === 'function') {
-                            parent.hideFloating();
-                        }
-                        // Then reload the parent page
+                        if (typeof parent.showToast === 'function') parent.showToast('You have left the activity');
+                        parent.hideFloating();
                         parent.location.reload();
                     } else {
-                        // Show error message (toast or alert)
-                        if (typeof parent.showToast === 'function') {
-                            parent.showToast(data.error);
-                        } else {
-                            alert(data.error);
-                        }
-                        btn.disabled = false;
-                        btn.textContent = isJoined ? 'Leave Activity' : 'Join Activity';
+                        alert(data.error);
+                        actionBtn.disabled = false;
+                        actionBtn.textContent = 'Leave Activity';
                     }
-                });
-        });
-    </script>
+                } catch (e) {
+                    alert('An error occurred. Please try again.');
+                    actionBtn.disabled = false;
+                    actionBtn.textContent = 'Leave Activity';
+                }
+                return;
+            }
 
+            // Join (if not pending/approved)
+            if (userStatus !== 'pending' && userStatus !== 'approved') {
+                if (typeof parent.showVolunteerForm === 'function') {
+                    parent.showVolunteerForm(activityId);
+                } else {
+                    console.error('showVolunteerForm not found in parent window');
+                    alert('Application form not available. Please refresh the page and try again.');
+                }
+            }
+        }
+
+        actionBtn.addEventListener('click', handleJoinLeave);
+    </script>
 </body>
 
 </html>

@@ -126,6 +126,11 @@ function showReport() {
 function hideFloating() {
   if (activeContainer) {
     activeContainer.classList.remove("active");
+    // Clear iframe src if this is the volunteer container to prevent state persistence
+    if (activeContainer.id === "floatingVolunteerContainer") {
+      const volunteerFrame = document.getElementById("volunteerFrame");
+      if (volunteerFrame) volunteerFrame.src = "";
+    }
   }
   overlay.classList.remove("active");
   body.classList.remove("login-active");
@@ -136,6 +141,12 @@ function closeAllFloating() {
   if (signUpContainer) signUpContainer.classList.remove("active");
   if (signInContainer) signInContainer.classList.remove("active");
   if (logoutContainer) logoutContainer.classList.remove("active");
+
+  // Close all other floating containers to prevent duplication
+  const allContainers = document.querySelectorAll(".floating-container");
+  allContainers.forEach((container) => {
+    container.classList.remove("active");
+  });
 }
 
 function switchToSignIn() {
@@ -197,6 +208,22 @@ function showActivityDetails(activityId) {
   activeContainer = container;
 }
 
+// Volunteer Registration Modal
+function showVolunteerForm(activityId) {
+  closeAllFloating();
+  const container = document.getElementById("floatingVolunteerContainer");
+  const iframe = document.getElementById("volunteerFrame");
+  if (iframe) {
+    iframe.src = "modals/volunteer.php?activity_id=" + activityId;
+  }
+  if (container) {
+    container.classList.add("active");
+    if (overlay) overlay.classList.add("active");
+    document.body.classList.add("login-active");
+    activeContainer = container;
+  }
+}
+
 window.showActivityDetails = showActivityDetails;
 window.showSignUp = showSignUp;
 window.showSignIn = showSignIn;
@@ -208,3 +235,4 @@ window.showReport = showReport;
 window.showLogin = showSignUp;
 window.hideLogin = hideFloating;
 window.showSpeciesDetail = showSpeciesDetail;
+window.showVolunteerForm = showVolunteerForm;

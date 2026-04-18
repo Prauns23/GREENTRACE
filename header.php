@@ -76,6 +76,13 @@
             <iframe id="forestDetailsFrame" class="floating-iframe" src="" frameborder="0"></iframe>
         </div>
     </div>
+    <!-- Volunteer Modal -->
+     <div class="floating-container" id="floatingVolunteerContainer">
+        <div class="floating-overlay" onclick="hideFloating()"></div>
+        <div class="floating-content">
+            <iframe src="" frameborder="0" id="volunteerFrame" class="floating-iframe" frameborder="0"></iframe>
+        </div>
+     </div>
 
     <!-- Navigation Bar -->
     <div class="navigation">
@@ -108,8 +115,8 @@
                 <?php endif; ?>
                 <li><a href="#"><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
                 <li><a href="information.php"> <i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
-                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'volunteer.php' ? 'active' : ''; ?>">
-                    <a href="volunteer.php"><i class="fa-solid fa-hand-holding-heart"></i><span class="label">Volunteer</span></a>
+                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'activities.php' ? 'active' : ''; ?>">
+                    <a href="activities.php"><i class="fa-solid fa-hand-holding-heart"></i><span class="label">Volunteer</span></a>
                 </li>
             </ul>
         </nav>
