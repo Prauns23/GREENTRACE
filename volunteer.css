@@ -39,7 +39,7 @@ body {
   gap: 12px;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #2e7d32  ;
   margin: 0;
 }
 
@@ -63,19 +63,49 @@ body {
 .icon-column i {
   font-size: 48px;
   color: #2e7d32;
+  margin-right: 18px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block;
+  cursor: pointer;
+}
+
+.icon-column i:hover {
+  filter: brightness(1.2);
+  transform: scale(1.05);
+}
+
+/* Transition effect when changing from regular to solid */
+.icon-column i.fa-solid {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-column i.pulse {
+  animation: heartPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes heartPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .header-column h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
+  color: #2e7d32;
+  margin: 0 0 4px 0;
 }
 
 .header-column p {
   font-size: 14px;
-  color: #666;
-  line-height: 1.5;
+  color: #333;
+  line-height: 1.4;
   margin: 0;
   width: 400px;
 }
@@ -108,6 +138,13 @@ select {
   font-size: 15px;
   font-family: "Inter", sans-serif;
   transition: border-color 0.2s;
+  cursor: text;
+}
+
+input:hover,
+select:hover {
+  border-color: #2e7d32;
+  background-color: #f9f9f9;
 }
 
 input:focus,

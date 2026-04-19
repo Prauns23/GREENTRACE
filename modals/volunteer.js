@@ -1,4 +1,66 @@
-// Drag & drop and preview functionality (mirrors report.js)
+// Heart icon animation on form interaction
+function initHeartAnimation() {
+  const heartIcon = document.querySelector('.icon-column i');
+  const formInputs = document.querySelectorAll('input, select, textarea');
+  
+  console.log('Heart animation initialized');
+  console.log('Heart icon found:', heartIcon);
+  console.log('Heart icon classes:', heartIcon ? heartIcon.className : 'N/A');
+  console.log('Form inputs found:', formInputs.length);
+  
+  let isAnimated = false;
+
+  if (!heartIcon || formInputs.length === 0) {
+    console.warn('Heart icon or form inputs not found');
+    return;
+  }
+
+  formInputs.forEach(input => {
+    input.addEventListener('focus', function() {
+      console.log('Input focused:', this.name);
+      
+      if (!isAnimated && heartIcon) {
+        console.log('Triggering heart animation');
+        console.log('Current classes before change:', heartIcon.className);
+        
+        // Change from regular to solid heart and add pulse
+        if (heartIcon.classList.contains('fa-regular')) {
+          heartIcon.classList.remove('fa-regular');
+          heartIcon.classList.add('fa-solid');
+          console.log('Classes after change:', heartIcon.className);
+        } else {
+          console.log('Heart is not fa-regular, current classes:', heartIcon.className);
+        }
+        
+        // Trigger pulse animation
+        heartIcon.classList.add('pulse');
+        console.log('Pulse class added');
+        
+        // Remove pulse class after animation completes
+        setTimeout(() => {
+          heartIcon.classList.remove('pulse');
+          console.log('Pulse class removed');
+        }, 600);
+        
+        isAnimated = true;
+      }
+    });
+  });
+}
+
+// Initialize heart animation on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOMContentLoaded fired');
+  initHeartAnimation();
+});
+
+// Fallback: Run immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initHeartAnimation);
+} else {
+  console.log('DOM already loaded, initializing heart animation immediately');
+  initHeartAnimation();
+}
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileUpload");
 const previewContainer = document.getElementById("photoPreview");

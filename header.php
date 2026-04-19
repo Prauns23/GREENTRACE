@@ -77,12 +77,12 @@
         </div>
     </div>
     <!-- Volunteer Modal -->
-     <div class="floating-container" id="floatingVolunteerContainer">
+    <div class="floating-container" id="floatingVolunteerContainer">
         <div class="floating-overlay" onclick="hideFloating()"></div>
         <div class="floating-content">
             <iframe src="" frameborder="0" id="volunteerFrame" class="floating-iframe" frameborder="0"></iframe>
         </div>
-     </div>
+    </div>
 
     <!-- Navigation Bar -->
     <div class="navigation">
@@ -109,17 +109,29 @@
                     <a href="index.php"><i class="fa-solid fa-house"></i><span class="label">Home</span></a>
                 </li>
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'forest_map.php' ? 'active' : ''; ?>">
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'forestmap.php' ? 'active' : ''; ?>">
                         <a href="forestmap.php"><i class="fa-solid fa-map"></i><span class="label">Forest Map</span></a>
                     </li>
                 <?php endif; ?>
-                <li><a href="#"><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
-                <li><a href="information.php"> <i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
+                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'pages/ar-camera.php' || basename($_SERVER['PHP_SELF']) == 'ar-camera.php' ? 'active' : ''; ?>"><a href="pages/ar-camera.php"><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
+                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'information.php' ? 'active' : ''; ?>"><a href="information.php"> <i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
                 <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'activities.php' ? 'active' : ''; ?>">
                     <a href="activities.php"><i class="fa-solid fa-hand-holding-heart"></i><span class="label">Volunteer</span></a>
                 </li>
             </ul>
         </nav>
+        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+            <nav class="sidebar-admin">
+                <ul>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin/manage_applications.php' ? 'active' : ''; ?>">
+                        <a href="admin/manage_applications.php">
+                            <i class="fa-solid fa-address-book"></i>
+                            <span class="label">Volunteer Applicants</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        <?php endif ?>
         <div class="sidebar-report">
             <button class="report-activity"
                 onclick="<?php echo isset($_SESSION['first_name']) ? 'showReport()' : 'showSignUp()'; ?>">

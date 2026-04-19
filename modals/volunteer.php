@@ -43,7 +43,7 @@ if ($existing) {
     <div class="modal-header">
         <div class="header-row">
             <div class="icon-column">
-                <i class="fa-solid fa-hand-holding-heart"></i>
+                <i class="fa-regular fa-heart"></i>
             </div>
             <div class="header-column">
                 <h2>Volunteer Application</h2>
