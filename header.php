@@ -1,4 +1,6 @@
-<?php require_once 'init_session.php'; ?>
+<?php require_once __DIR__ . '/init_session.php'; 
+$basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,10 +12,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-    <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="volunteer.css">
-    <link rel="stylesheet" href="information.css">
-    <link rel="stylesheet" href="activities.css">
+    <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>index.css">
+    <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>volunteer.css">
+    <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>information.css">
+    <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>activities.css">
 
 
 
@@ -29,19 +31,19 @@
     <div class="overlay" id="overlay"></div>
     <!-- Sign up Popup -->
     <div class="floating-container" id="floatingSignUpContainer">
-        <iframe src="pages/sign-up.php" class="floating-iframe" id="signupFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>pages/sign-up.php" class="floating-iframe" id="signupFrame"></iframe>
     </div>
     <!-- Login Popup -->
     <div class="floating-container" id="floatingSignInContainer">
-        <iframe src="pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
     </div>
     <!-- Report popup -->
     <div class="floating-container" id="floatingReportContainer">
-        <iframe src="pages/report.php" class="floating-iframe" id="reportFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>pages/report.php" class="floating-iframe" id="reportFrame"></iframe>
     </div>
     <!-- Logout -->
     <div class="floating-container" id="floatingLogoutContainer">
-        <iframe src="pages/logout.php" class="floating-iframe" id="logoutFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>pages/logout.php" class="floating-iframe" id="logoutFrame"></iframe>
     </div>
     <!-- Tree Species Popup -->
     <div class="floating-container" id="floatingSpeciesContainer">
@@ -49,11 +51,11 @@
     </div>
     <!-- Activity Details Modal -->
     <div class="floating-container" id="floatingActivityContainer">
-        <iframe src="pages/activity_details.php" class="floating-iframe" id="activityFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>pages/activity_details.php" class="floating-iframe" id="activityFrame"></iframe>
     </div>
     <!-- Add Marker Modal -->
     <div class="floating-container" id="floatingAddMarkerContainer">
-        <iframe src="modals/add_marker_modal.php" class="floating-iframe" id="addMarkerFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>modals/add_marker_modal.php" class="floating-iframe" id="addMarkerFrame"></iframe>
     </div>
     <!-- Edit Forest Marker -->
     <div class="floating-container" id="floatingEditForestContainer">
@@ -87,13 +89,13 @@
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
-            <img src="components/icons/menu.svg" alt="" class="menu" id="menuIcon">
+            <img src="<?php echo $basePath; ?>components/icons/menu.svg" alt="" class="menu" id="menuIcon">
             <ul class="nav-links">
-                <li><a href="index.php#about-section">About</a></li>
-                <li><a href="index.php#feature-section">Features</a></li>
-                <li><a href="index.php#volunteer-section">Volunteer</a></li>
+                <li><a href="<?php echo $basePath; ?>index.php#about-section">About</a></li>
+                <li><a href="<?php echo $basePath; ?>index.php#feature-section">Features</a></li>
+                <li><a href="<?php echo $basePath; ?>index.php#volunteer-section">Volunteer</a></li>
             </ul>
-            <img src="components/icons/person.svg" alt="" class="profile"
+            <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="" class="profile"
                 onclick="<?php echo isset($_SESSION['first_name']) ? 'showLogout()' : 'showLogin()'; ?>">
         </nav>
     </div>
@@ -101,32 +103,37 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="components/icons/menu.svg" alt="Menu" class="sidebar-menu-icon" id="sidebarToggle">
+            <img src="<?php echo $basePath; ?>components/icons/menu.svg" alt="Menu" class="sidebar-menu-icon" id="sidebarToggle">
         </div>
         <nav class="sidebar-nav">
             <ul>
                 <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">
-                    <a href="index.php"><i class="fa-solid fa-house"></i><span class="label">Home</span></a>
+                    <a href="<?php echo $basePath; ?>index.php"><i class="fa-solid fa-house"></i><span class="label">Home</span></a>
                 </li>
-                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'forestmap.php' ? 'active' : ''; ?>">
-                        <a href="forestmap.php"><i class="fa-solid fa-map"></i><span class="label">Forest Map</span></a>
-                    </li>
-                <?php endif; ?>
-                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'pages/ar-camera.php' || basename($_SERVER['PHP_SELF']) == 'ar-camera.php' ? 'active' : ''; ?>"><a href="pages/ar-camera.php"><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
-                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'information.php' ? 'active' : ''; ?>"><a href="information.php"> <i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
+                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'pages/ar-camera.php' || basename($_SERVER['PHP_SELF']) == 'ar-camera.php' ? 'active' : ''; ?>"><a href=""><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
+                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'information.php' ? 'active' : ''; ?>"><a href="<?php echo $basePath; ?>information.php"> <i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
                 <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'activities.php' ? 'active' : ''; ?>">
-                    <a href="activities.php"><i class="fa-solid fa-hand-holding-heart"></i><span class="label">Volunteer</span></a>
+                    <a href="<?php echo $basePath; ?>activities.php"><i class="fa-solid fa-hand-holding-heart"></i><span class="label">Volunteer</span></a>
                 </li>
             </ul>
         </nav>
         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
             <nav class="sidebar-admin">
                 <ul>
-                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin/manage_applications.php' ? 'active' : ''; ?>">
-                        <a href="admin/manage_applications.php">
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin/application_activity.php' || basename($_SERVER['PHP_SELF']) == 'application_activity.php' ? 'active' : ''; ?>">
+                        <a href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? 'application_activity.php' : 'admin/application_activity.php'; ?>">
                             <i class="fa-solid fa-address-book"></i>
                             <span class="label">Volunteer Applicants</span>
+                        </a>
+                    </li>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'forestmap.php' ? 'active' : ''; ?>">
+                        <a href="<?php echo $basePath; ?>forestmap.php">
+                            <i class="fa-solid fa-map"></i><span class="label">Forest Map</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="">
+                            <i class="fa-solid fa-user-group"></i><span class="label">Users</span>
                         </a>
                     </li>
                 </ul>
@@ -141,7 +148,7 @@
         </div>
         <div class="sidebar-profile">
             <div class="profile-avatar">
-                <img src="components/icons/person.svg" alt="Profile">
+                <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="Profile">
             </div>
             <div class="profile-info">
                 <h3><?php echo isset($_SESSION['first_name']) ? $_SESSION['first_name'] . ' ' . $_SESSION['last_name'] : 'Login Account'; ?></h3>

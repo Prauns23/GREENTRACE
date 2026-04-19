@@ -1,7 +1,7 @@
 </div> <!-- close .page-content -->
 
-<script src="app.js"></script>
-<script src="nav.js"></script>
+<script src="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>app.js"></script>
+<script src="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>nav.js"></script>
 
 <?php if (isset($_SESSION['login_success'])): ?>
     <script>

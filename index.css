@@ -207,6 +207,13 @@ body.overlay-active .footer {
   cursor: pointer;
 }
 
+.menu {
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
 /* Sidebar overlay */
 
 .sidebar-overlay {
