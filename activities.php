@@ -9,6 +9,7 @@ if (!isset($_SESSION['first_name'])) {
 }
 
 // Fetch upcoming activities
+
 $today = date('Y-m-d');
 $stmt = $conn->prepare("SELECT * FROM activities WHERE date >= ? ORDER BY date ASC");
 $stmt->bind_param("s", $today);
@@ -69,14 +70,24 @@ include 'header.php';
 </div>
 
 <script>
-    <?php if (isset($_SESSION['activity_message'])): ?>
-        window.addEventListener('DOMContentLoaded', function() {
+    // Get toast message from URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const toastMsg = urlParams.get('toast');
+    const toastType = urlParams.get('type') === 'error' ? 'error' : 'success';
+
+    if (toastMsg) {
+        // Clean the URL (remove toast parameters) without refreshing
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+
+        setTimeout(() => {
             if (typeof showToast === 'function') {
-                showToast("<?php echo addslashes($_SESSION['activity_message']); ?>");
+                showToast(decodeURIComponent(toastMsg), 5000, toastType);
+            } else {
+                alert(decodeURIComponent(toastMsg));
             }
-        });
-    <?php unset($_SESSION['activity_message']);
-    endif; ?>
+        }, 500);
+    }
 </script>
 
 <?php include 'footer.php'; ?>

@@ -123,7 +123,7 @@ function addMarkers() {
                 <div class="popup-content" id="popup-${markerId}">
                     <h4>${escapeHtml(area.name)}</h4>
                     <p>${escapeHtml(area.location_name)}</p>
-                    <p><strong>Established:</strong> ${area.date_started || "N/A"}</p>
+                    <p><strong>Started: </strong> ${area.date_started || "N/A"}</p>
                     <p>${area.latitude}, ${area.longitude}</p>
                     <div class="popup-details-link">
                         <span class="view-details" onclick="showDetails(${area.id}, 'forest')">View Details</span>

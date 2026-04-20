@@ -1,47 +1,50 @@
 // Heart icon animation on form interaction
 function initHeartAnimation() {
-  const heartIcon = document.querySelector('.icon-column i');
-  const formInputs = document.querySelectorAll('input, select, textarea');
-  
-  console.log('Heart animation initialized');
-  console.log('Heart icon found:', heartIcon);
-  console.log('Heart icon classes:', heartIcon ? heartIcon.className : 'N/A');
-  console.log('Form inputs found:', formInputs.length);
-  
+  const heartIcon = document.querySelector(".icon-column i");
+  const formInputs = document.querySelectorAll("input, select, textarea");
+
+  console.log("Heart animation initialized");
+  console.log("Heart icon found:", heartIcon);
+  console.log("Heart icon classes:", heartIcon ? heartIcon.className : "N/A");
+  console.log("Form inputs found:", formInputs.length);
+
   let isAnimated = false;
 
   if (!heartIcon || formInputs.length === 0) {
-    console.warn('Heart icon or form inputs not found');
+    console.warn("Heart icon or form inputs not found");
     return;
   }
 
-  formInputs.forEach(input => {
-    input.addEventListener('focus', function() {
-      console.log('Input focused:', this.name);
-      
+  formInputs.forEach((input) => {
+    input.addEventListener("focus", function () {
+      console.log("Input focused:", this.name);
+
       if (!isAnimated && heartIcon) {
-        console.log('Triggering heart animation');
-        console.log('Current classes before change:', heartIcon.className);
-        
+        console.log("Triggering heart animation");
+        console.log("Current classes before change:", heartIcon.className);
+
         // Change from regular to solid heart and add pulse
-        if (heartIcon.classList.contains('fa-regular')) {
-          heartIcon.classList.remove('fa-regular');
-          heartIcon.classList.add('fa-solid');
-          console.log('Classes after change:', heartIcon.className);
+        if (heartIcon.classList.contains("fa-regular")) {
+          heartIcon.classList.remove("fa-regular");
+          heartIcon.classList.add("fa-solid");
+          console.log("Classes after change:", heartIcon.className);
         } else {
-          console.log('Heart is not fa-regular, current classes:', heartIcon.className);
+          console.log(
+            "Heart is not fa-regular, current classes:",
+            heartIcon.className,
+          );
         }
-        
+
         // Trigger pulse animation
-        heartIcon.classList.add('pulse');
-        console.log('Pulse class added');
-        
+        heartIcon.classList.add("pulse");
+        console.log("Pulse class added");
+
         // Remove pulse class after animation completes
         setTimeout(() => {
-          heartIcon.classList.remove('pulse');
-          console.log('Pulse class removed');
+          heartIcon.classList.remove("pulse");
+          console.log("Pulse class removed");
         }, 600);
-        
+
         isAnimated = true;
       }
     });
@@ -49,18 +52,20 @@ function initHeartAnimation() {
 }
 
 // Initialize heart animation on DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOMContentLoaded fired');
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("DOMContentLoaded fired");
   initHeartAnimation();
 });
 
 // Fallback: Run immediately if DOM is already loaded
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initHeartAnimation);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initHeartAnimation);
 } else {
-  console.log('DOM already loaded, initializing heart animation immediately');
+  console.log("DOM already loaded, initializing heart animation immediately");
   initHeartAnimation();
 }
+
+// --- File upload handling (unchanged) ---
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileUpload");
 const previewContainer = document.getElementById("photoPreview");
@@ -77,13 +82,12 @@ function formatFileSize(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
-// Render previews as a grid (same as report.php)
+// Render previews as a grid
 function renderPreviews() {
   previewContainer.innerHTML = "";
   currentImages = [];
 
   if (selectedFiles.length === 0) {
-    // Optionally show empty state
     return;
   }
 
@@ -226,7 +230,7 @@ previewContainer.addEventListener("click", (e) => {
   }
 });
 
-// Form submission
+// --- Form submission (UPDATED: URL parameters instead of sessionStorage) ---
 const form = document.getElementById("applicationForm");
 form.addEventListener("submit", async function (e) {
   e.preventDefault();
@@ -252,12 +256,11 @@ form.addEventListener("submit", async function (e) {
     });
     const data = await response.json();
     if (data.success) {
-      if (typeof parent.showToast === "function") {
-        parent.showToast("Application submitted! Awaiting admin approval.");
-      }
-      parent.hideFloating();
-      parent.location.reload();
+      // ✅ Use URL parameter instead of sessionStorage
+      const message = encodeURIComponent("Application submitted! Awaiting admin approval.");
+      parent.location.href = "../activities.php?toast=" + message + "&type=success";
     } else {
+      // Show error using parent's toast if available
       if (typeof parent.showToast === "function") {
         parent.showToast(data.error || "Submission failed.");
       } else {

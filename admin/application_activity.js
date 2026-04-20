@@ -1,8 +1,8 @@
 // application_activity.js
 
 // Toast notification function
-function showToast(message, type = 'success', duration = 3000) {
-    const toast = document.getElementById('toast');
+function showToast(message, type = 'success', duration = 5000) {
+    const toast = document.getElementById('toast'); 
     
     // Reset classes
     toast.className = 'toast';

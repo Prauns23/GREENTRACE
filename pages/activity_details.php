@@ -153,9 +153,8 @@ $is_full = ($activity['participants_count'] >= $activity['capacity']);
                     });
                     const data = await response.json();
                     if (data.success) {
-                        if (typeof parent.showToast === 'function') parent.showToast('You have left the activity');
-                        parent.hideFloating();
-                        parent.location.reload();
+                        // Redirect parent to activities.php with toast in URL
+                        parent.location.href = '../activities.php?toast=' + encodeURIComponent('You have left the activity') + '&type=success';
                     } else {
                         alert(data.error);
                         actionBtn.disabled = false;
@@ -174,8 +173,7 @@ $is_full = ($activity['participants_count'] >= $activity['capacity']);
                 if (typeof parent.showVolunteerForm === 'function') {
                     parent.showVolunteerForm(activityId);
                 } else {
-                    console.error('showVolunteerForm not found in parent window');
-                    alert('Application form not available. Please refresh the page and try again.');
+                    alert('Application form not available. Please refresh.');
                 }
             }
         }
