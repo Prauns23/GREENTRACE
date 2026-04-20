@@ -8,11 +8,57 @@ body {
   font-family: "Inter", sans-serif;
 }
 
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #2e7d32;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 9999;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.error {
+  background: #d32f2f !important;
+}
+
+.toast.hidden {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  margin-left: 8px;
+}
+
 .application-container {
   max-width: 1400px;
   margin: 0 auto;
   background: white;
   padding: 12px 20px;
+  margin-bottom: 30px;
 }
 
 .app-header {
@@ -33,13 +79,113 @@ body {
 
 /* Search filter */
 
+/* Restyled search filter section */
 .search-filter {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 28px;
+  padding: 12px 16px;
+  border-radius: 20px;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.archive-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 40px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Inter", sans-serif;
+}
+
+.archive-btn:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.archive-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Checkbox column */
+
+.archive-toggle {
+    display: inline-block;
+}
+
+.toggle-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 40px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #475569;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: white;
+}
+
+.toggle-btn:hover {
+    background: #e2e8f0;
+}
+
+/* Bulk restore button – matches archive button style */
+.restore-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 40px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: "Inter", sans-serif;
+}
+
+.restore-btn:hover {
+    background: #dbeafe;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
+
+.restore-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Checkbox column */
+th:first-child,
+td:first-child {
+  width: 40px;
+  text-align: center;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2e7d32;
 }
 
 .search-bar {
@@ -52,6 +198,16 @@ body {
   gap: 12px;
   flex: 1;
   max-width: 320px;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #2e7d32;
+}
+
+.search-bar:hover {
+  outline: none;
+  border-color: #2e7d32;
 }
 
 .search-bar i {
