@@ -15,8 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
     $message = '';
     $type = 'success';
 
-    error_log("Single action: app_id=$app_id, action=$action");
-
     $stmt = $conn->prepare("SELECT user_id, activity_id, status, archived FROM volunteer_applications WHERE id = ?");
     $stmt->bind_param("i", $app_id);
     $stmt->execute();
@@ -55,21 +53,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
         elseif ($action === 'approve' || $action === 'reject') {
             if (($app['archived'] != 1) && $app['status'] === 'pending') {
                 if ($action === 'approve') {
-                    $conn->begin_transaction();
-                    try {
-                        $update = $conn->prepare("UPDATE volunteer_applications SET status = 'approved' WHERE id = ?");
-                        $update->bind_param("i", $app_id);
-                        $update->execute();
-                        $inc = $conn->prepare("UPDATE activities SET participants_count = participants_count + 1 WHERE id = ?");
-                        $inc->bind_param("i", $app['activity_id']);
-                        $inc->execute();
-                        $conn->commit();
-                        $message = "Application approved.";
-                    } catch (Exception $e) {
-                        $conn->rollback();
-                        $message = 'Error: ' . $e->getMessage();
+                    // CAPACITY CHECK before approving
+                    $capStmt = $conn->prepare("SELECT capacity, participants_count FROM activities WHERE id = ?");
+                    $capStmt->bind_param("i", $app['activity_id']);
+                    $capStmt->execute();
+                    $activity = $capStmt->get_result()->fetch_assoc();
+                    if ($activity && $activity['participants_count'] >= $activity['capacity']) {
+                        $message = 'Cannot approve: Activity is full.';
                         $type = 'error';
+                    } else {
+                        $conn->begin_transaction();
+                        try {
+                            $update = $conn->prepare("UPDATE volunteer_applications SET status = 'approved' WHERE id = ?");
+                            $update->bind_param("i", $app_id);
+                            $update->execute();
+                            $inc = $conn->prepare("UPDATE activities SET participants_count = participants_count + 1 WHERE id = ?");
+                            $inc->bind_param("i", $app['activity_id']);
+                            $inc->execute();
+                            $conn->commit();
+                            $message = "Application approved.";
+                        } catch (Exception $e) {
+                            $conn->rollback();
+                            $message = 'Error: ' . $e->getMessage();
+                            $type = 'error';
+                        }
                     }
+                    $capStmt->close();
                 } else { // reject
                     $update = $conn->prepare("UPDATE volunteer_applications SET status = 'rejected' WHERE id = ?");
                     $update->bind_param("i", $app_id);
@@ -254,7 +263,7 @@ require_once __DIR__ . '/../header.php';
         </div>
     </div>
 
-    <!-- Stat Cards -->
+    <!-- Stat Cards (optional – you may keep or remove) -->
     <div class="card-app-grid">
         <div class="app-card">
             <div class="card-header">

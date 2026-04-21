@@ -53,6 +53,16 @@ try {
         if ($current_status !== 'pending') {
             throw new Exception('Only pending applications can be approved.');
         }
+        // Check capacity before approving
+        $capStmt = $conn->prepare("SELECT capacity, participants_count FROM activities WHERE id = ?");
+        $capStmt->bind_param("i", $activity_id);
+        $capStmt->execute();
+        $activity = $capStmt->get_result()->fetch_assoc();
+        if ($activity && $activity['participants_count'] >= $activity['capacity']) {
+            throw new Exception('Activity is already full. Cannot approve more volunteers.');
+        }
+        $capStmt->close();
+
         $update = $conn->prepare("UPDATE volunteer_applications SET status = 'approved' WHERE id = ?");
         $update->bind_param("i", $app_id);
         $update->execute();
@@ -75,4 +85,3 @@ try {
     $conn->rollback();
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>

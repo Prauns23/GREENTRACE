@@ -3,11 +3,6 @@ function initHeartAnimation() {
   const heartIcon = document.querySelector(".icon-column i");
   const formInputs = document.querySelectorAll("input, select, textarea");
 
-  console.log("Heart animation initialized");
-  console.log("Heart icon found:", heartIcon);
-  console.log("Heart icon classes:", heartIcon ? heartIcon.className : "N/A");
-  console.log("Form inputs found:", formInputs.length);
-
   let isAnimated = false;
 
   if (!heartIcon || formInputs.length === 0) {
@@ -17,34 +12,15 @@ function initHeartAnimation() {
 
   formInputs.forEach((input) => {
     input.addEventListener("focus", function () {
-      console.log("Input focused:", this.name);
-
       if (!isAnimated && heartIcon) {
-        console.log("Triggering heart animation");
-        console.log("Current classes before change:", heartIcon.className);
-
-        // Change from regular to solid heart and add pulse
         if (heartIcon.classList.contains("fa-regular")) {
           heartIcon.classList.remove("fa-regular");
           heartIcon.classList.add("fa-solid");
-          console.log("Classes after change:", heartIcon.className);
-        } else {
-          console.log(
-            "Heart is not fa-regular, current classes:",
-            heartIcon.className,
-          );
         }
-
-        // Trigger pulse animation
         heartIcon.classList.add("pulse");
-        console.log("Pulse class added");
-
-        // Remove pulse class after animation completes
         setTimeout(() => {
           heartIcon.classList.remove("pulse");
-          console.log("Pulse class removed");
         }, 600);
-
         isAnimated = true;
       }
     });
@@ -53,19 +29,47 @@ function initHeartAnimation() {
 
 // Initialize heart animation on DOM ready
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("DOMContentLoaded fired");
   initHeartAnimation();
+  setupAgeValidation();
 });
 
-// Fallback: Run immediately if DOM is already loaded
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initHeartAnimation);
 } else {
-  console.log("DOM already loaded, initializing heart animation immediately");
   initHeartAnimation();
 }
 
-// --- File upload handling (unchanged) ---
+// Age validation setup
+function setupAgeValidation() {
+  const dobInput = document.querySelector('input[name="date_of_birth"]');
+  if (!dobInput) return;
+
+  const today = new Date();
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  const minDate = new Date(today.getFullYear() - 65, today.getMonth(), today.getDate());
+
+  const formatDate = (date) => date.toISOString().split('T')[0];
+  dobInput.setAttribute('max', formatDate(maxDate));
+  dobInput.setAttribute('min', formatDate(minDate));
+
+  const hint = document.createElement('small');
+  hint.style.cssText = 'color: #666; font-size: 12px; display: block; margin-top: 4px;';
+  hint.textContent = 'Must be between 18 and 65 years old.';
+  dobInput.parentNode.appendChild(hint);
+}
+
+function calculateAge(birthDateString) {
+  const birthDate = new Date(birthDateString);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+// --- File upload handling ---
 const uploadArea = document.getElementById("uploadArea");
 const fileInput = document.getElementById("fileUpload");
 const previewContainer = document.getElementById("photoPreview");
@@ -73,23 +77,11 @@ let selectedFiles = [];
 let currentImageIndex = 0;
 let currentImages = [];
 
-// Format file size
-function formatFileSize(bytes) {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-}
-
-// Render previews as a grid
 function renderPreviews() {
   previewContainer.innerHTML = "";
   currentImages = [];
 
-  if (selectedFiles.length === 0) {
-    return;
-  }
+  if (selectedFiles.length === 0) return;
 
   selectedFiles.forEach((file, index) => {
     if (!file.type.startsWith("image/")) return;
@@ -99,29 +91,26 @@ function renderPreviews() {
       previewDiv.className = "preview-item";
       previewDiv.setAttribute("data-index", index);
       previewDiv.innerHTML = `
-                <img src="${e.target.result}" class="preview-image">
-                <button type="button" class="remove-photo" data-index="${index}">&times;</button>
-            `;
+        <img src="${e.target.result}" class="preview-image">
+        <button type="button" class="remove-photo" data-index="${index}">&times;</button>
+      `;
       previewContainer.appendChild(previewDiv);
       currentImages.push(e.target.result);
     };
     reader.readAsDataURL(file);
   });
 
-  // Add photo stats and clear all button
   if (selectedFiles.length > 0) {
     const statsDiv = document.createElement("div");
     statsDiv.className = "photo-stats";
     statsDiv.innerHTML = `
-            <div class="photo-count-text">
-                <i class="fas fa-images"></i>
-                <span>${selectedFiles.length} file(s) selected</span>
-            </div>
-            <button type="button" class="clear-all-btn">Clear all</button>
-        `;
+      <div class="photo-count-text">
+        <i class="fas fa-images"></i>
+        <span>${selectedFiles.length} file(s) selected</span>
+      </div>
+      <button type="button" class="clear-all-btn">Clear all</button>
+    `;
     previewContainer.appendChild(statsDiv);
-
-    // Clear all button
     const clearBtn = statsDiv.querySelector(".clear-all-btn");
     clearBtn.addEventListener("click", () => {
       selectedFiles = [];
@@ -132,29 +121,39 @@ function renderPreviews() {
   }
 }
 
-// Update hidden file input with selectedFiles
 function updateFileInput() {
   const dataTransfer = new DataTransfer();
   selectedFiles.forEach((file) => dataTransfer.items.add(file));
   fileInput.files = dataTransfer.files;
 }
 
-// Handle file selection
 function handleFiles(files) {
   const newFiles = Array.from(files);
   if (selectedFiles.length + newFiles.length > 5) {
-    alert("You can only upload up to 5 files.");
+    if (typeof parent.showToast === "function") {
+      parent.showToast("You can only upload up to 5 files.", 4000, "error");
+    } else {
+      alert("You can only upload up to 5 files.");
+    }
     return;
   }
   const validFiles = newFiles.filter((file) => {
-    const validType =
-      file.type === "image/jpeg" ||
-      file.type === "image/png" ||
-      file.type === "application/pdf";
+    const validType = file.type === "image/jpeg" || file.type === "image/png" || file.type === "application/pdf";
     const validSize = file.size <= 5 * 1024 * 1024;
-    if (!validType)
-      alert(`Invalid type: ${file.name}. Only JPG, PNG, PDF allowed.`);
-    if (!validSize) alert(`File too large: ${file.name}. Max 5MB.`);
+    if (!validType) {
+      if (typeof parent.showToast === "function") {
+        parent.showToast(`Invalid type: ${file.name}. Only JPG, PNG, PDF allowed.`, 4000, "error");
+      } else {
+        alert(`Invalid type: ${file.name}. Only JPG, PNG, PDF allowed.`);
+      }
+    }
+    if (!validSize) {
+      if (typeof parent.showToast === "function") {
+        parent.showToast(`File too large: ${file.name}. Max 5MB.`, 4000, "error");
+      } else {
+        alert(`File too large: ${file.name}. Max 5MB.`);
+      }
+    }
     return validType && validSize;
   });
   selectedFiles = [...selectedFiles, ...validFiles];
@@ -162,14 +161,6 @@ function handleFiles(files) {
   updateFileInput();
 }
 
-// Remove a single file
-function removeFile(index) {
-  selectedFiles.splice(index, 1);
-  renderPreviews();
-  updateFileInput();
-}
-
-// Drag & drop events
 if (uploadArea) {
   uploadArea.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -186,12 +177,10 @@ if (uploadArea) {
   });
 }
 
-// File input change
 fileInput.addEventListener("change", (e) => {
   handleFiles(e.target.files);
 });
 
-// Remove photo via event delegation
 previewContainer.addEventListener("click", (e) => {
   const removeBtn = e.target.closest(".remove-photo");
   if (removeBtn) {
@@ -200,7 +189,13 @@ previewContainer.addEventListener("click", (e) => {
   }
 });
 
-// Image modal functionality
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  renderPreviews();
+  updateFileInput();
+}
+
+// Image modal
 const imageModal = document.getElementById("imageModal");
 const modalImage = document.querySelector(".modal-image");
 const modalCounter = document.querySelector(".modal-counter");
@@ -221,7 +216,6 @@ imageModal.addEventListener("click", (e) => {
   if (e.target === imageModal) closeImageModal();
 });
 
-// Preview click to open modal
 previewContainer.addEventListener("click", (e) => {
   const previewItem = e.target.closest(".preview-item");
   if (previewItem && !e.target.closest(".remove-photo")) {
@@ -230,20 +224,59 @@ previewContainer.addEventListener("click", (e) => {
   }
 });
 
-// --- Form submission (UPDATED: URL parameters instead of sessionStorage) ---
+if (typeof parent.showToast === "function") {
+  parent.showToast("Your error message", 4000, "error");
+  console.log("Toast called with type: error");
+}
+
+// --- Form submission with toast error handling ---
 const form = document.getElementById("applicationForm");
 form.addEventListener("submit", async function (e) {
   e.preventDefault();
-  if (selectedFiles.length === 0) {
-    alert("Please upload at least one verification file.");
+
+  // Age validation with parent toast
+  const dobInput = document.querySelector('input[name="date_of_birth"]');
+  const dobValue = dobInput.value;
+  if (!dobValue) {
+    if (typeof parent.showToast === "function") {
+      parent.showToast("Please enter your date of birth.", 4000, "error");
+    } else {
+      alert("Please enter your date of birth.");
+    }
     return;
   }
+  const age = calculateAge(dobValue);
+  if (age < 18) {
+    if (typeof parent.showToast === "function") {
+      parent.showToast("You must be at least 18 years old to volunteer.", 4000, "error");
+    } else {
+      alert("You must be at least 18 years old to volunteer.");
+    }
+    return;
+  }
+  if (age > 65) {
+    if (typeof parent.showToast === "function") {
+      parent.showToast("Maximum age for volunteering is 65 years old.", 4000, "error");
+    } else {
+      alert("Maximum age for volunteering is 65 years old.");
+    }
+    return;
+  }
+
+  if (selectedFiles.length === 0) {
+    if (typeof parent.showToast === "function") {
+      parent.showToast("Please upload at least one verification file.", 4000, "error");
+    } else {
+      alert("Please upload at least one verification file.");
+    }
+    return;
+  }
+
   const submitBtn = this.querySelector(".submit-btn");
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
   const formData = new FormData(this);
-  // Replace file input with selectedFiles
   formData.delete("verification_files[]");
   selectedFiles.forEach((file) => {
     formData.append("verification_files[]", file);
@@ -256,13 +289,11 @@ form.addEventListener("submit", async function (e) {
     });
     const data = await response.json();
     if (data.success) {
-      // ✅ Use URL parameter instead of sessionStorage
       const message = encodeURIComponent("Application submitted! Awaiting admin approval.");
       parent.location.href = "../activities.php?toast=" + message + "&type=success";
     } else {
-      // Show error using parent's toast if available
       if (typeof parent.showToast === "function") {
-        parent.showToast(data.error || "Submission failed.");
+        parent.showToast(data.error || "Submission failed.", 5000, "error");
       } else {
         alert(data.error || "Submission failed.");
       }
@@ -271,7 +302,11 @@ form.addEventListener("submit", async function (e) {
     }
   } catch (error) {
     console.error(error);
-    alert("An error occurred. Please try again.");
+    if (typeof parent.showToast === "function") {
+      parent.showToast("An error occurred. Please try again.", 5000, "error");
+    } else {
+      alert("An error occurred. Please try again.");
+    }
     submitBtn.disabled = false;
     submitBtn.innerHTML = "Submit Application";
   }

@@ -28,7 +28,14 @@ if ($existing) {
     }
     // If rejected or cancelled, allow new application (will insert new row)
 }
+
+$today = new DateTime();
+// 65 years old limit (Oldest allowed)
+$minDate = (clone $today)->sub(new DateInterval('P65Y'))->format('Y-m-d');
+// 18 years old limit (youngest allowed)
+$maxDate = (clone $today)->sub(new DateInterval('P18Y'))->format('Y-m-d');
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

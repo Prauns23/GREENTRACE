@@ -173,17 +173,30 @@ function showToast(message, duration = 3000, type = "success") {
   const toast = document.getElementById("toast");
   const toastMessage = document.getElementById("toast-message");
   if (!toast || !toastMessage) return;
+
   toastMessage.textContent = message;
-  toast.classList.remove("hidden", "error");
+
+  // Reset classes
+  toast.classList.remove("hidden", "error", "success");
+  
   if (type === "error") {
     toast.classList.add("error");
+    // Force inline style with !important to override CSS
+    toast.style.setProperty("background-color", "#d32f2f", "important");
+  } else {
+    toast.classList.add("success");
+    toast.style.removeProperty("background-color");
   }
+
   setTimeout(() => hideToast(), duration);
 }
 
 function hideToast() {
   const toast = document.getElementById("toast");
-  if (toast) toast.classList.add("hidden");
+  if (toast) {
+    toast.classList.add("hidden");
+    toast.style.removeProperty("background-color");
+  }
 }
 
 function showSpeciesDetail(id) {

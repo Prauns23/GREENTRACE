@@ -17,6 +17,18 @@ $barangay = trim($_POST['barangay'] ?? '');
 $understand = isset($_POST['understand']);
 $agree = isset($_POST['agree']);
 
+$birthDate = DateTime::createFromFormat('Y-m-d', $date_of_birth);
+if (!$birthDate) {
+    echo json_encode(['error' => 'Invalid date format']);
+    exit;
+}
+$today = new DateTime();
+$age = $today->diff($birthDate)->y;
+if ($age < 18 || $age > 65) {
+    echo json_encode(['error' => 'Age must be between 18 and 65 years old.']);
+    exit;
+}
+
 if (!$activity_id || !$date_of_birth || !$barangay || !$understand || !$agree) {
     echo json_encode(['error' => 'All required fields must be filled']);
     exit;
@@ -35,6 +47,29 @@ $full_name = $userData['full_name'];
 $mobile_number = $userData['mobile_number'];
 $email = $userData['email'];
 
+
+// Application checker
+$checkStmt = $conn->prepare("
+    SELECT id, status 
+    FROM volunteer_applications 
+    WHERE user_id = ? 
+      AND activity_id = ? 
+      AND archived = 0 
+      AND status IN ('pending', 'approved')
+    LIMIT 1
+");
+$checkStmt->bind_param("ii", $user_id, $activity_id);
+$checkStmt->execute();
+$existing = $checkStmt->get_result()->fetch_assoc();
+if ($existing) {
+    echo json_encode([
+        'error' => 'You already have an active application for this activity (status: ' . $existing['status'] . '). Please wait for admin review.'
+    ]);
+    exit;
+}
+$checkStmt->close();
+
+
 // File upload handling – multiple files
 $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/GREENTRACE/uploads/applications/';
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
@@ -44,8 +79,9 @@ if (!isset($_FILES['verification_files']) || empty($_FILES['verification_files']
     exit;
 }
 
+// File uploads
 $files = $_FILES['verification_files'];
-$allowed = ['image/jpeg','image/png','application/pdf'];
+$allowed = ['image/jpeg', 'image/png', 'application/pdf'];
 $uploadedPaths = [];
 
 for ($i = 0; $i < count($files['name']); $i++) {
@@ -59,7 +95,7 @@ for ($i = 0; $i < count($files['name']); $i++) {
         echo json_encode(['error' => 'Only JPG, PNG, or PDF files are allowed']);
         exit;
     }
-    if ($size > 5*1024*1024) {
+    if ($size > 5 * 1024 * 1024) {
         echo json_encode(['error' => 'File size must be less than 5MB: ' . $files['name'][$i]]);
         exit;
     }
@@ -74,7 +110,8 @@ for ($i = 0; $i < count($files['name']); $i++) {
     $uploadedPaths[] = $db_path;
 }
 
-// Insert application (with snapshot data from users_tbl)
+
+// Insert application
 $stmt = $conn->prepare("INSERT INTO volunteer_applications 
     (user_id, activity_id, full_name, date_of_birth, gender, mobile_number, email, barangay, status, submitted_at) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
@@ -105,4 +142,3 @@ foreach ($uploadedPaths as $idx => $path) {
 $photoStmt->close();
 
 echo json_encode(['success' => true]);
-?>
