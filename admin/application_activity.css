@@ -69,7 +69,7 @@ body {
   font-size: 1.8rem;
   font-weight: 600;
   color: #1a1a1a;
-  margin-bottom: 6px;
+  margin-bottom: 18px;
 }
 
 .app-header p {
@@ -193,7 +193,7 @@ input[type="checkbox"] {
   align-items: center;
   background: white;
   border: 1px solid #888888c0;
-  border-radius: 6px;
+  border-radius: 25px;
   padding: 4px 18px;
   gap: 12px;
   flex: 1;
@@ -231,8 +231,8 @@ input[type="checkbox"] {
   gap: 12px;
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 6px 16px;
+  border-radius: 25px;
+  padding: 10px 16px;
   transition: all 0.2s;
 }
 
@@ -572,25 +572,95 @@ tr:hover td {
   color: #bbb;
 }
 
-/* Responsive */
+/* Responsive Design for Application Activity */
 @media (max-width: 768px) {
-  body {
-    padding: 16px;
-  }
   .application-container {
-    padding: 18px;
+    padding: 12px;
   }
+
+  .app-header h2 {
+    font-size: 1.4rem;
+  }
+
+  /* Stack stat cards */
   .card-app-grid {
     flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .app-card {
+    min-width: auto;
+    width: 100%;
+  }
+
+  /* Make table horizontally scrollable */
+  .app-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-table table {
+    min-width: 800px; /* forces scroll if needed */
+  }
+
+  /* Reduce padding in cells */
+  .app-table th,
+  .app-table td {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+  }
+
+  /* Wrap action buttons */
+  .action-buttons {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .action-btn {
+    padding: 4px 6px;
+    font-size: 0.9rem;
+  }
+
+  /* Adjust search and filter bar */
+  .search-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar {
+    max-width: 100%;
+  }
+
+  .filter-actions {
     justify-content: space-between;
+  }
+
+  .sort-bar {
     flex: 1;
   }
-  th,
-  td {
-    padding: 12px 10px;
+}
+
+@media (max-width: 480px) {
+  .app-header h2 {
+    font-size: 1.2rem;
   }
-  .action-buttons {
-    flex-direction: column;
-    gap: 4px;
+
+  .app-header p {
+    font-size: 0.8rem;
+  }
+
+  .card-header h2 {
+    font-size: 0.9rem;
+  }
+
+  .card-content h2 {
+    font-size: 1.8rem;
+  }
+
+  .bulk-archive-btn,
+  .bulk-restore-btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
   }
 }

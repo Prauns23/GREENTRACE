@@ -304,11 +304,11 @@ include __DIR__ . '/../header.php';
                 <input type="hidden" name="selected_ids" id="selectedIdsInput" value="">
                 <?php if ($showArchived): ?>
                     <button type="submit" class="bulk-restore-btn" id="bulkRestoreBtn" disabled title="Restore Selected">
-                        <i class="fas fa-undo-alt"></i> Restore Selected
+                        <i class="fas fa-undo-alt"></i>
                     </button>
                 <?php else: ?>
                     <button type="submit" class="bulk-archive-btn" id="bulkArchiveBtn" disabled title="Archive Selected">
-                        <i class="fas fa-archive"></i> Archive Selected
+                        <i class="fas fa-archive"></i>
                     </button>
                 <?php endif; ?>
             </form>
@@ -352,7 +352,7 @@ include __DIR__ . '/../header.php';
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 40px;"><input type="checkbox" id="selectAll"></th>
+                        <th><input type="checkbox" id="selectAll"></th>
                         <th>ID</th>
                         <th>Name</th>
                         <th>Email</th>

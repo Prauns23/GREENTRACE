@@ -18,6 +18,7 @@
 .user-header h2 {
   font-size: 1.8rem;
   font-weight: 600;
+  margin-bottom: 12px;
   color: #1a1a1a;
 }
 
@@ -40,7 +41,7 @@
   align-items: center;
   background: white;
   border: 1px solid #888888c0;
-  border-radius: 6px;
+  border-radius: 25px;
   padding: 4px 18px;
   gap: 12px;
   flex: 1;
@@ -73,7 +74,7 @@ input[type="checkbox"] {
   gap: 12px;
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 25px;
   padding: 6px 16px;
 }
 
@@ -161,6 +162,7 @@ input[type="checkbox"] {
 .app-table table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.85rem;
 }
 
 .app-table th,
@@ -169,6 +171,28 @@ input[type="checkbox"] {
   text-align: left;
   border-bottom: 1px solid #f0f2f5;
   transition: all 0.3s ease;
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: top;
+}
+
+/* Table body scrolling (max 6 rows) */
+.app-table tbody {
+  display: block;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.app-table thead,
+.app-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.app-table tbody tr {
+  width: 100%;
 }
 
 .app-table tbody tr:hover td {
@@ -410,4 +434,114 @@ input[type="checkbox"] {
   border-radius: 8px;
   padding: 10px 20px;
   cursor: pointer;
+}
+
+/* Specific fix for user column overlapping */
+.app-table td:nth-child(2) {
+    white-space: normal;
+    word-break: break-word;
+    min-width: 160px;
+}
+
+.app-table td:nth-child(2) small {
+    word-break: break-all;
+    display: inline-block;
+    max-width: 100%;
+}
+
+/* Responsive Design for User Management */
+@media (max-width: 768px) {
+  .user-container {
+    padding: 12px;
+  }
+
+  .user-header h2 {
+    font-size: 1.4rem;
+  }
+
+  /* Stack stat cards */
+  .card-app-grid {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .app-card {
+    min-width: auto;
+    width: 100%;
+  }
+
+  /* Make table horizontally scrollable */
+  .app-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-table table {
+    min-width: 700px; /* adjust based on column count */
+  }
+
+  /* Reduce padding */
+  .app-table th,
+  .app-table td {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+  }
+
+  /* Allow action buttons to wrap */
+  .action-buttons {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .action-btn {
+    padding: 4px 6px;
+    font-size: 0.9rem;
+  }
+
+  /* Adjust search/filter */
+  .search-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-bar {
+    max-width: 100%;
+  }
+
+  .filter-actions {
+    justify-content: space-between;
+  }
+
+  .sort-bar {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .user-header p {
+    font-size: 0.8rem;
+  }
+
+  .app-card .card-header h2 {
+    font-size: 0.9rem;
+  }
+
+  .app-card .card-content h2 {
+    font-size: 1.8rem;
+  }
+
+  .bulk-archive-btn,
+  .bulk-restore-btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .role-select {
+    font-size: 0.7rem;
+    padding: 4px 6px;
+  }
 }
