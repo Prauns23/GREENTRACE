@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/init_session.php'; 
+<?php require_once __DIR__ . '/init_session.php';
 $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
 ?>
 <!DOCTYPE html>
@@ -131,8 +131,8 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
                             <i class="fa-solid fa-map"></i><span class="label">Forest Map</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="">
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'user_management.php' ? 'active' : ''; ?>">
+                        <a href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? 'user_management.php' : 'admin/user_management.php'; ?>">
                             <i class="fa-solid fa-user-group"></i><span class="label">Users</span>
                         </a>
                     </li>

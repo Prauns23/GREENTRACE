@@ -34,7 +34,7 @@ if (isset($_POST['sign-in'])) {
     $email    = $_POST['email'];
     $password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT * FROM users_tbl WHERE email = ?");
+    $stmt = $conn->prepare("SELECT * FROM users_tbl WHERE email = ? AND archived = 0");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -47,16 +47,14 @@ if (isset($_POST['sign-in'])) {
             $_SESSION['email']      = $user['email'];
             $_SESSION['role']       = $user['role'];
             $_SESSION['user_id']    = $user['id'];
-            // Success Message
             $_SESSION['login_success'] = "Welcome back, " . $user['fname'] . "!";
-
             header("Location: index.php");
             exit();
         }
     }
 
     // Login failed
-    $_SESSION['login_error'] = 'Incorrect email or password';
+    $_SESSION['login_error'] = 'Incorrect email or password or account deactivated.';
     $_SESSION['active_form'] = 'sign-in';
     header("Location: index.php");
     exit();

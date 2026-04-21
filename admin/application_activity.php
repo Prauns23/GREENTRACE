@@ -309,7 +309,15 @@ require_once __DIR__ . '/../header.php';
                     </tr>
                 <?php else: ?>
                     <?php foreach ($applications as $app): ?>
-                        <tr>
+                        <?php
+                        $rowClass = '';
+                        if ($app['archived']) {
+                            $rowClass = 'archived-row';
+                        } elseif ($app['status'] === 'rejected' || $app['status'] === 'cancelled') {
+                            $rowClass = 'status-negative-row';
+                        }
+                        ?>
+                        <tr class="<?= $rowClass ?>">
                             <td><input type="checkbox" class="rowCheckbox" value="<?= $app['id'] ?>"></td>
                             <td>
                                 <strong><?= htmlspecialchars($app['fname'] . ' ' . $app['lname']) ?></strong><br>

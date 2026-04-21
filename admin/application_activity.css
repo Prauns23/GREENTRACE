@@ -124,54 +124,54 @@ body {
 /* Checkbox column */
 
 .archive-toggle {
-    display: inline-block;
+  display: inline-block;
 }
 
 .toggle-btn {
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 40px;
-    padding: 8px 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #475569;
-    text-decoration: none;
-    transition: all 0.2s;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 40px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  transition: all 0.2s;
 }
 
 .toggle-btn.active {
-    background: #2e7d32;
-    border-color: #2e7d32;
-    color: white;
+  background: #2e7d32;
+  border-color: #2e7d32;
+  color: white;
 }
 
 .toggle-btn:hover {
-    background: #e2e8f0;
+  background: #e2e8f0;
 }
 
 /* Bulk restore button – matches archive button style */
 .restore-btn {
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 40px;
-    padding: 8px 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: "Inter", sans-serif;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 40px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Inter", sans-serif;
 }
 
 .restore-btn:hover {
-    background: #dbeafe;
-    border-color: #bfdbfe;
-    color: #2563eb;
+  background: #dbeafe;
+  border-color: #bfdbfe;
+  color: #2563eb;
 }
 
 .restore-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Checkbox column */
@@ -394,6 +394,14 @@ input[type="checkbox"] {
   width: 100%;
 }
 
+.app-table tbody tr.status-negative-row:hover td {
+  background-color: #fff0f0 !important;
+}
+
+.app-table tbody tr.archived-row:hover td {
+  background-color: #f5f5f5 !important;
+}
+
 th {
   text-align: left;
   padding: 16px 16px;
@@ -412,7 +420,7 @@ td {
 }
 
 tr:hover td {
-  background-color: #fafcff;
+  background-color: #f4fff8;
 }
 
 /* Status badges */
@@ -574,6 +582,8 @@ tr:hover td {
   }
   .card-app-grid {
     flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
   }
   th,
   td {

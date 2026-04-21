@@ -6,7 +6,7 @@
     <h2 id="header02">To Restore Nature</h2>
     <p>Our platform connects people, businesses, and governments to greening programs that reduce carbon footprints,
         restore biodiversity, and create healthier cities. </p>
-    <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='volunteer.php'" : "showLogin()"; ?>" class="start-planting">
+    <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='activities.php'" : "showLogin()"; ?>" class="start-planting">
         Start Planting
         <img src="components/icons/arrow-forward-white.svg" alt="">
     </button>
@@ -38,7 +38,7 @@
     </div>
     <div class="bottom">
         <p>TECHNOLOGY AND <span class="green">NATURE</span> COLLABORATION</p>
-        <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='volunteer.php'" : "showLogin()"; ?>" class="joinBtn">
+        <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='activities.php'" : "showLogin()"; ?>" class="joinBtn">
             Join us
             <img src="components/icons/double-arrow.svg" alt="">
         </button>
@@ -167,7 +167,7 @@
                     <p class="fourth-description">Join thousands of volunteers and organizations working together to
                         restore the Philippines' forests and create a sustainable future for generations to come.</p>
                     <div class="fourth-buttons">
-                        <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='volunteer.php'" : "showLogin()"; ?>" class="btn-primary">Start Volunteering <img src="components/icons/arrow-forward-white (2).svg" alt=""></button>
+                        <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='activities.php'" : "showLogin()"; ?>" class="btn-primary">Start Volunteering <img src="components/icons/arrow-forward-white (2).svg" alt=""></button>
                         <button class="btn-secondary">Learn More</button>
                     </div>
                 </div>
