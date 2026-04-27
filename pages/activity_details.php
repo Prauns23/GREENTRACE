@@ -4,7 +4,6 @@ require_once '../config.php';
 
 // Get activity ID from URL
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
 if ($id === 0) {
     echo '<div class="error">No activity specified. Please go back and try again.</div>';
     exit;
@@ -22,6 +21,9 @@ if (!$activity) {
 
 // Get user's latest application status for this activity
 $user_status = null;
+$isFull = ($activity['participants_count'] >= $activity['capacity']);
+$isPast = (strtotime($activity['date']) < strtotime(date('Y-m-d')));
+
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
     $statusStmt = $conn->prepare("SELECT status FROM volunteer_applications WHERE user_id = ? AND activity_id = ? ORDER BY submitted_at DESC LIMIT 1");
@@ -33,9 +35,8 @@ if (isset($_SESSION['user_id'])) {
         $user_status = $app['status'];
     }
 }
-
-$is_full = ($activity['participants_count'] >= $activity['capacity']);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -101,7 +102,7 @@ $is_full = ($activity['participants_count'] >= $activity['capacity']);
                 <div class="detail-icon"><span class="material-symbols-rounded">group</span></div>
                 <div class="detail-content">
                     <div class="detail-label">Participants</div>
-                    <div class="detail-value" id="participantCount"><?php echo $activity['participants_count']; ?> / <?php echo $activity['capacity']; ?> registered</div>
+                    <div class="detail-value"><?php echo $activity['participants_count']; ?> / <?php echo $activity['capacity']; ?> registered</div>
                 </div>
             </div>
         </div>
@@ -118,13 +119,19 @@ $is_full = ($activity['participants_count'] >= $activity['capacity']);
 
         <div class="bottom-button">
             <button class="close-button" onclick="parent.hideFloating()">Close</button>
-            <button class="join-btn" id="actionBtn"
-                data-status="<?php echo $user_status; ?>"
-                <?php echo ($user_status === 'pending') ? 'disabled' : ''; ?>>
+            <button class="join-btn" id="actionBtn" <?php if ($isPast || $isFull) echo 'disabled'; ?>>
                 <?php
-                if ($user_status === 'pending') echo 'Pending';
-                elseif ($user_status === 'approved') echo 'Leave Activity';
-                else echo 'Join Activity';
+                if ($isPast) {
+                    echo 'Activity Ended';
+                } elseif ($isFull && $user_status !== 'approved') {
+                    echo 'Full';
+                } elseif ($user_status === 'pending') {
+                    echo 'Pending';
+                } elseif ($user_status === 'approved') {
+                    echo 'Leave Activity';
+                } else {
+                    echo 'Join Activity';
+                }
                 ?>
             </button>
         </div>
@@ -133,7 +140,9 @@ $is_full = ($activity['participants_count'] >= $activity['capacity']);
     <script>
         const actionBtn = document.getElementById('actionBtn');
         const activityId = <?php echo $id; ?>;
-        let userStatus = actionBtn.getAttribute('data-status');
+        const userStatus = <?php echo json_encode($user_status); ?>;
+        const isPast = <?php echo json_encode($isPast); ?>;
+        const isFull = <?php echo json_encode($isFull); ?>;
 
         async function handleJoinLeave() {
             if (actionBtn.disabled) return;
@@ -153,7 +162,6 @@ $is_full = ($activity['participants_count'] >= $activity['capacity']);
                     });
                     const data = await response.json();
                     if (data.success) {
-                        // Redirect parent to activities.php with toast in URL
                         parent.location.href = '../activities.php?toast=' + encodeURIComponent('You have left the activity') + '&type=success';
                     } else {
                         alert(data.error);
@@ -168,13 +176,17 @@ $is_full = ($activity['participants_count'] >= $activity['capacity']);
                 return;
             }
 
-            // Join (if not pending/approved)
-            if (userStatus !== 'pending' && userStatus !== 'approved') {
+            // Join (if not pending/approved and not full/ended)
+            if (userStatus !== 'pending' && userStatus !== 'approved' && !isPast && !isFull) {
                 if (typeof parent.showVolunteerForm === 'function') {
                     parent.showVolunteerForm(activityId);
                 } else {
                     alert('Application form not available. Please refresh.');
                 }
+            } else if (isFull) {
+                alert('This activity has reached its maximum capacity.');
+            } else if (isPast) {
+                alert('This activity has already ended.');
             }
         }
 

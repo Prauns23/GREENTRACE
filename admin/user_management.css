@@ -140,15 +140,12 @@ input[type="checkbox"] {
 .app-card .card-content h2 {
   font-size: 2.2rem;
   font-weight: 700;
-  padding-left: 12px;
-  padding-top: 10px;
+  padding-bottom: 12px;
 }
 
 .app-card .card-content p {
-  padding-left: 12px;
   font-size: 14px;
   color: #8b9297;
-  padding-bottom: 20px;
 }
 
 /* Table */
