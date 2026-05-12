@@ -137,9 +137,9 @@ include __DIR__ . '/../header.php';
         <form method="POST" id="bulkActionForm" class="bulk-action-form">
             <input type="hidden" name="bulk_action" id="bulkActionType" value="">
             <input type="hidden" name="selected_ids" id="selectedIdsInput" value="">
-            <button type="button" class="bulk-archive-btn" id="bulkArchiveBtn" disabled><i class="fas fa-archive"></i> Archive</button>
-            <button type="button" class="bulk-restore-btn" id="bulkRestoreBtn" disabled><i class="fas fa-undo-alt"></i> Restore</button>
-            <button type="button" class="bulk-delete-btn" id="bulkDeleteBtn" disabled><i class="fas fa-trash-alt"></i> Delete</button>
+            <button type="button" class="bulk-archive-btn" id="bulkArchiveBtn" disabled><i class="fas fa-archive"></i> </button>
+            <button type="button" class="bulk-restore-btn" id="bulkRestoreBtn" disabled><i class="fas fa-undo-alt"></i> </button>
+            <button type="button" class="bulk-delete-btn" id="bulkDeleteBtn" disabled><i class="fas fa-trash-alt"></i> </button>
         </form>
     </div>
 
