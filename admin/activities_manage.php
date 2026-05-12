@@ -9,7 +9,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
 // Get filters from URL
 $search = trim($_GET['search'] ?? '');
-$statusFilter = $_GET['status'] ?? 'active'; // active, archived, all
+$statusFilter = $_GET['status'] ?? 'active';
 $sort = $_GET['sort'] ?? 'date_asc';
 
 // Build WHERE clause
@@ -29,7 +29,6 @@ if ($statusFilter === 'active') {
 } elseif ($statusFilter === 'archived') {
     $where .= " AND archived = 1";
 }
-// 'all' shows both
 
 // Build ORDER BY
 switch ($sort) {
@@ -69,7 +68,6 @@ $totalArchived = $conn->query("SELECT COUNT(*) as cnt FROM activities WHERE arch
 $totalAll = $totalActive + $totalArchived;
 
 include __DIR__ . '/../header.php';
-
 ?>
 
 <link rel="stylesheet" href="activities_manage.css">
@@ -81,7 +79,7 @@ include __DIR__ . '/../header.php';
         <p>Manage the activities for our volunteers here</p>
     </div>
 
-    <!-- Filter and Search -->
+    <!-- Search and Filter Bar -->
     <div class="search-filter">
         <div class="search-bar">
             <i class="fas fa-search"></i>
@@ -116,7 +114,7 @@ include __DIR__ . '/../header.php';
         </div>
     </div>
 
-    <!-- Stat Cards -->
+    <!-- Stats Cards -->
     <div class="stats-cards">
         <div class="stat-card">
             <h3>Total Activities</h3>
@@ -137,12 +135,11 @@ include __DIR__ . '/../header.php';
         <form method="POST" id="bulkActionForm" class="bulk-action-form">
             <input type="hidden" name="bulk_action" id="bulkActionType" value="">
             <input type="hidden" name="selected_ids" id="selectedIdsInput" value="">
-            <button type="button" class="bulk-archive-btn" id="bulkArchiveBtn" disabled><i class="fas fa-archive"></i> </button>
-            <button type="button" class="bulk-restore-btn" id="bulkRestoreBtn" disabled><i class="fas fa-undo-alt"></i> </button>
-            <button type="button" class="bulk-delete-btn" id="bulkDeleteBtn" disabled><i class="fas fa-trash-alt"></i> </button>
+            <button type="button" class="bulk-archive-btn" id="bulkArchiveBtn" disabled><i class="fas fa-archive"></i> Archive</button>
+            <button type="button" class="bulk-restore-btn" id="bulkRestoreBtn" disabled><i class="fas fa-undo-alt"></i> Restore</button>
+            <button type="button" class="bulk-delete-btn" id="bulkDeleteBtn" disabled><i class="fas fa-trash-alt"></i> Delete</button>
         </form>
     </div>
-
 
     <!-- Activities Table -->
     <div class="activities-table">
@@ -168,7 +165,7 @@ include __DIR__ . '/../header.php';
                         </tr>
                     <?php else: ?>
                         <?php foreach ($activities as $act): ?>
-                            <tr data-activity-id="<?= $act['id'] ?>">
+                            <tr data-activity-id="<?= $act['id'] ?>" data-archived="<?= $act['archived'] ?>">
                                 <td><input type="checkbox" class="rowCheckbox" value="<?= $act['id'] ?>"></td>
                                 <td><?= $act['id'] ?></td>
                                 <td><?= htmlspecialchars($act['title']) ?></td>

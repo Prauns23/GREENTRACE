@@ -29,6 +29,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
 
     <!-- floating overlays -->
     <div class="overlay" id="overlay"></div>
+
     <!-- Sign up Popup -->
     <div class="floating-container" id="floatingSignUpContainer">
         <iframe src="<?php echo $basePath; ?>pages/sign-up.php" class="floating-iframe" id="signupFrame"></iframe>
@@ -86,6 +87,21 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
         </div>
     </div>
 
+    <!-- Confirm Archive -->
+    <div class="floating-container" id="floatingArchiveContainer">
+        <iframe src="/greentrace/modals/confirm_archive.php" class="floating-iframe" id="confirmArchiveFrame"></iframe>
+    </div>
+
+    <!-- Confirm Restore -->
+    <div class="floating-container" id="floatingRestoreContainer">
+        <iframe src="/greentrace/modals/confirm_restore.php" class="floating-iframe" id="confirmRestoreFrame"></iframe>
+    </div>
+
+    <!-- Confirm Delete -->
+    <div class="floating-container" id="floatingDeleteContainer">
+        <iframe src="/greentrace/modals/confirm_delete.php" class="floating-iframe" id="confirmDeleteFrame"></iframe>
+    </div>
+    
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
@@ -138,7 +154,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
                     </li>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'activities_manage.php' ? 'active' : ''; ?>">
                         <a href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? 'activities_manage.php' : 'admin/activities_manage.php'; ?>">
-                           <i class="fa-solid fa-calendar-days"></i><span>Manage Activities</span>
+                            <i class="fa-solid fa-calendar-days"></i><span>Manage Activities</span>
                         </a>
                     </li>
                 </ul>

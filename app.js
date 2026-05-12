@@ -178,7 +178,7 @@ function showToast(message, duration = 3000, type = "success") {
 
   // Reset classes
   toast.classList.remove("hidden", "error", "success");
-  
+
   if (type === "error") {
     toast.classList.add("error");
     // Force inline style with !important to override CSS
@@ -237,6 +237,60 @@ function showVolunteerForm(activityId) {
   }
 }
 
+function showConfirmArchive(idOrArray) {
+  closeAllFloating();
+  const container = document.getElementById("floatingArchiveContainer");
+  const iframe = document.getElementById("confirmArchiveFrame");
+  let param = "";
+  if (Array.isArray(idOrArray)) {
+    param = "ids=" + idOrArray.join(",");
+  } else {
+    param = "id=" + idOrArray;
+  }
+  const baseUrl = iframe.src.split('?')[0];
+  iframe.src = `${baseUrl}?${param}`;
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+}
+
+function showConfirmRestore(idOrArray) {
+  closeAllFloating();
+  const container = document.getElementById("floatingRestoreContainer");
+  const iframe = document.getElementById("confirmRestoreFrame");
+  let param = "";
+  if (Array.isArray(idOrArray)) {
+    param = "ids=" + idOrArray.join(",");
+  } else {
+    param = "id=" + idOrArray;
+  }
+  const baseUrl = iframe.src.split('?')[0];
+  iframe.src = `${baseUrl}?${param}`;
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+}
+
+function showConfirmDelete(idOrArray) {
+  closeAllFloating();
+  const container = document.getElementById("floatingDeleteContainer");
+  const iframe = document.getElementById("confirmDeleteFrame");
+  let param = "";
+  if (Array.isArray(idOrArray)) {
+    param = "ids=" + idOrArray.join(",");
+  } else {
+    param = "id=" + idOrArray;
+  }
+  const baseUrl = iframe.src.split('?')[0];
+  iframe.src = `${baseUrl}?${param}`;
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+}
+
 window.showActivityDetails = showActivityDetails;
 window.showSignUp = showSignUp;
 window.showSignIn = showSignIn;
@@ -249,3 +303,6 @@ window.showLogin = showSignUp;
 window.hideLogin = hideFloating;
 window.showSpeciesDetail = showSpeciesDetail;
 window.showVolunteerForm = showVolunteerForm;
+window.showConfirmArchive = showConfirmArchive;
+window.showConfirmRestore = showConfirmRestore;
+window.showConfirmDelete = showConfirmDelete;

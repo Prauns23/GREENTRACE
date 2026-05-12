@@ -1,5 +1,4 @@
 // Search, Filter, and Sort
-
 const searchInput = document.getElementById("searchInput");
 const statusFilter = document.getElementById("statusFilter");
 const sortSelect = document.getElementById("sortSelect");
@@ -8,7 +7,7 @@ function reloadPage() {
   const search = searchInput ? searchInput.value : "";
   const status = statusFilter ? statusFilter.value : "active";
   const sort = sortSelect ? sortSelect.value : "date_asc";
-  window.location.href = `activities_manage.php?searc=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
+  window.location.href = `activities_manage.php?search=${encodeURIComponent(search)}&status=${status}&sort=${sort}`;
 }
 
 if (searchInput) {
@@ -18,12 +17,10 @@ if (searchInput) {
     debounceTimer = setTimeout(reloadPage, 400);
   });
 }
-
 if (statusFilter) statusFilter.addEventListener("change", reloadPage);
 if (sortSelect) sortSelect.addEventListener("change", reloadPage);
 
 // Bulk Actions (Select All + Checkboxes)
-
 const selectAll = document.getElementById("selectAll");
 const rowCheckboxes = document.querySelectorAll(".rowCheckbox");
 const bulkArchiveBtn = document.getElementById("bulkArchiveBtn");
@@ -32,15 +29,39 @@ const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
 
 function updateBulkButtons() {
   const anyChecked = Array.from(rowCheckboxes).some((cb) => cb.checked);
-  if (bulkArchiveBtn) bulkArchiveBtn.disabled = !anyChecked;
-  if (bulkRestoreBtn) bulkRestoreBtn.disabled = !anyChecked;
-  if (bulkDeleteBtn) bulkDeleteBtn.disabled = !anyChecked;
+  if (!anyChecked) {
+    // No selection: disable all bulk buttons
+    if (bulkArchiveBtn) bulkArchiveBtn.disabled = true;
+    if (bulkRestoreBtn) bulkRestoreBtn.disabled = true;
+    if (bulkDeleteBtn) bulkDeleteBtn.disabled = true;
+    return;
+  }
+
+  // Determine which statuses are selected
+  let hasActive = false;
+  let hasArchived = false;
+
+  rowCheckboxes.forEach((cb) => {
+    if (cb.checked) {
+      const row = cb.closest("tr");
+      const archived = row ? row.getAttribute("data-archived") : null;
+      if (archived === "0") hasActive = true;
+      if (archived === "1") hasArchived = true;
+    }
+  });
+
+  // Archive button disabled if any archived selected (cannot archive already archived)
+  if (bulkArchiveBtn) bulkArchiveBtn.disabled = hasArchived;
+  // Restore button disabled if any active selected (cannot restore active)
+  if (bulkRestoreBtn) bulkRestoreBtn.disabled = hasActive;
+  // Delete button always enabled as long as there is any checked
+  if (bulkDeleteBtn) bulkDeleteBtn.disabled = false;
 }
 
 if (selectAll) {
   selectAll.addEventListener("change", () => {
     rowCheckboxes.forEach((cb) => (cb.checked = selectAll.checked));
-    updateBulkButtons;
+    updateBulkButtons();
   });
 }
 rowCheckboxes.forEach((cb) => {
@@ -51,7 +72,6 @@ rowCheckboxes.forEach((cb) => {
 });
 
 // Bulk Action Triggers
-
 if (bulkArchiveBtn) {
   bulkArchiveBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -60,81 +80,78 @@ if (bulkArchiveBtn) {
       .map((cb) => cb.value);
     if (selected.length === 0) return;
     if (window.parent.showConfirmArchive) {
-        window.parent.showConfirmArchive(selected); 
+      window.parent.showConfirmArchive(selected);
     } else {
-        alert("Archive modal not available");
+      alert("Archive modal not available");
+    }
+  });
+}
+if (bulkRestoreBtn) {
+  bulkRestoreBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const selected = Array.from(rowCheckboxes)
+      .filter((cb) => cb.checked)
+      .map((cb) => cb.value);
+    if (selected.length === 0) return;
+    if (window.parent.showConfirmRestore) {
+      window.parent.showConfirmRestore(selected);
+    } else {
+      alert("Restore modal not available");
+    }
+  });
+}
+if (bulkDeleteBtn) {
+  bulkDeleteBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const selected = Array.from(rowCheckboxes)
+      .filter((cb) => cb.checked)
+      .map((cb) => cb.value);
+    if (selected.length === 0) return;
+    if (window.parent.showConfirmDelete) {
+      window.parent.showConfirmDelete(selected);
+    } else {
+      alert("Delete modal not available");
     }
   });
 }
 
-if (bulkRestoreBtn) {
-    bulkRestoreBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        const selected = Array.from(rowCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
-        if (selected.length === 0) return;
-        if (window.parent.showConfirmRestore) {
-            window.parent.showConfirmRestore(selected);
-        } else {
-            alert("Restore modal not available");
-        }
-    });
-}
-
-if (bulkDeleteBtn) {
-    bulkDeleteBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        const selected = Array.from(rowCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
-        if (selected.length === 0) return;
-        if (window.parent.showConfirmDelete) {
-            window.parent.showConfirmDelete(selected);
-        } else {
-            alert("Delete modal not available");
-        }
-    });
-}
-
 // Single Actions
-
-// Edit button (placeholder)
-document.querySelectorAll(".edit-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const id = btn.dataset.id;
-        alert("Edit feature coming soon.");
-    });
+document.querySelectorAll(".edit-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.id;
+    alert("Edit feature coming soon.");
+  });
 });
 
-// Single archive
-document.querySelectorAll(".archive-single-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const id = btn.dataset.id;
-        if (window.parent.showConfirmArchive) {
-            window.parent.showConfirmArchive(id);  // pass single ID (number)
-        } else {
-            alert("Archive modal not available");
-        }
-    });
+document.querySelectorAll(".archive-single-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.id;
+    if (window.parent.showConfirmArchive) {
+      window.parent.showConfirmArchive(id);
+    } else {
+      alert("Archive modal not available");
+    }
+  });
 });
 
-// Single restore
-document.querySelectorAll(".restore-single-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const id = btn.dataset.id;
-        if (window.parent.showConfirmRestore) {
-            window.parent.showConfirmRestore(id);
-        } else {
-            alert("Restore modal not available");
-        }
-    });
+document.querySelectorAll(".restore-single-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.id;
+    if (window.parent.showConfirmRestore) {
+      window.parent.showConfirmRestore(id);
+    } else {
+      alert("Restore modal not available");
+    }
+  });
 });
 
-// Single delete
-document.querySelectorAll(".delete-single-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const id = btn.dataset.id;
-        if (window.parent.showConfirmDelete) {
-            window.parent.showConfirmDelete(id);
-        } else {
-            alert("Delete modal not available");
-        }
-    });
+document.querySelectorAll(".delete-single-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.id;
+    if (window.parent.showConfirmDelete) {
+      window.parent.showConfirmDelete(id);
+    } else {
+      alert("Delete modal not available");
+    }
+  });
 });

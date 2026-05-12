@@ -15,12 +15,11 @@ if (!$id) {
     echo json_encode(['error' => 'Invalid activity ID']);
     exit;
 }
-$stmt = $conn->prepare("UPDATE activities SET archived = 1, archived_at = NOW() WHERE id = ?");
+$stmt = $conn->prepare("UPDATE activities SET archived = 0, archived_at = NULL WHERE id = ?");
 $stmt->bind_param("i", $id);
 if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Activity archived.']);
+    echo json_encode(['success' => true, 'message' => 'Activity restored.']);
 } else {
     echo json_encode(['error' => 'Database error: ' . $conn->error]);
 }
-
 ?>
