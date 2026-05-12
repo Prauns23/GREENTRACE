@@ -136,6 +136,11 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
                             <i class="fa-solid fa-user-group"></i><span class="label">Users</span>
                         </a>
                     </li>
+                    <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'activities_manage.php' ? 'active' : ''; ?>">
+                        <a href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? 'activities_manage.php' : 'admin/activities_manage.php'; ?>">
+                           <i class="fa-solid fa-calendar-days"></i><span>Manage Activities</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         <?php endif ?>
