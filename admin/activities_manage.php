@@ -205,14 +205,23 @@ include __DIR__ . '/../header.php';
 
 <script src="activities_manage.js"></script>
 <script>
-    // Simple toast from URL (will be replaced with proper toast later)
     const urlParams = new URLSearchParams(window.location.search);
     const toastMsg = urlParams.get('toast');
+    const toastType = urlParams.get('type');
     if (toastMsg) {
-        alert(decodeURIComponent(toastMsg));
-        const cleanUrl = window.location.pathname;
+        // Remove parameteres from URL without reload
+        const cleanUrl = window.location.pathname + window.location.search.replace(/[&?]toast=[^&]*/g, '').replace(/[&?]type=[^&]*/g,'').replace(/[?&]/, '');
         window.history.replaceState({}, document.title, cleanUrl);
-    }
+
+        setTimeout(() => {
+            if (typeof showToast === 'function') {
+                showToast(decodeURIComponent(toastMsg), 5000, toastType === 'error' ? 'error' : 'success');
+            } else {
+                alert(decodeURIComponent(toastMsg));
+            }
+        }, 500);
+    }                                    
+
 </script>
 
 <?php require_once __DIR__ . '/../footer.php'; ?>
