@@ -71,8 +71,8 @@ if (!$forest) {
                 </div>
 
                 <div class="form-group">
-                    <label for="dateEstablished">Date Established</label>
-                    <input type="date" id="dateEstablished" name="date_established" value="<?php echo $forest['date_established']; ?>">
+                    <label for="dateEstablished">Date Started</label>
+                    <input type="date" id="dateEstablished" name="date_established" value="<?php echo $forest['date_started']; ?>">
                 </div>
 
                 <div class="form-group">
