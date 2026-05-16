@@ -291,6 +291,19 @@ function showConfirmDelete(idOrArray) {
   activeContainer = container;
 }
 
+// Edit Activity Modal
+function showEditActivityModal(activityId) {
+    closeAllFloating();
+    const container = document.getElementById('floatingEditActivityContainer');
+    const iframe = document.getElementById('editActivityFrame');
+    iframe.src = `modals/edit_activity.php?id=${activityId}`;
+    container.classList.add('active');
+    overlay.classList.add('active');
+    body.classList.add('login-active');
+    activeContainer = container;
+}
+
+window.showEditActivityModal = showEditActivityModal;
 window.showActivityDetails = showActivityDetails;
 window.showSignUp = showSignUp;
 window.showSignIn = showSignIn;

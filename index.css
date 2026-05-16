@@ -158,6 +158,12 @@ body.login-active {
   background: transparent;
 }
 
+#floatingEditActivityContainer .floating-iframe {
+    width: 750px;
+    height: 90vh;
+    border-radius: 24px;
+}
+
 .overlay.active {
   display: block; /* Show when active */
 }

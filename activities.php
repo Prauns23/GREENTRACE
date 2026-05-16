@@ -118,7 +118,7 @@ include 'header.php';
                 <?php endforeach; ?>
             <?php endif; ?>
             <!-- ADD ACTIVITY (Admin Only) -->
-            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin' ): ?>
+            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                 <div class="activity-card add-activity-card" onclick="showAddActivityModal()" role="button" aria-label="Add activity">
                     <div class="add-activity-inner">
                         <i class="fa-solid fa-plus add-activity-icon"></i>
@@ -224,7 +224,11 @@ include 'header.php';
     }
 
     function editActivity(activityId) {
-        alert('Edit functionality will be added later. Activity ID: ' + activityId);
+        if (window.parent.showEditActivityModal) {
+            window.parent.showEditActivityModal(activityId);
+        } else {
+            alert('Edit modal not available');
+        }
     }
 
     // Filter dropdown change

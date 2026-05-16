@@ -42,6 +42,7 @@ body {
 .search-bar form {
   display: flex;
   gap: 0.5rem;
+  border: none;
 }
 
 .search-bar input {
@@ -50,6 +51,7 @@ body {
   border-radius: 8px;
   width: 250px;
   font-size: 0.9rem;
+  border: none;
 }
 
 .category-buttons {

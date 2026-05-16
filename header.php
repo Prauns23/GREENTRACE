@@ -101,7 +101,12 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
     <div class="floating-container" id="floatingDeleteContainer">
         <iframe src="/greentrace/modals/confirm_delete.php" class="floating-iframe" id="confirmDeleteFrame"></iframe>
     </div>
-    
+
+    <!-- Edit Activity Modal -->
+    <div class="floating-container" id="floatingEditActivityContainer">
+        <iframe src="<?php echo $basePath; ?>modals/edit_activity.php" class="floating-iframe" id="editActivityFrame"></iframe>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
