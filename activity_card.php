@@ -1,3 +1,11 @@
+<?php 
+
+$today = date('Y-m-d');
+if (!isset($activity)) {
+    return;
+}
+
+?>
 <div class="activity-card <?= $activity['date'] < $today ? 'past-activity' : '' ?>" data-activity-id="<?= $activity['id'] ?>" onclick="<?= $activity['date'] >= $today ? 'showActivityDetails(' . $activity['id'] . ')' : '' ?>">
     <div class="activity-prev">
         <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>

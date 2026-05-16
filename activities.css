@@ -319,6 +319,39 @@
   color: #1a1a1a;
 }
 
+/* Add Activity Card (admin) */
+.activity-card.add-activity-card {
+  background: transparent;
+  border: 2px dashed #70707086;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 424px;
+  padding: 20px;
+}
+
+.activity-card.add-activity-card .add-activity-inner {
+  text-align: center;
+  color: #707070;
+}
+
+.activity-card.add-activity-card .add-activity-icon {
+  font-size: 32px;
+  color: #707070ab;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.activity-card.add-activity-card .add-activity-guidetext {
+  color: #70707086;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+
+
 /* Responsive */
 @media (max-width: 768px) {
   .activities-page {
@@ -386,4 +419,5 @@
     flex-direction: column;
     gap: 8px;
   }
+
 }
