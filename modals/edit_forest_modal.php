@@ -24,6 +24,7 @@ if (!$forest) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,6 +34,7 @@ if (!$forest) {
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="edit_forest_modal.css" />
 </head>
+
 <body>
     <div class="modal-container">
         <div class="modal-header">
@@ -88,16 +90,16 @@ if (!$forest) {
                     <label for="description">Description</label>
                     <textarea id="description" name="description" placeholder="Describe the reforestation area, species planted, and etc..."><?php echo htmlspecialchars($forest['description']); ?></textarea>
                 </div>
-
-                <div class="button-group">
-                    <button class="btn-cancel" type="button" onclick="parent.hideFloating()">Cancel</button>
-                    <button class="btn-submit" type="submit">Save Changes</button>
-                </div>
             </form>
+            <div class="button-group">
+                <button class="btn-cancel" type="button" onclick="parent.hideFloating()">Cancel</button>
+                <button class="btn-submit" type="submit">Save Changes</button>
+            </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="edit_forest_modal.js"></script>
 </body>
+
 </html>

@@ -4,24 +4,32 @@
   box-sizing: border-box;
 }
 
+body,
+html {
+  height: 100%;
+  overflow: hidden !important;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: "Inter", sans-serif;
-  padding: 0;
-  margin: 0;
-  overflow: hidden;
 }
 
 .modal-container {
   width: 100%;
   max-width: 600px;
-  margin: 0 auto;
+  height: 100%;
+  margin: 0;
   background: white;
   border-radius: 24px;
-  overflow: visible;
-  padding: 20px 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -45,7 +53,7 @@ body {
 
 .modal-body {
   padding: 24px;
-  max-height: 70vh;
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -200,6 +208,7 @@ label {
   padding: 16px 24px;
   border-top: 1px solid #f0f0f0;
   background: white;
+  flex-shrink: 0;
 }
 
 .btn-cancel {
@@ -259,9 +268,8 @@ select:focus {
   border-color: #2e7d32;
 }
 
-
 .image-modal {
-  background-color: rgba(0, 0, 0, 0.5); 
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 /* Scrollbar */
