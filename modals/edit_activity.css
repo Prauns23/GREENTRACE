@@ -20,7 +20,7 @@ body {
   border-radius: 24px;
   padding: 24px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .edit-modal-header {
@@ -90,6 +90,7 @@ body {
 
 .form-group {
   margin-bottom: 20px;
+  overflow-y: visible;
 }
 
 .form-group label {
