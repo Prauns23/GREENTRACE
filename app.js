@@ -247,7 +247,7 @@ function showConfirmArchive(idOrArray) {
   } else {
     param = "id=" + idOrArray;
   }
-  const baseUrl = iframe.src.split('?')[0];
+  const baseUrl = iframe.src.split("?")[0];
   iframe.src = `${baseUrl}?${param}`;
   container.classList.add("active");
   overlay.classList.add("active");
@@ -265,7 +265,7 @@ function showConfirmRestore(idOrArray) {
   } else {
     param = "id=" + idOrArray;
   }
-  const baseUrl = iframe.src.split('?')[0];
+  const baseUrl = iframe.src.split("?")[0];
   iframe.src = `${baseUrl}?${param}`;
   container.classList.add("active");
   overlay.classList.add("active");
@@ -283,7 +283,7 @@ function showConfirmDelete(idOrArray) {
   } else {
     param = "id=" + idOrArray;
   }
-  const baseUrl = iframe.src.split('?')[0];
+  const baseUrl = iframe.src.split("?")[0];
   iframe.src = `${baseUrl}?${param}`;
   container.classList.add("active");
   overlay.classList.add("active");
@@ -293,16 +293,31 @@ function showConfirmDelete(idOrArray) {
 
 // Edit Activity Modal
 function showEditActivityModal(activityId) {
-    closeAllFloating();
-    const container = document.getElementById('floatingEditActivityContainer');
-    const iframe = document.getElementById('editActivityFrame');
-    iframe.src = `modals/edit_activity.php?id=${activityId}`;
-    container.classList.add('active');
-    overlay.classList.add('active');
-    body.classList.add('login-active');
-    activeContainer = container;
+  closeAllFloating();
+  const container = document.getElementById("floatingEditActivityContainer");
+  const iframe = document.getElementById("editActivityFrame");
+  iframe.src = `modals/edit_activity.php?id=${activityId}`;
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
 }
 
+// Add Activity Modal
+function showAddActivityModal() {
+  closeAllFloating();
+  const container = document.getElementById("floatingAddActivityContainer");
+  const iframe = document.getElementById('addActivityFrame');
+  iframe.src = 'modals/add_activity.php';
+  console.log('Loading iframe:', iframe.src);
+  container.classList.add('active');
+  overlay.classList.add('active')
+  body.classList.add('login-active')
+  activeContainer = container;
+}
+
+
+window.showAddActivityModal = showAddActivityModal;
 window.showEditActivityModal = showEditActivityModal;
 window.showActivityDetails = showActivityDetails;
 window.showSignUp = showSignUp;

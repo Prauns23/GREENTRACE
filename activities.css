@@ -329,6 +329,7 @@
   justify-content: center;
   min-height: 424px;
   padding: 20px;
+  transition: all 0.2s ease;
 }
 
 .activity-card.add-activity-card .add-activity-inner {
@@ -341,6 +342,7 @@
   color: #707070ab;
   display: block;
   margin-bottom: 24px;
+  transition: all 0.3s ease-in;
 }
 
 .activity-card.add-activity-card .add-activity-guidetext {
@@ -348,8 +350,12 @@
   font-size: 0.95rem;
   font-weight: 500;
   margin: 0;
+  transition: all 0.2s ease;
 }
 
+.activity-card.add-activity-card:hover {
+  border: 2px dashed #2e7d32;
+}
 
 
 /* Responsive */
@@ -419,5 +425,4 @@
     flex-direction: column;
     gap: 8px;
   }
-
 }

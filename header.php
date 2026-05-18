@@ -107,6 +107,12 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
         <iframe src="<?php echo $basePath; ?>modals/edit_activity.php" class="floating-iframe" id="editActivityFrame"></iframe>
     </div>
 
+    <!-- Add Activity Modal -->
+
+    <div class="floating-container" id="floatingAddActivityContainer">
+        <iframe src="/greentrace/modals/add_activity.php" class="floating-iframe" id="addActivityFrame"></iframe>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
