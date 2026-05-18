@@ -25,7 +25,7 @@ if (!$activity) {
     <title>Edit Activity</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="edit_activity.css?v=2">
+    <link rel="stylesheet" href="edit_activity.css?v=3">
 </head>
 
 <body>
@@ -35,7 +35,7 @@ if (!$activity) {
             <p>Edit the details of the activity you made such as the title, image, and etc.</p>
         </div>
 
-        <div class="form-container">
+        <div class="form-scrollable">
             <form id="editActivityForm">
                 <input type="hidden" name="activity_id" value="<?= $activity['id'] ?>">
 
@@ -103,15 +103,15 @@ if (!$activity) {
                     <label>Capacity</label>
                     <input type="number" name="capacity" value="<?= $activity['capacity'] ?>">
                 </div>
-
-
             </form>
         </div>
+
         <div class="button-group">
             <button type="button" class="cancel-btn" onclick="parent.hideFloating()">Cancel</button>
-            <button type="submit" class="submit-btn">Save</button>
+            <button type="submit" form="editActivityForm" class="submit-btn">Save</button>
         </div>
     </div>
+
     <script>
         const imageUploadArea = document.getElementById('imageUploadArea');
         const imageFileInput = document.getElementById('imageFile');
@@ -136,10 +136,10 @@ if (!$activity) {
         const form = document.getElementById('editActivityForm');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(form);
-            const submitBtn = form.querySelector('.submit-btn');
+            const submitBtn = document.querySelector('.submit-btn');
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Saving...';
+            const formData = new FormData(form);
             try {
                 const response = await fetch('../actions/update_activity.php', {
                     method: 'POST',
