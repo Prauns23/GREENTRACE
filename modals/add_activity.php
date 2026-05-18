@@ -1,3 +1,15 @@
+<?php
+require_once '../init_session.php';
+require_once '../config.php';
+
+// Only admin can access this modal directly
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    echo '<div style="padding: 20px; text-align: center;">Access denied. You must be an administrator.</div>';
+    exit;
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -23,7 +35,7 @@
                     <label>Activity Title <span class="required">*</span></label>
                     <input type="text" name="title" placeholder="E.g., Urban Tree Planting" required>
                 </div>
-                
+
                 <div class="image-upload-area" id="imageUploadArea">
                     <div class="image-preview" id="imagePreview">
                         <div class="placeholder-icon"><i class="fas fa-cloud-upload-alt"></i></div>
