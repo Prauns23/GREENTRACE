@@ -118,8 +118,8 @@ $maxDate = (clone $today)->sub(new DateInterval('P18Y'))->format('Y-m-d');
                 </div>
 
                 <div class="bottom-button">
-                    <button type="submit" class="submit-btn" <?php echo $isDisabled ? 'disabled' : ''; ?>>Submit Application</button>
                     <button type="button" class="cancel-btn" onclick="parent.hideFloating()">Cancel</button>
+                    <button type="submit" class="submit-btn" <?php echo $isDisabled ? 'disabled' : ''; ?>>Submit Application</button>
                 </div>
             </form>
         </div>
