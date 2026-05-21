@@ -2,6 +2,14 @@
 require_once 'init_session.php';
 require_once 'config.php';
 
+// CSRF validation for POST request
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+        die('Invalid CSRF token. Please refresh the page and try again.');
+    }
+}
+
 // Sign Up
 if (isset($_POST['sign-up'])) {
     $fname   = $_POST['first_name'];

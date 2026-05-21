@@ -37,6 +37,7 @@ function isActiveForm($formName, $activeForm)
                 <h1>Welcome Back!</h1>
                 <p class="subtitle">Let's keep planting the future, your forest is waiting</p>
                 <form action="../login_register.php" method="post" target="_parent">
+                    <?php csrf_field(); ?>
                     <div class="form-group">
                         <label>Email Address</label>
                         <input type="email" name="email" placeholder="Email Account">

@@ -19,7 +19,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
 
 
 
-
+    <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Green Trace</title>

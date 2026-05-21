@@ -316,6 +316,9 @@ function showAddActivityModal() {
   activeContainer = container;
 }
 
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
 
 window.showAddActivityModal = showAddActivityModal;
 window.showEditActivityModal = showEditActivityModal;

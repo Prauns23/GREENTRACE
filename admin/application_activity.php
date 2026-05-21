@@ -292,7 +292,6 @@ require_once __DIR__ . '/../header.php';
                     <th><input type="checkbox" id="selectAll"></th>
                     <th>User</th>
                     <th>Activity</th>
-                    <th>Full Name</th>
                     <th>Birthdate</th>
                     <th>Mobile</th>
                     <th>Barangay</th>
@@ -320,11 +319,9 @@ require_once __DIR__ . '/../header.php';
                         <tr class="<?= $rowClass ?>">
                             <td><input type="checkbox" class="rowCheckbox" value="<?= $app['id'] ?>"></td>
                             <td>
-                                <strong><?= htmlspecialchars($app['fname'] . ' ' . $app['lname']) ?></strong><br>
-                                <small><?= htmlspecialchars($app['user_email']) ?></small>
+                                <strong><?= htmlspecialchars($app['fname'] . ' ' . $app['lname']) ?></strong>
                             </td>
                             <td><?= htmlspecialchars($app['activity_title']) ?></td>
-                            <td><?= htmlspecialchars($app['full_name']) ?></td>
                             <td><?= date('M d, Y', strtotime($app['date_of_birth'])) ?></td>
                             <td><?= htmlspecialchars($app['mobile_number']) ?></td>
                             <td><?= htmlspecialchars($app['barangay']) ?></td>
