@@ -29,7 +29,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         </div>
 
         <div class="form-scrollable">
-            <form id="addActivityForm">
+            <form id="addActivityForm" enctype="multipart/form-data">
 
                 <div class="form-group">
                     <label>Activity Title <span class="required">*</span></label>
@@ -41,7 +41,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                         <div class="placeholder-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                     </div>
                     <div class="upload-text">Click to upload the image or drag and drop<br><small>PNG, JPG up to 10MB</small></div>
-                    <input type="file" id="imageFile" accept="image/jpeg,image/png" style="display: none;">
+                    <input type="file" id="imageFile" accept="image/jpeg,image/png" style="display: none;" name="image">
                     <input type="hidden" name="image_url" id="imageUrl">
                 </div>
 

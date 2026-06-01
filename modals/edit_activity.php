@@ -36,7 +36,7 @@ if (!$activity) {
         </div>
 
         <div class="form-scrollable">
-            <form id="editActivityForm">
+            <form id="editActivityForm" enctype="multipart/form-data">
                 <input type="hidden" name="activity_id" value="<?= $activity['id'] ?>">
 
                 <div class="form-group">
@@ -53,7 +53,7 @@ if (!$activity) {
                         <?php endif; ?>
                     </div>
                     <div class="upload-text">Click to replace the image or drag and drop<br><small>PNG, JPG up to 10MB</small></div>
-                    <input type="file" id="imageFile" accept="image/jpeg,image/png" style="display: none;">
+                    <input type="file" id="imageFile" accept="image/jpeg,image/png" style="display: none;" name="image">
                     <input type="hidden" name="image_url" id="imageUrl" value="<?= htmlspecialchars($activity['image_url'] ?? '') ?>">
                 </div>
 

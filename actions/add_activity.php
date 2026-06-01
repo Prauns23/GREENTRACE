@@ -34,6 +34,25 @@ if (empty($title) || empty($description) || empty($date) || empty($location) || 
     exit;
 }
 
+// Handles image upload 
+$image_url = '';
+if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+    $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/greentrace/uploads/activities/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+    $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+    $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (in_array($ext, $allowed)) {
+        $filename = 'activity_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+        $destination = $uploadDir . $filename;
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
+            $image_url = 'uploads/activities/' . $filename;
+        }
+    }
+} else {
+    // Keep existing image url if provided via text field
+    $image_url = trim($_POST['image_url'] ?? '');
+}
+
 $stmt = $conn->prepare("INSERT INTO activities (title, description, date, time_start, time_end, location, meetup_point, capacity, badge_primary, badge_secondary, image_url, created_at, archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)");
 if (!$stmt) {
     echo json_encode(['error' => 'Prepare failed: ' . $conn->error]);
