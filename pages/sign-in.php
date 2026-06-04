@@ -2,10 +2,13 @@
 require_once '../init_session.php';
 
 $errors = [
-    'login' => $_SESSION['login_error'] ?? '',
+    'login' => $_SESSION['login_error'] ?? $_SESSION['csrf_error'] ?? '',
     'register' => $_SESSION['register_error'] ?? ''
 ];
 $activeForm = $_SESSION['active_form'] ?? 'sign-in';
+
+// Clear errors after displaying
+unset($_SESSION['login_error'], $_SESSION['register_error'], $_SESSION['csrf_error'], $_SESSION['active_form']);
 
 function showError($error)
 {
@@ -36,7 +39,8 @@ function isActiveForm($formName, $activeForm)
             <div class="form-column">
                 <h1>Welcome Back!</h1>
                 <p class="subtitle">Let's keep planting the future, your forest is waiting</p>
-                <form action="../login_register.php" method="post" target="_parent">
+                <?php echo showError($errors['login']); ?>
+                <form action="/greentrace/login_register.php" method="post" target="_parent">
                     <?php csrf_field(); ?>
                     <div class="form-group">
                         <label>Email Address</label>

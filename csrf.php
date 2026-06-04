@@ -18,14 +18,22 @@ function generateCSRFToken() {
  * @return bool
  */
 function verifyCSRFToken($token) {
-    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    $isValid = isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    
+    // Log for debugging
+    error_log('CSRF Verification: POST=' . substr($token ?? '', 0, 8) . 
+              ', Session=' . substr($_SESSION['csrf_token'] ?? '', 0, 8) . 
+              ', Match=' . ($isValid ? 'YES' : 'NO'));
+    
+    return $isValid;
 }
 
 /**
  * Output a hidden input field with the CSRF token (for forms).
  */
 function csrf_field() {
-    echo '<input type="hidden" name="csrf_token" value="' . generateCSRFToken() . '">';
+    $token = generateCSRFToken();
+    echo '<input type="hidden" name="csrf_token" value="' . $token . '">';
 }
 
 /**

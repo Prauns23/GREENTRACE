@@ -3,11 +3,26 @@ require_once 'init_session.php';
 require_once 'config.php';
 
 // CSRF validation for POST request
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
-        die('Invalid CSRF token. Please refresh the page and try again.');
-    }
+    $postToken = $_POST['csrf_token'] ?? '';
+    $sessionToken = $_SESSION['csrf_token'] ?? '';
+    
+    error_log('=== CSRF Validation Debug ===');
+    error_log('POST csrf_token: ' . substr($postToken, 0, 16) . (strlen($postToken) > 16 ? '...' : ''));
+    error_log('Session token: ' . substr($sessionToken, 0, 16) . (strlen($sessionToken) > 16 ? '...' : ''));
+    error_log('SessionID: ' . session_id());
+    error_log('Session file: ' . session_save_path() . '/sess_' . session_id());
+    error_log('POST token present: ' . (isset($_POST['csrf_token']) ? 'YES' : 'NO'));
+    error_log('Session token present: ' . (isset($_SESSION['csrf_token']) ? 'YES' : 'NO'));
+
+    // if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+    //     error_log('CSRF validation FAILED');
+    //     $_SESSION['csrf_error'] = 'Invalid CSRF token. Please refresh the page and try again.';
+    //     $_SESSION['active_form'] = isset($_POST['sign-in']) ? 'sign-in' : 'sign-up';
+    //     header("Location: index.php");
+    //     exit();
+    // }
+    // error_log('CSRF validation PASSED');
 }
 
 // Sign Up

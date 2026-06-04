@@ -36,7 +36,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
     </div>
     <!-- Login Popup -->
     <div class="floating-container" id="floatingSignInContainer">
-        <iframe src="<?php echo $basePath; ?>pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
+        <iframe src="/greentrace/pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
     </div>
     <!-- Report popup -->
     <div class="floating-container" id="floatingReportContainer">
