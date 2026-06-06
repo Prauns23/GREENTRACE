@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=park" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to GreenTrace</title>
+    <style>
+        /* Reset styles for email clients */
+        body,
+        table,
+        td,
+        p,
+        a {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #1a1a1a;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background: #2e7d32;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 12px;
+        }
+
+        .content {
+            padding: 30px 25px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .greeting {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 32px;
+        }
+
+        .highlight {
+            font-weight: 600;
+        }
+
+        .message1 {
+            margin-bottom: 30px;
+        }
+
+        .message1 p {
+            font-size: 32px;
+            font-weight: 600;
+            color: #2e7d32;
+            line-height: 1;
+        }
+
+        .message1 span {
+            font-style: italic;
+        }
+
+        .message2 {
+            margin: 0 100px 0;
+        }
+
+        .message2 p {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .celebration-icon {
+            margin-top: 32px;
+            margin-bottom: 32px;
+            align-items: center;
+        }
+
+        .celebration-icon img {
+            height: 260px;
+            width: 205;
+        }
+
+        .button {
+            display: inline-block;
+            background: #2e7d32;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 500;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .button:hover {
+            background: #1b5e20;
+        }
+
+        .accountdetailsBtn a {
+            margin: 0;
+        }
+
+        .accountdetailsBtn p {
+            font-size: 12px;
+            color: #666;
+            padding: 5px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 24px 0;
+        }
+
+        /* Footer table layout */
+        .footer-table {
+            width: 100%;
+            background: #2e7d32;
+            border-radius: 24px;
+            overflow: hidden;
+            padding: 32px 10px;
+        }
+
+        .footer-table td {
+            padding: 20px;
+            vertical-align: top;
+            color: white;
+        }
+
+        .footer-left {
+            text-align: left;
+        }
+
+        .footer-left h1 {
+            color: white;
+            font-size: 24px;
+            font-weight: 500px;
+            margin-bottom: 8px;
+        }
+
+        .footer-left p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .footer-right {
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            margin-top: 20px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .contact-item i {
+            width: 20px;
+            color: white;
+            font-size: 16px;
+        }
+
+        .contact-item p {
+            margin: 0;
+            color: white;
+            font-size: 14px;
+        }
+
+        .small-note {
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        .small-note01 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 14px;
+            margin-top: 42px;
+        }
+
+        .small-note02 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 32px;
+        }
+
+        .small-note02 a {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+
+            .greeting {
+                font-size: 20px;
+            }
+
+            .button {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body style="background: #f0f2f5; padding: 20px;">
+    <div class="container">
+        <div class="header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none"
+                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-tree-pine-icon lucide-tree-pine">
+                <path
+                    d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" />
+                <path d="M12 22v-3" />
+            </svg>
+        </div>
+        <div class="content">
+            <div class="greeting">
+                Hello, <span class="highlight">Franz Harvey Bautista</span>!
+            </div>
+            <div class="message1">
+                <p>You’re now part of <br><span>GreenTrace!</span></p>
+            </div>
+            <div class="message2">
+                <p>Join monthly activities helping restore Morong Bataan’s Forests — one tree at a time.</p>
+            </div>
+            <div class="celebration-icon">
+                <img src="components\icons\undraw_celebration_wtm8.svg" alt="">
+            </div>
+            <div class="accountdetailsBtn">
+                <a href="[[ACCOUNT_URL]]" class="button">Account Details</a>
+                <p>Click to see your account details</p>
+            </div>
+            <div class="small-note">
+                <p class="small-note01">Please note: this message was sent from a notification‑only address that cannot
+                    accept incoming
+                    email. Please do not reply to this message.</p>
+                <p class="small-note02">Please see our <a href="#">Terms of Use</a> and <a href="#">Privacy & Cookies
+                        Policy</a> for more
+                    information.</p>
+            </div>
+        </div>
+        <table class="footer-table" cellpadding="0" cellspacing="0" role="presentation">
+            <tr>
+                <td class="footer-left" style="width: 60%;">
+                    <h1>GreenTrace</h1>
+                    <p>Empowering communities to restore nature through technology, transparency, and collective action.
+                    </p>
+                </td>
+                <td class="footer-right" style="width: 40%;">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <p>Morong, Bataan, Philippines</p>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <p>greentraceph@gmail.com</p>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <p>+639 176 367803</p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>
