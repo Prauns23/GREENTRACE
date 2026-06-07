@@ -2,13 +2,6 @@
 <html>
 
 <head>
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=park" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to GreenTrace</title>
@@ -22,7 +15,7 @@
             margin: 0;
             padding: 0;
             border: 0;
-            font-family: 'Inter', Arial, sans-serif;
+            font-family: 'Segoe UI', 'Verdana', 'Helvetica Neue', Arial, sans-serif;
             font-size: 16px;
             line-height: 1.5;
             color: #1a1a1a;
@@ -40,9 +33,9 @@
 
         .header {
             background: #2e7d32;
-            padding: 30px 20px;
+            padding: 18px 0;
             text-align: center;
-            border-radius: 12px;
+            border-radius: 24px;
         }
 
         .content {
@@ -55,6 +48,7 @@
             font-size: 16px;
             font-weight: 500;
             margin-bottom: 32px;
+            color: #555;
         }
 
         .highlight {
@@ -81,6 +75,7 @@
         }
 
         .message2 p {
+            color: #555;
             font-size: 14px;
             font-weight: 500;
         }
@@ -88,12 +83,18 @@
         .celebration-icon {
             margin-top: 32px;
             margin-bottom: 32px;
-            align-items: center;
+            text-align: center;
         }
 
-        .celebration-icon img {
+        .celebration-icon svg {
             height: 260px;
-            width: 205;
+            width: auto;
+            max-width: 100%;
+        }
+
+        .contact-item span {
+            color: white;
+            font-size: 18px;
         }
 
         .button {
@@ -122,11 +123,6 @@
             padding: 5px;
         }
 
-        .divider {
-            height: 1px;
-            background: #e0e0e0;
-            margin: 24px 0;
-        }
 
         /* Footer table layout */
         .footer-table {
@@ -163,6 +159,14 @@
         .footer-right {
             text-align: left;
             white-space: nowrap;
+        }
+
+        .footer-right span {
+            font-size: 16px;
+        }
+
+        .footer-right img {
+            padding-right: 4px;
         }
 
         .contact-item {
@@ -207,7 +211,8 @@
 
         .small-note02 a {
             font-size: 12px;
-            color: #666;
+            color: #2e7d32;
+            text-decoration: none;
         }
 
         @media only screen and (max-width: 600px) {
@@ -229,13 +234,8 @@
 <body style="background: #f0f2f5; padding: 20px;">
     <div class="container">
         <div class="header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none"
-                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="lucide lucide-tree-pine-icon lucide-tree-pine">
-                <path
-                    d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z" />
-                <path d="M12 22v-3" />
-            </svg>
+            <img src="https://i.postimg.cc/5NSXxbRM/tree-pine-(2).png" alt="Tree icon" width="auto" height="42"
+                style="display:inline-block;">
         </div>
         <div class="content">
             <div class="greeting">
@@ -248,7 +248,7 @@
                 <p>Join monthly activities helping restore Morong Bataan’s Forests — one tree at a time.</p>
             </div>
             <div class="celebration-icon">
-                <img src="components\icons\undraw_celebration_wtm8.svg" alt="">
+                <img src="[[IMAGE_URL]]" alt="Celebration" style="max-width:100%; height:auto;">
             </div>
             <div class="accountdetailsBtn">
                 <a href="[[ACCOUNT_URL]]" class="button">Account Details</a>
@@ -272,15 +272,15 @@
                 </td>
                 <td class="footer-right" style="width: 40%;">
                     <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
+                        <img src="https://i.postimg.cc/yYyDVsb4/map-pin.png" alt="" height="18" width="auto">
                         <p>Morong, Bataan, Philippines</p>
                     </div>
                     <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
+                        <img src="https://i.postimg.cc/fTfVwDr4/mail.png" alt="" height="18" width="auto">
                         <p>greentraceph@gmail.com</p>
                     </div>
                     <div class="contact-item">
-                        <i class="fas fa-phone-alt"></i>
+                        <img src="https://i.postimg.cc/c4Bvs05p/phone.png" alt="" height="18" width="auto">
                         <p>+639 176 367803</p>
                     </div>
                 </td>
