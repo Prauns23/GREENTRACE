@@ -3,6 +3,25 @@
 <script src="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>app.js"></script>
 <script src="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>nav.js"></script>
 
+<script>
+    // Check URL for toast parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const toastMsg = urlParams.get('toast');
+    const toastType = urlParams.get('type') === 'error' ? 'error' : 'success';
+    if (toastMsg) {
+        // Clean the URL
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        setTimeout(() => {
+            if (typeof showToast === 'function') {
+                showToast(decodeURIComponent(toastMsg), 5000, toastType);
+            } else {
+                alert(decodeURIComponent(toastMsg));
+            }
+        }, 500);
+    }
+</script>
+
 <?php if (isset($_SESSION['login_success'])): ?>
     <script>
         window.addEventListener('DOMContentLoaded', function() {
@@ -68,6 +87,7 @@ endif; ?>
     </script>
 <?php unset($_SESSION['open_signup_modal']);
 endif; ?>
+
 
 </body>
 

@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // error_log('CSRF validation PASSED');
 }
 
-// Sign Up
+//  SIGN UP (AJAX) 
 if (isset($_POST['sign-up'])) {
     $fname   = trim($_POST['first_name'] ?? '');
     $lname   = trim($_POST['last_name'] ?? '');
@@ -34,11 +34,12 @@ if (isset($_POST['sign-up'])) {
     $password = password_hash($_POST['password'] ?? '', PASSWORD_DEFAULT);
     $role    = $_POST['role'] ?? 'user';
 
+    $response = [];
+
     // Basic validation
     if (empty($fname) || empty($lname) || empty($email) || empty($_POST['password']) || empty($phone)) {
-        $_SESSION['register_error'] = 'All fields, including phone number, are required.';
-        $_SESSION['active_form'] = 'sign-up';
-        header("Location: index.php");
+        $response = ['success' => false, 'error' => 'All fields are required.'];
+        echo json_encode($response);
         exit();
     }
 
@@ -47,58 +48,59 @@ if (isset($_POST['sign-up'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result->num_rows > 0) {
-        $_SESSION['register_error'] = 'Email is already registered!';
-        $_SESSION['active_form'] = 'sign-up';
-    } else {
-        $stmt = $conn->prepare("INSERT INTO users_tbl (fname, lname, email, phone_no, password, role) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssss", $fname, $lname, $email, $phone, $password, $role);
-        if ($stmt->execute()) {
-            $newUserId = $conn->insert_id;
-
-            // Auto-login: set session variables
-            $_SESSION['first_name'] = $fname;
-            $_SESSION['last_name']  = $lname;
-            $_SESSION['email']      = $email;
-            $_SESSION['role']       = $role;
-            $_SESSION['user_id']    = $newUserId;
-            $_SESSION['register_success'] = "Account created successfully! Welcome, $fname!";
-
-            // Send welcome email
-            require_once __DIR__ . '/email_helper.php';
-            $templatePath = __DIR__ . '/welcome_template.html';
-            if (file_exists($templatePath)) {
-                $emailBody = file_get_contents($templatePath);
-                $fullName = $fname . ' ' . $lname;
-                $accountUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/greentrace/my_applications.php';
-                $baseUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/greentrace/';
-
-                $emailBody = str_replace('Hello, <span class="highlight">Franz Harvey Bautista</span>!', 'Hello, <span class="highlight">' . htmlspecialchars($fullName) . '</span>!', $emailBody);
-                $emailBody = str_replace('[[ACCOUNT_URL]]', $accountUrl, $emailBody);
-                $emailBody = str_replace('[[BASE_URL]]', $baseUrl, $emailBody);
-                $emailBody = str_replace('[[IMAGE_URL]]', 'https://i.postimg.cc/90NN9vxj/undraw-celebration-wtm8.png', $emailBody);
-
-                sendEmail($email, 'Welcome to GreenTrace!', $emailBody);
-            } else {
-                error_log("Welcome email template not found: $templatePath");
-            }
-        } else {
-            $_SESSION['register_error'] = 'Database error. Please try again.';
-            $_SESSION['active_form'] = 'sign-up';
-        }
+        $response = ['success' => false, 'error' => 'Email is already registered!'];
+        echo json_encode($response);
+        exit();
     }
-    header("Location: index.php");
+
+    $stmt = $conn->prepare("INSERT INTO users_tbl (fname, lname, email, phone_no, password, role) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $fname, $lname, $email, $phone, $password, $role);
+    if ($stmt->execute()) {
+        $newUserId = $conn->insert_id;
+
+        // Auto-login
+        $_SESSION['first_name'] = $fname;
+        $_SESSION['last_name']  = $lname;
+        $_SESSION['email']      = $email;
+        $_SESSION['role']       = $role;
+        $_SESSION['user_id']    = $newUserId;
+        $response = ['success' => true, 'message' => "Account created successfully! Welcome, $fname!"];
+
+        // Send welcome email (best effort)
+        require_once __DIR__ . '/email_helper.php';
+        $templatePath = __DIR__ . '/welcome_template.html';
+        if (file_exists($templatePath)) {
+            $emailBody = file_get_contents($templatePath);
+            $fullName = $fname . ' ' . $lname;
+            $accountUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/greentrace/my_applications.php';
+            $baseUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/greentrace/';
+
+            $emailBody = str_replace('Hello, <span class="highlight">Franz Harvey Bautista</span>!', 'Hello, <span class="highlight">' . htmlspecialchars($fullName) . '</span>!', $emailBody);
+            $emailBody = str_replace('[[ACCOUNT_URL]]', $accountUrl, $emailBody);
+            $emailBody = str_replace('[[BASE_URL]]', $baseUrl, $emailBody);
+            $emailBody = str_replace('[[IMAGE_URL]]', 'https://i.postimg.cc/90NN9vxj/undraw-celebration-wtm8.png', $emailBody);
+
+            sendEmail($email, 'Welcome to GreenTrace!', $emailBody);
+        } else {
+            error_log("Welcome email template not found: $templatePath");
+        }
+    } else {
+        $response = ['success' => false, 'error' => 'Database error. Please try again.'];
+    }
+    echo json_encode($response);
     exit();
 }
 
-// Sign In
+//  SIGN IN (AJAX) 
 if (isset($_POST['sign-in'])) {
     $email    = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
+    $response = [];
+
     if (empty($email) || empty($password)) {
-        $_SESSION['login_error'] = 'Please enter email and password.';
-        $_SESSION['active_form'] = 'sign-in';
-        header("Location: index.php");
+        $response = ['success' => false, 'error' => 'Please enter email and password.'];
+        echo json_encode($response);
         exit();
     }
 
@@ -115,15 +117,19 @@ if (isset($_POST['sign-in'])) {
             $_SESSION['email']      = $user['email'];
             $_SESSION['role']       = $user['role'];
             $_SESSION['user_id']    = $user['id'];
-            $_SESSION['login_success'] = "Welcome back, " . $user['fname'] . "!";
-            header("Location: index.php");
+            $response = ['success' => true, 'message' => "Welcome back, " . $user['fname'] . "!"];
+            echo json_encode($response);
             exit();
         }
     }
 
     // Login failed
-    $_SESSION['login_error'] = 'Incorrect email or password or account deactivated.';
-    $_SESSION['active_form'] = 'sign-in';
-    header("Location: index.php");
+    $response = ['success' => false, 'error' => 'Incorrect email or password.'];
+    echo json_encode($response);
     exit();
 }
+
+// If no action is set, just return an error (should not happen)
+echo json_encode(['success' => false, 'error' => 'Invalid request.']);
+exit();
+?>

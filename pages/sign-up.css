@@ -287,6 +287,49 @@ input::placeholder {
   text-decoration: underline;
 }
 
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(30px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 280px;
+  max-width: calc(100% - 32px);
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #d32f2f;
+  color: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+  font-size: 14px;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toast-close {
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 0 0 10px;
+}
+
 @media (max-width: 1240px) {
   .login-container {
     max-width: 95%;
