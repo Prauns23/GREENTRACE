@@ -14,15 +14,18 @@ $errors = [
 ];
 $activeForm = $_SESSION['active_form'] ?? 'sign-up';
 
-function showError($error) {
+function showError($error)
+{
     return !empty($error) ? "<p class='error-message'>$error</p>" : '';
 }
-function isActiveForm($formName, $activeForm) {
+function isActiveForm($formName, $activeForm)
+{
     return $formName === $activeForm ? 'active' : '';
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,6 +35,7 @@ function isActiveForm($formName, $activeForm) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="sign-up.css">
 </head>
+
 <body>
     <div class="login-container" <?= isActiveForm('sign-up', $activeForm); ?>>
         <span class="close-btn" onclick="parent.hideLogin && parent.hideLogin()">×</span>
@@ -70,7 +74,7 @@ function isActiveForm($formName, $activeForm) {
                         <label>Phone Number <span class="required">*</span></label>
                         <div class="phone-input">
                             <span class="country-code">PHIL</span>
-                            <input type="tel" name="phone_num" placeholder="09XX-XXX-YYYY" class="phone-field" maxlength="11" pattern="\d{11}" inputmode="numeric" required value="<?= htmlspecialchars($old_phone) ?>">
+                            <input type="tel" name="phone_num" placeholder="09XX-XXX-YYYY" class="phone-field" maxlength="11" pattern="\d{11}" inputmode="numeric" value="<?= htmlspecialchars($old_phone) ?>">
                         </div>
                     </div>
                     <div class="terms">
@@ -94,14 +98,27 @@ function isActiveForm($formName, $activeForm) {
 
     <script src="password-toggle.js"></script>
     <script>
-        // Phone number formatting (unchanged)
+        // Phone number formatting and focus order
         document.addEventListener('DOMContentLoaded', function() {
             const phoneField = document.querySelector('.phone-field');
+            const signupFields = [
+                document.querySelector('input[name="first_name"]'),
+                document.querySelector('input[name="last_name"]'),
+                document.querySelector('input[name="email"]'),
+                document.querySelector('input[name="password"]')
+            ];
+
+            // Focus the first empty field in order, excluding the phone field
+            // const firstEmptyField = signupFields.find(field => field && field.value.trim() === '');
+            // if (firstEmptyField) {
+            //     firstEmptyField.focus();
+            // }
+
             if (phoneField) {
-                phoneField.addEventListener('input', function(e) {
+                phoneField.addEventListener('input', function() {
                     this.value = this.value.replace(/\D/g, '');
                 });
-                phoneField.addEventListener('focus', function() {
+                phoneField.addEventListener('click', function() {
                     if (this.value === '') {
                         this.value = '09';
                         this.setSelectionRange(this.value.length, this.value.length);
@@ -112,6 +129,8 @@ function isActiveForm($formName, $activeForm) {
 
         // AJAX form submission
         const form = document.getElementById('signupForm');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
 
         function showSignupToast(message, duration = 5000) {
             if (typeof parent !== 'undefined' && parent.showToast) {
@@ -131,29 +150,65 @@ function isActiveForm($formName, $activeForm) {
             toast.classList.add('show');
 
             clearTimeout(window.signupToastTimer);
-            window.signupToastTimer = setTimeout(hideSignupToast, duration);
-        }
-
-        function hideSignupToast() {
-            const toast = document.getElementById('signupToast');
-            if (toast) {
+            window.signupToastTimer = setTimeout(() => {
                 toast.classList.remove('show');
                 toast.classList.add('hidden');
-            }
+            }, duration);
         }
+
+        // function hideSignupToast() {
+        //     const toast = document.getElementById('signupToast');
+        //     if (toast) {
+        //         toast.classList.remove('show');
+        //         toast.classList.add('hidden');
+        //     }
+        // }
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
+            // Get all required fields (excluding phone)
+            const firstName = this.querySelector('input[name="first_name"]');
+            const lastName = this.querySelector('input[name="last_name"]');
+            const email = this.querySelector('input[name="email"]');
+            const password = this.querySelector('input[name="password"]');
             const phoneField = this.querySelector('.phone-field');
-            const phoneValue = phoneField ? phoneField.value.replace(/\D/g, '') : '';
-            if (phoneValue.length !== 11) {
-                showSignupToast('Enter a valid phone number');
+
+            // Validate other required fields first
+            if (!firstName.value.trim()) {
+                showSignupToast('First name is required.');
+                firstName.focus();
+                return;
+            }
+            if (!lastName.value.trim()) {
+                showSignupToast('Last name is required.');
+                lastName.focus();
+                return;
+            }
+            if (!email.value.trim()) {
+                showSignupToast('Email address is required.');
+                email.focus();
+                return;
+            }
+            if (!password.value) {
+                showSignupToast('Password is required.');
+                password.focus();
                 return;
             }
 
+            // Now validate phone (only after other fields are filled)
+            const phoneValue = phoneField ? phoneField.value.replace(/\D/g, '') : '';
+            if (phoneValue.length !== 11) {
+                showSignupToast('Enter a valid 11‑digit phone number.');
+                phoneField.focus();
+                return;
+            }
+
+            // Disable button and show spinner
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Creating account...';
+
             const formData = new FormData(this);
-            // Add the sign-up flag (in case the button name is not sent)
             formData.append('sign-up', '1');
 
             try {
@@ -163,16 +218,20 @@ function isActiveForm($formName, $activeForm) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    // Redirect parent page with success toast
                     parent.location.href = '../index.php?toast=' + encodeURIComponent(data.message) + '&type=success';
                 } else {
                     showSignupToast(data.error || 'Registration failed.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
                 }
             } catch (err) {
                 showSignupToast('Network error. Please try again.');
                 console.error(err);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
         });
     </script>
 </body>
+
 </html>
