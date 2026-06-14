@@ -178,7 +178,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
                 <span class="label">Report an activity</span>
             </button>
         </div>
-        <div class="sidebar-profile">
+        <div class="sidebar-profile" onclick="window.location.href='profile.php'">
             <div class="profile-avatar">
                 <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="Profile">
             </div>

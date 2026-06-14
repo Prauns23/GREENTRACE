@@ -1,0 +1,150 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+  box-sizing: border-box;
+}
+
+.account-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.account-container h2 {
+  color: #3f7c42;
+  margin-bottom: 20px;
+}
+
+/* Header */
+.account-header {
+  margin-bottom: 32px;
+}
+
+.user-header-grid {
+  margin: 30px 0;
+}
+
+.user-header-grid h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #3f7c42;
+}
+
+.user-header-grid p {
+  color: #666;
+  margin-top: 4px;
+}
+
+/* Personal Information Card */
+
+.personal-info-container {
+  background: #f4f4f45d;
+  border-radius: 24px;
+  padding: 42px 120px 50px 38px;
+  margin-bottom: 32px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.info-item label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.info-item p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+/* Recent Activity Card */
+
+.recent-act-container {
+  background: #f4f4f45d;
+  border-radius: 24px;
+  padding: 42px;
+  overflow-y: auto;
+  max-height: 400px;
+  height: 100%;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.activity-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 24px;
+    padding-right: 32px;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.activity-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.activity-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.activity-title h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #3f7c42;
+    margin-bottom: 12px;
+}
+
+.time-ago {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.activity-date {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.activity-description {
+    font-size: 16px;
+    color: #444;
+    line-height: 1.5;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .activity-main {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .account-container {
+        margin: 20px auto;
+    }
+}

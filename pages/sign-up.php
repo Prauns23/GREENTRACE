@@ -108,12 +108,6 @@ function isActiveForm($formName, $activeForm)
                 document.querySelector('input[name="password"]')
             ];
 
-            // Focus the first empty field in order, excluding the phone field
-            // const firstEmptyField = signupFields.find(field => field && field.value.trim() === '');
-            // if (firstEmptyField) {
-            //     firstEmptyField.focus();
-            // }
-
             if (phoneField) {
                 phoneField.addEventListener('input', function() {
                     this.value = this.value.replace(/\D/g, '');
@@ -156,14 +150,6 @@ function isActiveForm($formName, $activeForm)
             }, duration);
         }
 
-        // function hideSignupToast() {
-        //     const toast = document.getElementById('signupToast');
-        //     if (toast) {
-        //         toast.classList.remove('show');
-        //         toast.classList.add('hidden');
-        //     }
-        // }
-
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -174,8 +160,21 @@ function isActiveForm($formName, $activeForm)
             const password = this.querySelector('input[name="password"]');
             const phoneField = this.querySelector('.phone-field');
 
+            const firstNameValue = firstName.value.trim();
+            const lastNameValue = lastName.value.trim();
+            const emailValue = email.value.trim();
+            const passwordValue = password.value;
+            const phoneValueRaw = phoneField ? phoneField.value.replace(/\D/g, '') : '';
+
+            // If every field is empty, show a single toast message
+            if (!firstNameValue && !lastNameValue && !emailValue && !passwordValue && !phoneValueRaw) {
+                showSignupToast('All fields must be filled');
+                firstName.focus();
+                return;
+            }
+
             // Validate other required fields first
-            if (!firstName.value.trim()) {
+            if (!firstNameValue) {
                 showSignupToast('First name is required.');
                 firstName.focus();
                 return;
