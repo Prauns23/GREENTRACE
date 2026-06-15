@@ -112,7 +112,7 @@
 .recent-act-container {
   background: #f4f4f481;
   border-radius: 24px;
-  padding: 42px 56px 42px 42px;
+  padding: 42px 20px 42px 42px;
   overflow-y: auto;
   max-height: 400px;
   height: 100%;
@@ -126,9 +126,9 @@
 }
 
 .activity-item {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1.2px solid #e9e9e9;
   padding-bottom: 24px;
-  padding-right: 32px;
+  padding-right: 12px;
 }
 
 .activity-item:last-child {

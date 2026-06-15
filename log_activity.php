@@ -1,4 +1,6 @@
 <?php
+
+
 function logActivity($user_id, $type, $item_id, $title, $status, $description) {
     global $conn;
     if (!$conn) return;
