@@ -14,6 +14,7 @@
 .account-container h2 {
   color: #3f7c42;
   margin-bottom: 20px;
+  font-weight: 600;
 }
 
 /* Header */
@@ -23,10 +24,35 @@
 
 .user-header-grid {
   margin: 30px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 0px;
+  border-radius: 24px;
+}
+
+.user-profile-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-avatar {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  color: #3f7c42;
+  font-size: 1.5rem;
+  background: #f4f4f4;
 }
 
 .user-header-grid h1 {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   font-weight: 600;
   color: #3f7c42;
 }
@@ -34,6 +60,22 @@
 .user-header-grid p {
   color: #666;
   margin-top: 4px;
+}
+
+.user-menu-trigger {
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 1.1rem;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-menu-trigger:hover {
+  color: #3f7c42;
 }
 
 /* Personal Information Card */
@@ -61,90 +103,102 @@
 
 .info-item p {
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #1a1a1a;
 }
 
 /* Recent Activity Card */
 
 .recent-act-container {
-  background: #f4f4f45d;
+  background: #f4f4f481;
   border-radius: 24px;
-  padding: 42px;
+  padding: 42px 56px 42px 42px;
   overflow-y: auto;
   max-height: 400px;
   height: 100%;
+  scrollbar-gutter: stable;
 }
 
 .activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .activity-item {
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 24px;
-    padding-right: 32px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 24px;
+  padding-right: 32px;
 }
 
 .activity-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .activity-main {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .activity-title {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .activity-title h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: #3f7c42;
-    margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #3f7c42; /* green for applications */
 }
 
-.time-ago {
-    font-size: 0.8rem;
-    color: #999;
-}
-
-.activity-date {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 8px;
+/* Report type changes h3 color to red */
+.activity-item[data-type="report"] .activity-title h3 {
+  color: #e53935;
 }
 
 .activity-description {
-    font-size: 16px;
-    color: #444;
-    line-height: 1.5;
+  font-size: 16px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.time-ago {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.activity-date {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.activity-description {
+  font-size: 16px;
+  color: #444;
+  line-height: 1.5;
 }
 
 /* Responsive */
 
 @media (max-width: 768px) {
-    .info-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    .activity-main {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .account-container {
-        margin: 20px auto;
-    }
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .activity-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .account-container {
+    margin: 20px auto;
+  }
 }

@@ -2,126 +2,145 @@
 require_once 'init_session.php';
 require_once 'config.php';
 
-// Ensure user is logged in
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['open_signup_modal'] = true;
     header('Location: index.php');
     exit();
 }
 
-$user_ud = $_SESSION['user_id'];
-// Placeholder data 
+$user_id = $_SESSION['user_id'];
+
+// Fetch user details (unchanged)
+$userStmt = $conn->prepare("SELECT fname, lname, email, phone_no, role, created_at FROM users_tbl WHERE id = ?");
+$userStmt->bind_param("i", $user_id);
+$userStmt->execute();
+$userData = $userStmt->get_result()->fetch_assoc();
 
 $user = [
-    'first_name' => $_SESSION['first_name'] ?? 'James Dean',
-    'last_name' => $_SESSION['last_name'] ?? 'Flores',
-    'email' => $_SESSION['email'] ?? 'jamesdean@example.com',
-    'phone' => $_SESSION['phone_no'] ?? '09196410680',
-    'role' => $_SESSION['role'] ?? 'user', // 'Volunteer' for display
-    'joined' => $_SESSION['created_at'] ?? 'MM-DD-YYYY',
-    'dob' => 'MM-DD-YYYY'
+    'first_name' => $userData['fname'] ?? $_SESSION['first_name'] ?? 'User',
+    'last_name'  => $userData['lname'] ?? $_SESSION['last_name'] ?? '',
+    'email'      => $userData['email'] ?? $_SESSION['email'] ?? '',
+    'phone'      => $userData['phone_no'] ?? 'Not provided',
+    'role'       => $userData['role'] ?? $_SESSION['role'] ?? 'user',
+    'joined'     => date('F j, Y', strtotime($userData['created_at'] ?? 'now'))
 ];
 
-// Placeholder recent activities - structure: title, time_ago, status, event_date, description
+// Fetch activity log
+$logStmt = $conn->prepare("
+    SELECT id, type, title, status, description, created_at 
+    FROM user_activity_log 
+    WHERE user_id = ? 
+    ORDER BY created_at DESC
+");
+$logStmt->bind_param("i", $user_id);
+$logStmt->execute();
+$activities = $logStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-$recentActivities = [
-    [
-        'title' => 'Tree Identification Workshop',
-        'time_ago' => '14 hours ago',
-        'status' => 'approved',
-        'event_date' => 'May 28, 2026',
-        'description' => 'Your application for the Tree Identificaiton workshop has been Approved. Click for more details.'
-    ],
-    [
-        'title' => 'Tree Identification Workshop',
-        'time_ago' => '2 days ago',
-        'status' => 'pending',
-        'event_date' => 'May 25, 2026',
-        'description' => 'Your application for the Tree Identification workshop is being processed, your application will be reviewed soon. Click for more details.'
-    ],
-    [
-        'title' => 'Animal Poaching Report',
-        'time_ago' => '7 weeks ago',
-        'status' => 'resolved',
-        'event_date' => 'Feb 21, 2026',
-        'description' => ''
-    ]
-];
+// Helper: relative time (displayed on server, but will be updated by JS)
+function time_ago($timestamp) {
+    $diff = time() - strtotime($timestamp);
+    if ($diff < 60) return 'Just now';
+    if ($diff < 3600) return round($diff / 60) . ' minutes ago';
+    if ($diff < 86400) return round($diff / 3600) . ' hours ago';
+    if ($diff < 604800) return round($diff / 86400) . ' days ago';
+    if ($diff < 2592000) return round($diff / 604800) . ' weeks ago';
+    return date('M j, Y', strtotime($timestamp));
+}
 
 include 'header.php';
 ?>
 <link rel="stylesheet" href="profile.css">
 
 <div class="account-container">
-    <!-- Header/Hero -->
     <div class="account-header">
         <div class="user-header-grid">
-            <div class="user-img">
-                <img src="" alt="user-profile">
+            <div class="user-profile-main">
+                <div class="user-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <h1><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h1>
+                    <p>Joined <?php echo $user['joined']; ?></p>
+                </div>
             </div>
-            <div class="user-details">
-                <h1><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h1>
-                <p>Joined <?php $user['joined']; ?></p>
-            </div>
-            <div class="action-btn">
+            <button type="button" class="user-menu-trigger" aria-label="More options">
                 <i class="fa-solid fa-ellipsis-vertical"></i>
-            </div>
+            </button>
         </div>
     </div>
 
     <h2>Personal Information</h2>
-
-    <!-- Personal Information Card -->
     <div class="personal-info-container">
-
         <div class="info-grid">
             <div class="info-item">
-                <label for="">First Name</label>
+                <label>First Name</label>
                 <p><?php echo htmlspecialchars($user['first_name']); ?></p>
             </div>
             <div class="info-item">
-                <label for="">Last Name</label>
+                <label>Last Name</label>
                 <p><?php echo htmlspecialchars($user['last_name']); ?></p>
             </div>
             <div class="info-item">
-                <label for="">Date of Birth</label>
-                <p><?php echo htmlspecialchars($user['dob']); ?></p>
-            </div>
-            <div class="info-item">
-                <label for="">Email Address</label>
+                <label>Email Address</label>
                 <p><?php echo htmlspecialchars($user['email']); ?></p>
             </div>
             <div class="info-item">
-                <label for="">Phone Number</label>
+                <label>Phone Number</label>
                 <p><?php echo htmlspecialchars($user['phone']); ?></p>
             </div>
             <div class="info-item">
-                <label for="">User Role</label>
-                <p><?php echo htmlspecialchars($user['role']); ?></p>
+                <label>User Role</label>
+                <p><?php echo ucfirst($user['role']); ?></p>
             </div>
         </div>
     </div>
 
-    <!-- Recent Activity Card -->
     <h2>Recent Activity</h2>
     <div class="recent-act-container">
-        <div class="activity-list">
-            <?php foreach ($recentActivities as $activity): ?>
-                <div class="activity-item" data-status="<?php echo $activity['status']; ?>">
-                    <div class="activity-main">
-                        <div class="activity-title">
-                            <h3><?php echo htmlspecialchars($activity['title']); ?></h3>
-                            <span class="time-ago"><?php echo htmlspecialchars($activity['time_ago']); ?></span>
+        <?php if (empty($activities)): ?>
+            <p class="no-activity">No recent activity to show.</p>
+        <?php else: ?>
+            <div class="activity-list" id="activityList">
+                <?php foreach ($activities as $act): ?>
+                    <div class="activity-item" data-type="<?php echo $act['type']; ?>" data-timestamp="<?php echo strtotime($act['created_at']); ?>">
+                        <div class="activity-main">
+                            <div class="activity-title">
+                                <h3><?php echo htmlspecialchars($act['title']); ?></h3>
+                                <span class="time-ago" data-ts="<?php echo strtotime($act['created_at']); ?>">
+                                    <?php echo time_ago($act['created_at']); ?>
+                                </span>
+                            </div>
                         </div>
+                        <p class="activity-date"><?php echo date('F j, Y', strtotime($act['created_at'])); ?></p>
+                        <p class="activity-description"><?php echo $act['description']; ?></p>
                     </div>
-                    <p class="activity-date"><?php echo $activity['event_date']; ?></p>
-                    <?php if (!empty($activity['description'])): ?>
-                        <p class="activity-description"><?php echo htmlspecialchars($activity['description']); ?></p>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
+
+<script>
+    // Update all "time ago" spans every 60 seconds
+    function refreshTimeAgo() {
+        const spans = document.querySelectorAll('.time-ago');
+        const now = Math.floor(Date.now() / 1000);
+        spans.forEach(span => {
+            const ts = parseInt(span.dataset.ts);
+            if (!ts) return;
+            const diff = now - ts;
+            let text = '';
+            if (diff < 60) text = 'Just now';
+            else if (diff < 3600) text = Math.floor(diff / 60) + ' minutes ago';
+            else if (diff < 86400) text = Math.floor(diff / 3600) + ' hours ago';
+            else if (diff < 604800) text = Math.floor(diff / 86400) + ' days ago';
+            else if (diff < 2592000) text = Math.floor(diff / 604800) + ' weeks ago';
+            else text = new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            span.textContent = text;
+        });
+    }
+    refreshTimeAgo();
+    setInterval(refreshTimeAgo, 60000); // every minute
+</script>
 
 <?php include 'footer.php'; ?>
