@@ -1,13 +1,13 @@
 <?php
 require_once __DIR__ . '/../init_session.php';
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../log_activity.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../index.php');
     exit;
 }
 
-// --- Single actions: approve, reject, restore ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_POST['action']) && !isset($_POST['bulk_action'])) {
     $app_id = (int)$_POST['application_id'];
     $action = $_POST['action'];
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
         elseif ($action === 'approve' || $action === 'reject') {
             if (($app['archived'] != 1) && $app['status'] === 'pending') {
                 if ($action === 'approve') {
-                    // CAPACITY CHECK before approving
+                    //  CAPACITY CHECK
                     $capStmt = $conn->prepare("SELECT capacity, participants_count FROM activities WHERE id = ?");
                     $capStmt->bind_param("i", $app['activity_id']);
                     $capStmt->execute();
@@ -72,6 +72,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                             $inc->execute();
                             $conn->commit();
                             $message = "Application approved.";
+
+                            // LOG ACTIVITY FOR APPROVE
+                            $actTitleStmt = $conn->prepare("SELECT title FROM activities WHERE id = ?");
+                            $actTitleStmt->bind_param("i", $app['activity_id']);
+                            $actTitleStmt->execute();
+                            $actTitle = $actTitleStmt->get_result()->fetch_assoc()['title'] ?? 'the activity';
+                            $actTitleStmt->close();
+                            require_once __DIR__ . '/../log_activity.php';
+                            logActivity($app['user_id'], 'application', $app_id, $actTitle, 'approved', "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>.");
                         } catch (Exception $e) {
                             $conn->rollback();
                             $message = 'Error: ' . $e->getMessage();
@@ -80,10 +89,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                     }
                     $capStmt->close();
                 } else { // reject
-                    $update = $conn->prepare("UPDATE volunteer_applications SET status = 'rejected' WHERE id = ?");
-                    $update->bind_param("i", $app_id);
-                    $update->execute();
-                    $message = "Application rejected.";
+                    $conn->begin_transaction();
+                    try {
+                        $update = $conn->prepare("UPDATE volunteer_applications SET status = 'rejected' WHERE id = ?");
+                        $update->bind_param("i", $app_id);
+                        $update->execute();
+                        $conn->commit();
+                        $message = "Application rejected.";
+
+                        // LOG ACTIVITY FOR REJECT
+                        $actTitleStmt = $conn->prepare("SELECT title FROM activities WHERE id = ?");
+                        $actTitleStmt->bind_param("i", $app['activity_id']);
+                        $actTitleStmt->execute();
+                        $actTitle = $actTitleStmt->get_result()->fetch_assoc()['title'] ?? 'the activity';
+                        $actTitleStmt->close();
+                        require_once __DIR__ . '/../log_activity.php';
+                        logActivity($app['user_id'], 'application', $app_id, $actTitle, 'rejected', "Your application for <strong>$actTitle</strong> has been <strong>rejected</strong>.");
+                    } catch (Exception $e) {
+                        $conn->rollback();
+                        $message = 'Error: ' . $e->getMessage();
+                        $type = 'error';
+                    }
                 }
             } else {
                 $message = 'Application not pending or already archived.';

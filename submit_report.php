@@ -64,7 +64,7 @@ if (isset($_FILES['photos']) && is_array($_FILES['photos']['name'])) {
 }
 
 if ($user_id !== null) {
-    logActivity($user_id, 'report', $report_id, $issue_type, 'pending', "Your report <strong>$issue_type</strong> is pending review.");
+    logActivity($user_id, 'report', $report_id, $issue_type, 'pending', "Your report <strong>$issue_type</strong> is <strong>pending</strong> review.");
 }
 
 echo json_encode(['success' => true, 'message' => 'Report submitted successfully']);

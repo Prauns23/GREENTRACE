@@ -43,7 +43,7 @@ $stmt->bind_param("si", $new_status, $report_id);
 if ($stmt->execute()) {
     // Log activity only if the report belongs to a logged‑in user (not anonymous)
     if ($user_id !== null) {
-        logActivity($user_id, 'report', $report_id, $issue_type, $new_status, "Your report \"$issue_type\" has been $new_status.");
+        logActivity($user_id, 'report', $report_id, $issue_type, $new_status, "Your report <strong>$issue_type</strong> has been <strong>$new_status</strong>.");
     }
     echo json_encode(['success' => true]);
 } else {

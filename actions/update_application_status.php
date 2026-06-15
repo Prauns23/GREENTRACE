@@ -94,7 +94,7 @@ try {
     $conn->commit();
 
     // Log activity after successful commit
-    logActivity($user_id, 'application', $app_id, $actTitle, $new_status, "Your application for \"$actTitle\" has been $new_status.");
+    logActivity($user_id, 'application', $app_id, $actTitle, $new_status, "Your application for <strong>$actTitle</strong> has been <strong>$new_status.</strong>");
 
     echo json_encode(['success' => true]);
 } catch (Exception $e) {
