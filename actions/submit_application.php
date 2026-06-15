@@ -1,6 +1,7 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
+require_once __DIR__ . '/../log_activity.php';
 
 header('Content-Type: application/json');
 
@@ -8,6 +9,7 @@ if (!isset($_SESSION['user_id'])) {
     echo json_encode(['error' => 'Not logged in']);
     exit;
 }
+
 
 $user_id = $_SESSION['user_id'];
 $activity_id = (int)($_POST['activity_id'] ?? 0);
@@ -134,11 +136,22 @@ foreach ($uploadedPaths as $idx => $path) {
         foreach ($uploadedPaths as $p) {
             $fullPath = $_SERVER['DOCUMENT_ROOT'] . '/GREENTRACE/' . $p;
             if (file_exists($fullPath)) unlink($fullPath);
+
+        
         }
         echo json_encode(['error' => 'Failed to save photo: ' . $originalName]);
         exit;
     }
 }
 $photoStmt->close();
+
+// Fetch activity title for logging
+$actTitleStmt = $conn->prepare("SELECT title FROM activities WHERE id = ?");
+$actTitleStmt->bind_param("i", $activity_id);
+$actTitleStmt->execute();
+$actTitle = $actTitleStmt->get_result()->fetch_assoc()['title'] ?? 'the activity';
+$actTitleStmt->close();
+
+logActivity($user_id, 'application', $application_id, $actTitle, 'pending', "Your application for <strong>$actTitle</strong> is pending. It will be reviewed soon.");
 
 echo json_encode(['success' => true]);

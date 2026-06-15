@@ -1,6 +1,7 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
+require_once __DIR__ . '/../log_activity.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -21,10 +22,29 @@ if (!$report_id || !in_array($new_status, ['pending', 'reviewed', 'resolved', 'd
     exit;
 }
 
+// Fetch the report's user_id and issue_type for logging
+$infoStmt = $conn->prepare("SELECT user_id, issue_type FROM reports WHERE id = ?");
+$infoStmt->bind_param("i", $report_id);
+$infoStmt->execute();
+$reportInfo = $infoStmt->get_result()->fetch_assoc();
+$infoStmt->close();
+
+if (!$reportInfo) {
+    echo json_encode(['error' => 'Report not found']);
+    exit;
+}
+
+$user_id = $reportInfo['user_id'];
+$issue_type = $reportInfo['issue_type'];
+
 $stmt = $conn->prepare("UPDATE reports SET status = ? WHERE id = ?");
 $stmt->bind_param("si", $new_status, $report_id);
 
 if ($stmt->execute()) {
+    // Log activity only if the report belongs to a logged‑in user (not anonymous)
+    if ($user_id !== null) {
+        logActivity($user_id, 'report', $report_id, $issue_type, $new_status, "Your report \"$issue_type\" has been $new_status.");
+    }
     echo json_encode(['success' => true]);
 } else {
     echo json_encode(['error' => 'Database error: ' . $conn->error]);
