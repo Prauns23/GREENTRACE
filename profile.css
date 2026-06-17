@@ -127,13 +127,18 @@
 
 .activity-item {
   border-bottom: 1.2px solid #e9e9e9;
-  padding-bottom: 24px;
-  padding-right: 12px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
 .activity-item:last-child {
   border-bottom: none;
   padding-bottom: 0;
+}
+
+.activity-item:hover {
+  background: #e8f5e9a2;
 }
 
 .activity-main {
@@ -162,6 +167,11 @@
 /* Report type changes h3 color to red */
 .activity-item[data-type="report"] .activity-title h3 {
   color: #e53935;
+  transition: all 0.3s ease;
+}
+
+.activity-item[data-type="report"]:hover {
+  background: #ffe5e6a2;
 }
 
 .activity-description {

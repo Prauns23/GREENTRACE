@@ -18,6 +18,10 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
     <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>activities.css">
 
 
+    <script>
+        window.basePath = '<?php echo $basePath; ?>';
+    </script>
+
 
     <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
     <meta charset="UTF-8">

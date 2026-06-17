@@ -296,7 +296,8 @@ function showEditActivityModal(activityId) {
   closeAllFloating();
   const container = document.getElementById("floatingEditActivityContainer");
   const iframe = document.getElementById("editActivityFrame");
-  iframe.src = `modals/edit_activity.php?id=${activityId}`;
+  iframe.src =
+    (window.basePath || "") + "modals/edit_activity.php?id=" + activityId;
   container.classList.add("active");
   overlay.classList.add("active");
   body.classList.add("login-active");
@@ -307,17 +308,19 @@ function showEditActivityModal(activityId) {
 function showAddActivityModal() {
   closeAllFloating();
   const container = document.getElementById("floatingAddActivityContainer");
-  const iframe = document.getElementById('addActivityFrame');
-  iframe.src = 'modals/add_activity.php';
-  console.log('Loading iframe:', iframe.src);
-  container.classList.add('active');
-  overlay.classList.add('active')
-  body.classList.add('login-active')
+  const iframe = document.getElementById("addActivityFrame");
+  iframe.src = (window.basePath || "") + "modals/add_activity.php";
+  console.log("Loading iframe:", iframe.src);
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
   activeContainer = container;
 }
 
 function getCSRFToken() {
-    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
 }
 
 window.showAddActivityModal = showAddActivityModal;

@@ -116,10 +116,17 @@ if (bulkDeleteBtn) {
 }
 
 // Single Actions
+
 document.querySelectorAll(".edit-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     const id = btn.dataset.id;
-    alert("Edit feature coming soon.");
+    if (typeof window,parent.showEditActivityModal === 'function') {
+      window.parent.showEditActivityModal(id);
+    } else if (typeof showEditActivityModal === 'function') {
+      showEditActivityModal(id);
+    } else {
+      alert('Edit Modal not available');
+    }
   });
 });
 

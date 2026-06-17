@@ -72,7 +72,7 @@ if (isset($_POST['sign-up'])) {
         if (file_exists($templatePath)) {
             $emailBody = file_get_contents($templatePath);
             $fullName = $fname . ' ' . $lname;
-            $accountUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/greentrace/my_applications.php';
+            $accountUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/greentrace/profile.php';
             $baseUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/greentrace/';
 
             $emailBody = str_replace('Hello, <span class="highlight">Franz Harvey Bautista</span>!', 'Hello, <span class="highlight">' . htmlspecialchars($fullName) . '</span>!', $emailBody);

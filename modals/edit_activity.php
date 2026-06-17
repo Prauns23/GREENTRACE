@@ -25,7 +25,7 @@ if (!$activity) {
     <title>Edit Activity</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="edit_activity.css?v=3">
+    <link rel="stylesheet" href="edit_activity.css?v=44">
 </head>
 
 <body>
@@ -147,7 +147,7 @@ if (!$activity) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    parent.location.href = '../activities.php?toast=' + encodeURIComponent(data.message) + '&type=success';
+                    parent.location.href = '../admin/activities_manage.php?toast=' + encodeURIComponent(data.message) + '&type=success';
                 } else {
                     alert(data.error || 'Update failed');
                     submitBtn.disabled = false;
