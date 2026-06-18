@@ -99,7 +99,7 @@ include 'header.php';
             </div>
         </div>
     </div>
-
+    
     <!-- Upcoming Activities Section -->
     <?php if ($showUpcoming): ?>
         <div class="section-header">
@@ -116,20 +116,18 @@ include 'header.php';
                 <?php foreach ($upcoming as $activity): ?>
                     <?php include 'activity_card.php'; ?>
                 <?php endforeach; ?>
-            <?php endif; ?>
-            <!-- ADD ACTIVITY (Admin Only) -->
-            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
-                <div class="activity-card add-activity-card" onclick="showAddActivityModal()" role="button" aria-label="Add activity">
-                    <div class="add-activity-inner">
-                        <i class="fa-solid fa-plus add-activity-icon"></i>
-                        <p class="add-activity-guidetext">Click to add Activity</p>
+                <!-- ADD ACTIVITY (Admin Only) – only shown when activities exist -->
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                    <div class="activity-card add-activity-card" onclick="showAddActivityModal()" role="button" aria-label="Add activity">
+                        <div class="add-activity-inner">
+                            <i class="fa-solid fa-plus add-activity-icon"></i>
+                            <p class="add-activity-guidetext">Click to add Activity</p>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
-
     <?php endif; ?>
-
     <!-- Past Activities Section -->
     <?php if ($showPast): ?>
         <div class="section-header">
