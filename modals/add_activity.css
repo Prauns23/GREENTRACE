@@ -153,6 +153,9 @@ body {
   border-radius: 8px;
   font-size: 0.9rem;
 }
+.time-input {
+  cursor: pointer;
+}
 
 .form-group textarea {
   min-height: 120px;
@@ -184,4 +187,10 @@ body {
   border-radius: 24px;
   padding: 10px 20px;
   cursor: pointer;
+}
+
+.time-guideline {
+  color: #c0c0c0;
+  font-size: 0.85rem;
+  margin: -8px 0 16px 0;
 }

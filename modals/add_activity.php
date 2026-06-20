@@ -69,13 +69,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                 <div class="form-row">
                     <div class="form-group">
                         <label>Start Time</label>
-                        <input type="time" name="time_start" placeholder="07:00">
+                        <input type="time" name="time_start" placeholder="07:00" class="time-input">
                     </div>
                     <div class="form-group">
                         <label>End Time</label>
-                        <input type="time" name="time_end" placeholder="12:00">
+                        <input type="time" name="time_end" placeholder="12:00" class="time-input">
                     </div>
                 </div>
+                <p class="time-guideline">Click the icon to set time</p>
 
                 <div class="form-group">
                     <label>Activity Location <span class="required">*</span></label>

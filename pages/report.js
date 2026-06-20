@@ -310,6 +310,38 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Helper function to update marker and coordinates
+  function setMarker(lat, lng) {
+    // Remove existing marker if any
+    if (mapMarker) {
+      map.removeLayer(mapMarker);
+    }
+
+    // Add new marker
+    mapMarker = L.marker([lat, lng], { draggable: true })
+      .addTo(map)
+      .bindPopup("Your location")
+      .openPopup();
+
+    // Update hidden fields
+    document.getElementById("latitude").value = lat.toFixed(6);
+    document.getElementById("longitude").value = lng.toFixed(6);
+
+    // Update location input
+    if (locationInput) {
+      locationInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+
+    // Center map on marker
+    map.setView([lat, lng], 15);
+
+    // Make marker draggable
+    mapMarker.on("dragend", function (e) {
+      const newPos = e.target.getLatLng();
+      setMarker(newPos.lat, newPos.lng);
+    });
+  }
+
   // Initialize Leaflet map
   function initMap(lat, lng) {
     if (!locationMap) return;
@@ -320,10 +352,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (mapMarker) {
         mapMarker.setLatLng([lat, lng]);
       } else {
-        mapMarker = L.marker([lat, lng], { draggable: true })
-          .addTo(map)
-          .bindPopup("Your location")
-          .openPopup();
+        setMarker(lat, lng);
       }
     } else {
       // Create new map
@@ -333,23 +362,12 @@ document.addEventListener("DOMContentLoaded", function () {
         attribution: "© OpenStreetMap contributors",
       }).addTo(map);
 
-      mapMarker = L.marker([lat, lng], { draggable: true })
-        .addTo(map)
-        .bindPopup("Your location")
-        .openPopup();
-
-      // Update coordinates when marker is dragged
-      mapMarker.on("dragend", function (e) {
-        const newPos = e.target.getLatLng();
-        const newLat = newPos.lat.toFixed(6);
-        const newLng = newPos.lng.toFixed(6);
-        if (locationInput) {
-          locationInput.value = `${newLat}, ${newLng}`;
-          document.getElementById("latitude").value = newLat;
-          document.getElementById("longitude").value = newLng;
-        }
+      // Add click handler to place marker on map
+      map.on("click", function (e) {
+        setMarker(e.latlng.lat, e.latlng.lng);
       });
 
+      setMarker(lat, lng);
       mapInitialized = true;
     }
   }
