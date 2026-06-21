@@ -2,7 +2,7 @@
 
 <!-- Landing Page -->
 <div class="FirstPage">
-    <h2 id="header01">Empowering Communities</h2>
+    <h2 id="header01">Empowering <i>Communities</i></h2>
     <h2 id="header02">To Restore Nature</h2>
     <p>Our platform connects people, businesses, and governments to greening programs that reduce carbon footprints,
         restore biodiversity, and create healthier cities. </p>

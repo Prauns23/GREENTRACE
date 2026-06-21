@@ -625,9 +625,7 @@ body.sidebar-open {
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
-.FirstPage #header01 {
-  font-style: italic;
-}
+
 .FirstPage p {
   max-width: 40rem;
   color: #fff;
