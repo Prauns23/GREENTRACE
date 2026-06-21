@@ -20,6 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
     $stmt->execute();
     $app = $stmt->get_result()->fetch_assoc();
 
+    // CSRF validation for single actions 
+    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+        $message = 'Invalid CSRF Token. Please refresh and try again.';
+        $type = 'error';
+        header("Location: application_activity.php?sort=" . urlencode($currentSort) . "&toast=" . urlencode($message) . "&type=" . $type);
+        exit;
+    }
+
     if (!$app) {
         $message = 'Application not found.';
         $type = 'error';
@@ -125,13 +133,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
     exit;
 }
 
-// --- Bulk actions (archive / restore) ---
+// Bulk actions (archive / restore)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && isset($_POST['selected_ids'])) {
     $bulk_action = $_POST['bulk_action'];
     $selected_ids = json_decode($_POST['selected_ids'], true);
     $currentSort = $_GET['sort'] ?? 'latest';
     $message = '';
     $type = 'success';
+
+    // CSRF validation for bulk actions 
+    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+        $message = 'Invalid CSRF token. Please refresh and try again.';
+        $type = 'error';
+        header("Location: application_activity.php?sort=" . urlencode($currentSort) . "&toast=" . urlencode($message) . "&type=" . $type);
+        exit;
+    }
 
     if (!empty($selected_ids)) {
         $conn->begin_transaction();
@@ -274,6 +290,7 @@ require_once __DIR__ . '/../header.php';
                 </div>
             </div>
             <form method="POST" id="bulkActionForm" style="display: inline;">
+                <?php csrf_field(); ?>
                 <input type="hidden" name="bulk_action" id="bulkActionType" value="">
                 <input type="hidden" name="selected_ids" id="selectedIdsInput" value="">
                 <?php if ($showArchived): ?>
@@ -388,12 +405,14 @@ require_once __DIR__ . '/../header.php';
                                 <?php elseif ($app['status'] === 'pending'): ?>
                                     <div class="action-buttons">
                                         <form method="POST" style="display:inline;">
+                                            <?php csrf_field(); ?>
                                             <input type="hidden" name="application_id" value="<?= $app['id'] ?>">
                                             <button type="submit" name="action" value="approve" class="action-btn approve-btn" title="Approve">
                                                 <i class="fas fa-check-circle"></i>
                                             </button>
                                         </form>
                                         <form method="POST" style="display:inline;">
+                                            <?php csrf_field(); ?>
                                             <input type="hidden" name="application_id" value="<?= $app['id'] ?>">
                                             <button type="submit" name="action" value="reject" class="action-btn reject-btn" title="Reject">
                                                 <i class="fas fa-times-circle"></i>
@@ -420,7 +439,7 @@ require_once __DIR__ . '/../header.php';
 
 <script src="application_activity.js"></script>
 
-<script>
+<!-- <script>
     // Show toast from URL parameter
     const toastMsg = <?php echo json_encode($toastMessage); ?>;
     const toastType = <?php echo json_encode($toastType); ?>;
@@ -438,6 +457,6 @@ require_once __DIR__ . '/../header.php';
             }
         }, 500);
     }
-</script>
+</script> -->
 
 <?php require_once __DIR__ . '/../footer.php'; ?>
