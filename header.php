@@ -117,6 +117,11 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
         <iframe src="/greentrace/modals/add_activity.php" class="floating-iframe" id="addActivityFrame"></iframe>
     </div>
 
+    <!-- Edit Profile Modal -->
+    <div class="floating-container" id="floatingEditProfileContainer">
+        <iframe src="<?php echo $basePath; ?>modals/edit_profile.php" class="floating-iframe" id="editProfileFrame"></iframe>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
@@ -127,7 +132,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
                 <li><a href="<?php echo $basePath; ?>index.php#volunteer-section">Volunteer</a></li>
             </ul>
             <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="" class="profile"
-                onclick="<?php echo isset($_SESSION['first_name']) ? 'showLogout()' : 'showLogin()'; ?>">
+                onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='/greentrace/profile.php'" : 'showLogin()'; ?>">
         </nav>
     </div>
 
@@ -182,13 +187,13 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
                 <span class="label">Report an activity</span>
             </button>
         </div>
-        <div class="sidebar-profile" onclick="window.location.href='/greentrace/profile.php'">
+        <div class="sidebar-profile" onclick="<?php echo isset($_SESSION['first_name']) ? 'showLogout()' : 'showLogin()'; ?>">
             <div class="profile-avatar">
                 <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="Profile">
             </div>
             <div class="profile-info">
                 <h3><?php echo isset($_SESSION['first_name']) ? $_SESSION['first_name'] . ' ' . $_SESSION['last_name'] : 'Login Account'; ?></h3>
-                <span>View profile</span>
+                <span><?php echo isset($_SESSION['first_name']) ? 'Logout Account' : 'Sign in'; ?></span>
             </div>
         </div>
     </div>

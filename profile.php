@@ -69,11 +69,17 @@ include 'header.php';
                     <p>Joined <?php echo $user['joined']; ?></p>
                 </div>
             </div>
-            <button type="button" class="user-menu-trigger" aria-label="More options">
+            <button type="button" class="user-menu-trigger" aria-label="More options" id="userMenuTrigger">
                 <i class="fa-solid fa-ellipsis-vertical"></i>
             </button>
+            <div class="user-menu-dropdown" id="userMenuDropdown" style="display: none;">
+                <button onclick="window.parent.showEditProfileModal()"> <i class="fa-solid fa-pen"></i> Edit Profile</button>
+                <button onclick="window.location.href='logout_action.php'"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+            </div>
         </div>
     </div>
+
+    <button id="editProfileBtn" style="display: none;"></button>
 
     <h2>Personal Information</h2>
     <div class="personal-info-container">
@@ -111,8 +117,8 @@ include 'header.php';
                     $ts = (int) $act['created_unix'];
                 ?>
                     <div class="activity-item"
-                         data-type="<?php echo htmlspecialchars($act['type']); ?>"
-                         data-timestamp="<?php echo $ts; ?>">
+                        data-type="<?php echo htmlspecialchars($act['type']); ?>"
+                        data-timestamp="<?php echo $ts; ?>">
                         <div class="activity-main">
                             <div class="activity-title">
                                 <h3><?php echo htmlspecialchars($act['title']); ?></h3>
@@ -141,12 +147,12 @@ include 'header.php';
             const diff = Math.max(0, nowSeconds - ts);
             let text;
 
-            if      (diff < 60)      text = 'Just now';
-            else if (diff < 3600)    text = Math.floor(diff / 60)    + ' minutes ago';
-            else if (diff < 86400)   text = Math.floor(diff / 3600)  + ' hours ago';
-            else if (diff < 604800)  text = Math.floor(diff / 86400) + ' days ago';
+            if (diff < 60) text = 'Just now';
+            else if (diff < 3600) text = Math.floor(diff / 60) + ' minutes ago';
+            else if (diff < 86400) text = Math.floor(diff / 3600) + ' hours ago';
+            else if (diff < 604800) text = Math.floor(diff / 86400) + ' days ago';
             else if (diff < 2592000) text = Math.floor(diff / 604800) + ' weeks ago';
-            else                     text = new Date(ts * 1000).toLocaleDateString('en-PH');
+            else text = new Date(ts * 1000).toLocaleDateString('en-PH');
 
             if (el.textContent.trim() !== text) el.textContent = text;
         });
@@ -154,6 +160,22 @@ include 'header.php';
 
     updateTimeAgo();
     setInterval(updateTimeAgo, 30000); // re-check every 30 seconds
+
+    // Dropdown toggle
+    const trigger = document.getElementById('userMenuTrigger');
+    const dropdown = document.getElementById('userMenuDropdown');
+
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
 </script>
 
 <?php include 'footer.php'; ?>

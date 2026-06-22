@@ -323,6 +323,18 @@ function getCSRFToken() {
     .getAttribute("content");
 }
 
+function showEditProfileModal() {
+  closeAllFloating();
+  const container = document.getElementById("floatingEditProfileContainer");
+  const iframe = document.getElementById("editProfileFrame");
+  iframe.src = (window.basePath || "") + "modals/edit_profile.php";
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+}
+
+window.showEditProfileModal = showEditProfileModal;
 window.showAddActivityModal = showAddActivityModal;
 window.showEditActivityModal = showEditActivityModal;
 window.showActivityDetails = showActivityDetails;
