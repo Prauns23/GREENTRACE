@@ -1,140 +1,204 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
 }
-html, body {
-    height: 100%;
-    overflow: hidden;
+html,
+body {
+  height: 100%;
+  overflow: hidden;
 }
 body {
-    background: transparent;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .edit-profile {
-    width: 100%;
-    max-width: 840px;
-    background: white;
-    border-radius: 24px;
-    padding: 28px 32px 24px;
+  width: 100%;
+  max-width: 840px;
+  background: white;
+  border-radius: 24px;
+  padding: 28px 32px 24px;
 }
 
 .edit-profile-header {
-    margin: 14px 0;
-
+  margin: 14px 0;
 }
 .edit-profile-header h2 {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 4px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
 }
 .edit-profile-header p {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 24px;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 24px;
 }
 
 .edit-profile-container {
-    background: #ffff;
-    border: 1px solid #ccc;
-    border-radius: 16px;
-    padding: 24px;
+  background: #f2f2f2a8;
+  /* border: 1px solid #ccc; */
+  border-radius: 16px;
+  padding: 24px;
 }
 
 /* Two‑column form rows */
 .form-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 18px;
+  display: flex;
+  gap: 20px;
+  margin-bottom: 18px;
 }
 .form-row .form-group {
-    flex: 1;
-    min-width: 0;
+  flex: 1;
+  min-width: 0;
 }
 .form-group label {
-    display: block;
-    font-weight: 500;
-    font-size: 0.85rem;
-    color: #333;
-    margin-bottom: 4px;
+  display: block;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #333;
+  margin-bottom: 4px;
 }
 .form-group input,
 .form-group select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    background: white;
-    transition: border-color 0.2s;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: white;
+  transition: border-color 0.2s;
 }
 .form-group input:focus,
 .form-group select:focus {
-    outline: none;
-    border-color: #2e7d32;
+  outline: none;
+  border-color: #2e7d32;
 }
 .form-group input:disabled {
-    background: #f5f5f5;
-    cursor: not-allowed;
-    color: #666;
+  background: #f5f5f5;
+  cursor: not-allowed;
+  color: #666;
 }
 
 /* Custom select with chevron */
 .custom-select {
-    position: relative;
+  position: relative;
 }
 .custom-select select {
-    appearance: none;
-    -webkit-appearance: none;
-    padding-right: 36px;
-    cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
 }
 .custom-select i {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    pointer-events: none;
-    font-size: 14px;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  pointer-events: none;
+  font-size: 14px;
 }
 
 /* Button group */
 .button-group {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
 }
 .submit-btn {
-    background: #2e7d32;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 24px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 .submit-btn:hover {
-    background: #1b5e20;
+  background: #1b5e20;
 }
 .cancel-btn {
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 10px 24px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 .cancel-btn:hover {
-    background: #f5f5f5;
+  background: #f5f5f5;
+}
+
+@media (max-width: 600px) {
+  .edit-profile {
+    padding: 20px 16px;
+    border-radius: 16px;
+    max-width: 100%;
+    margin: 0 12px;
+  }
+  .edit-profile-header h2 {
+    font-size: 1.2rem;
+  }
+  .edit-profile-header p {
+    font-size: 0.8rem;
+  }
+  .edit-profile-container {
+    padding: 16px;
+  }
+  /* Stack columns */
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-group label {
+    font-size: 0.8rem;
+  }
+  .form-group input,
+  .form-group select {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+  .button-group {
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .submit-btn,
+  .cancel-btn {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .edit-profile {
+    padding: 16px 12px;
+    margin: 0 8px;
+  }
+  .edit-profile-header h2 {
+    font-size: 1rem;
+  }
+  .edit-profile-container {
+    padding: 12px;
+  }
+  .form-row {
+    gap: 12px;
+  }
+  .submit-btn,
+  .cancel-btn {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
 }

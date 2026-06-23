@@ -1,5 +1,5 @@
 <?php require_once __DIR__ . '/init_session.php';
-$basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
+$basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false || strpos($_SERVER['PHP_SELF'], '/pages/') !== false) ? '../' : '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,7 +40,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
     </div>
     <!-- Login Popup -->
     <div class="floating-container" id="floatingSignInContainer">
-        <iframe src="/greentrace/pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
     </div>
     <!-- Report popup -->
     <div class="floating-container" id="floatingReportContainer">
@@ -93,17 +93,17 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
 
     <!-- Confirm Archive -->
     <div class="floating-container" id="floatingArchiveContainer">
-        <iframe src="/greentrace/modals/confirm_archive.php" class="floating-iframe" id="confirmArchiveFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>modals/confirm_archive.php" class="floating-iframe" id="confirmArchiveFrame"></iframe>
     </div>
 
     <!-- Confirm Restore -->
     <div class="floating-container" id="floatingRestoreContainer">
-        <iframe src="/greentrace/modals/confirm_restore.php" class="floating-iframe" id="confirmRestoreFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>modals/confirm_restore.php" class="floating-iframe" id="confirmRestoreFrame"></iframe>
     </div>
 
     <!-- Confirm Delete -->
     <div class="floating-container" id="floatingDeleteContainer">
-        <iframe src="/greentrace/modals/confirm_delete.php" class="floating-iframe" id="confirmDeleteFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>modals/confirm_delete.php" class="floating-iframe" id="confirmDeleteFrame"></iframe>
     </div>
 
     <!-- Edit Activity Modal -->
@@ -114,7 +114,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
     <!-- Add Activity Modal -->
 
     <div class="floating-container" id="floatingAddActivityContainer">
-        <iframe src="/greentrace/modals/add_activity.php" class="floating-iframe" id="addActivityFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>modals/add_activity.php" class="floating-iframe" id="addActivityFrame"></iframe>
     </div>
 
     <!-- Edit Profile Modal -->
@@ -125,14 +125,26 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : '';
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
-            <img src="<?php echo $basePath; ?>components/icons/menu.svg" alt="" class="menu" id="menuIcon">
-            <ul class="nav-links">
-                <li><a href="<?php echo $basePath; ?>index.php#about-section">About</a></li>
-                <li><a href="<?php echo $basePath; ?>index.php#feature-section">Features</a></li>
-                <li><a href="<?php echo $basePath; ?>index.php#volunteer-section">Volunteer</a></li>
-            </ul>
-            <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="" class="profile"
-                onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='/greentrace/profile.php'" : 'showLogin()'; ?>">
+            <div class="nav-left">
+                <img src="<?php echo $basePath; ?>components/icons/menu.svg" alt="" class="menu" id="menuIcon">
+            </div>
+            <div class="nav-middle">
+                <ul class="nav-links">
+                    <li><a href="<?php echo $basePath; ?>index.php#about-section">About</a></li>
+                    <li><a href="<?php echo $basePath; ?>index.php#feature-section">Features</a></li>
+                    <li><a href="<?php echo $basePath; ?>index.php#volunteer-section">Volunteer</a></li>
+                </ul>
+            </div>
+            <div class="nav-right">
+                <div class="notification-bell-container">
+                    <span class="material-symbols-rounded bell-icon" onclick="window.location.href='notifications.php'">
+                        notifications
+                    </span>
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">3</span>
+                </div>
+                <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="" class="profile"
+                    onclick="<?php echo isset($_SESSION['first_name']) ? 'window.location.href=\'' . $basePath . 'profile.php\'' : 'showLogin()'; ?>">
+            </div>
         </nav>
     </div>
 
