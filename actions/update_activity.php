@@ -61,14 +61,24 @@ if (empty($title) || empty($description) || empty($date) || empty($location)) {
 $sql = "UPDATE activities SET title = ?, description = ?, date = ?, time_start = ?, time_end = ?, location = ?, meetup_point = ?, capacity = ?, badge_primary = ?, badge_secondary = ?, image_url = ? WHERE id = ?";
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
-    echo json_encode(['error' => 'Prepare failed: ' . $conn->error]);
+    logError("Prepare failed: " . $conn->error, ['sql' => $sql]);
+    echo json_encode(['error' => 'Database error']);
     exit;
 }
 
 $params = [
-    $title, $description, $date, $time_start, $time_end,
-    $location, $meetup_point, $capacity, $badge_primary,
-    $badge_secondary, $image_url, $id
+    $title,
+    $description,
+    $date,
+    $time_start,
+    $time_end,
+    $location,
+    $meetup_point,
+    $capacity,
+    $badge_primary,
+    $badge_secondary,
+    $image_url,
+    $id
 ];
 $types = str_repeat('s', 11) . 'i';
 $stmt->bind_param($types, ...$params);
@@ -80,4 +90,5 @@ if ($stmt->execute()) {
 }
 $stmt->close();
 $conn->close();
+
 ?>

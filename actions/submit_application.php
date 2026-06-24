@@ -128,7 +128,7 @@ foreach ($uploadedPaths as $idx => $path) {
             $fullPath = $_SERVER['DOCUMENT_ROOT'] . '/GREENTRACE/' . $p;
             if (file_exists($fullPath)) unlink($fullPath);
         }
-        echo json_encode(['error' => 'Failed to save photo: ' . $originalName]);
+        logDbError($conn, "INSERT INTO application_photos", "Failed to save photo: $originalName");
         exit;
     }
 }
@@ -151,4 +151,5 @@ $link = "activities.php";
 createNotification($user_id, 'application', $notifTitle, $notifMessage, $link);
 
 echo json_encode(['success' => true]);
+
 ?>
