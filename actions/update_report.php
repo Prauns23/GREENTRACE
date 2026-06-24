@@ -2,6 +2,7 @@
 require_once '../init_session.php';
 require_once '../config.php';
 require_once __DIR__ . '/../log_activity.php';
+require_once '../notifications_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -44,6 +45,12 @@ if ($stmt->execute()) {
     // Log activity only if the report belongs to a logged‑in user (not anonymous)
     if ($user_id !== null) {
         logActivity($user_id, 'report', $report_id, $issue_type, $new_status, "Your report <strong>$issue_type</strong> has been <strong>$new_status</strong>.");
+
+        // Send notification (report status updated)
+        $notifTitle = "Report Update";
+        $notifMessage = "Your report \"<strong>$issue_type</strong>\" has is <strong>$new_status</strong>.";
+        $link = "forestmap.php";
+        createNotification($user_id, 'report', $notifTitle, $notifMessage, $link);
     }
     echo json_encode(['success' => true]);
 } else {

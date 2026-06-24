@@ -33,7 +33,7 @@ if (empty($users)) {
 foreach ($activities as $act) {
     $notifTitle = "Activity Reminder";
     $notifMessage = "The activity \"<strong>{$act['title']}</strong>\" is starting in 1 week on {$act['date']} at {$act['location']}. Don't forget to join!";
-    $link = "pages/activity_details.php?id={$act['id']}";
+    $link = "activities.php?open_activity={$act['id']}";
 
     foreach ($users as $user) {
         createNotification($user['id'], 'activity', $notifTitle, $notifMessage, $link);

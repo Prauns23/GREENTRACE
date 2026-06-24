@@ -165,7 +165,7 @@ include 'header.php';
         });
     }
 
-    // Toast handling (unchanged)
+    // Toast handling 
     const urlParams = new URLSearchParams(window.location.search);
     const toastMsg = urlParams.get('toast');
     const toastType = urlParams.get('type') === 'error' ? 'error' : 'success';
@@ -181,7 +181,19 @@ include 'header.php';
         }, 500);
     }
 
-    // Menu functions (admin only)
+    // Auto Open Activity Modal for notifications page
+    const openActivityParam = new URLSearchParams(window.location.search).get('open_activity');
+    if (openActivityParam) {
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        setTimeout(() => {
+            if (typeof showActivityDetails === 'function') {
+                showActivityDetails(parseInt(openActivityParam, 10));
+            }
+        }, 300);
+    }
+
+    // Menu functions 
     function toggleActivityMenu(trigger) {
         event.stopPropagation();
         const dropdown = trigger.querySelector('.activity-menu-dropdown');

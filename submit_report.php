@@ -2,6 +2,7 @@
 require_once 'init_session.php';
 require_once 'config.php';
 require_once __DIR__ . '/log_activity.php';
+require_once 'notifications_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -67,5 +68,12 @@ if ($user_id !== null) {
     logActivity($user_id, 'report', $report_id, $issue_type, 'pending', "Your report <strong>$issue_type</strong> is pending review.");
 }
 
+// Send Notification (Report Submitted)
+if ($user_id !== null) {
+    $notifTile = "Report Submitted";
+    $notifMessage = "Your report \"<strong>$issue_type</strong>\" has been submitted and is pending review.";
+    $link = "forestmap.php";
+    createNotification($user_id, 'report', $notifTitle, $notifMessage, $link);
+}
+
 echo json_encode(['success' => true, 'message' => 'Report submitted successfully']);
-?>

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../init_session.php';
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../log_activity.php';
 require_once __DIR__ . '/../notifications_helper.php';
-require_once __DIR__ . '/error_logger.php';
+require_once __DIR__ . '/../error_logger.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../index.php');
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                             // Send notification
                             $notifTitle = "Application Approved";
                             $notifMessage = "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>! Please check the event date.";
-                            $link = "activities.php";
+                            $link = "activities.php?open_activity={$app['activity_id']}"; 
                             createNotification($app['user_id'], 'application', $notifTitle, $notifMessage, $link);
                         } catch (Exception $e) {
                             $conn->rollback();
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                         // Send notification
                         $notifTitle = "Application Rejected";
                         $notifMessage = "Your application for <strong>$actTitle</strong> was <strong>rejected</strong>. Please recheck your documents and resubmit.";
-                        $link = "activities.php";
+                        $link = "activities.php?open_activity={$app['activity_id']}";
                         createNotification($app['user_id'], 'application', $notifTitle, $notifMessage, $link);
                     } catch (Exception $e) {
                         $conn->rollback();

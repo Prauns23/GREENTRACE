@@ -147,7 +147,7 @@ logActivity($user_id, 'application', $application_id, $actTitle, 'pending', "You
 // SEND NOTIFICATION (JOIN) 
 $notifTitle = "Application Submitted";
 $notifMessage = "Your application for <strong>$actTitle</strong> has been submitted and is pending admin review.";
-$link = "activities.php";
+$link = "activities.php?open_activity={$activity_id}";
 createNotification($user_id, 'application', $notifTitle, $notifMessage, $link);
 
 echo json_encode(['success' => true]);

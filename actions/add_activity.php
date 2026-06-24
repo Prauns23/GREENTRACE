@@ -64,7 +64,8 @@ $stmt->bind_param("sssssssisss", $title, $description, $date, $time_start, $time
 
 if ($stmt->execute()) {
     // Store the activity title for notification BEFORE overwriting the variable
-    $activityTitle = $title; // <-- Save the original title here
+    $activityTitle = $title; 
+    $activityId = $conn->insert_id;
 
     // Send notifications to all active users (except admins)
     $userStmt = $conn->prepare("SELECT id FROM users_tbl WHERE archived = 0 AND role = 'user'");
@@ -75,7 +76,7 @@ if ($stmt->execute()) {
     // Notification details (using the actual activity title)
     $notifTitle = "New Activity!";
     $notifMessage = "A new activity \"<strong>$activityTitle</strong>\" has been added. Come join and apply!";
-    $link = "activities.php";
+    $link = "activities.php?open_activity={$activityId}";
 
     foreach ($users as $user) {
         createNotification($user['id'], 'activity', $notifTitle, $notifMessage, $link);
