@@ -137,10 +137,10 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false || strpos($_SERVE
             </div>
             <div class="nav-right">
                 <div class="notification-bell-container">
-                    <span class="material-symbols-rounded bell-icon" onclick="window.location.href='notifications.php'">
+                    <span class="material-symbols-rounded bell-icon" id="fa-bell" onclick="window.location.href='<?php echo $basePath; ?>notifications.php'">
                         notifications
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">3</span>
                     </span>
-                    <span class="notification-badge" id="notificationBadge" style="display: none;">3</span>
                 </div>
                 <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="" class="profile"
                     onclick="<?php echo isset($_SESSION['first_name']) ? 'window.location.href=\'' . $basePath . 'profile.php\'' : 'showLogin()'; ?>">

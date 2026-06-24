@@ -2,6 +2,7 @@
 require_once '../init_session.php';
 require_once '../config.php';
 require_once __DIR__ . '/../log_activity.php';
+require_once __DIR__ . '/../notifications_helper.php'; // Add this line
 
 header('Content-Type: application/json');
 
@@ -9,7 +10,6 @@ if (!isset($_SESSION['user_id'])) {
     echo json_encode(['error' => 'Not logged in']);
     exit;
 }
-
 
 $user_id = $_SESSION['user_id'];
 $activity_id = (int)($_POST['activity_id'] ?? 0);
@@ -36,7 +36,7 @@ if (!$activity_id || !$date_of_birth || !$barangay || !$understand || !$agree) {
     exit;
 }
 
-// Fetch user data from users_tbl (full name, mobile, email)
+// Fetch user data
 $userStmt = $conn->prepare("SELECT CONCAT(fname, ' ', lname) as full_name, phone_no as mobile_number, email FROM users_tbl WHERE id = ?");
 $userStmt->bind_param("i", $user_id);
 $userStmt->execute();
@@ -49,8 +49,7 @@ $full_name = $userData['full_name'];
 $mobile_number = $userData['mobile_number'];
 $email = $userData['email'];
 
-
-// Application checker
+// Check for existing application
 $checkStmt = $conn->prepare("
     SELECT id, status 
     FROM volunteer_applications 
@@ -71,21 +70,16 @@ if ($existing) {
 }
 $checkStmt->close();
 
-
-// File upload handling – multiple files
+// File upload handling
 $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/GREENTRACE/uploads/applications/';
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-
 if (!isset($_FILES['verification_files']) || empty($_FILES['verification_files']['name'][0])) {
     echo json_encode(['error' => 'Please upload at least one verification file']);
     exit;
 }
-
-// File uploads
 $files = $_FILES['verification_files'];
 $allowed = ['image/jpeg', 'image/png', 'application/pdf'];
 $uploadedPaths = [];
-
 for ($i = 0; $i < count($files['name']); $i++) {
     if ($files['error'][$i] !== UPLOAD_ERR_OK) {
         echo json_encode(['error' => 'Error uploading file: ' . $files['name'][$i]]);
@@ -112,13 +106,11 @@ for ($i = 0; $i < count($files['name']); $i++) {
     $uploadedPaths[] = $db_path;
 }
 
-
 // Insert application
 $stmt = $conn->prepare("INSERT INTO volunteer_applications 
     (user_id, activity_id, full_name, date_of_birth, gender, mobile_number, email, barangay, status, submitted_at) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
 $stmt->bind_param("iissssss", $user_id, $activity_id, $full_name, $date_of_birth, $gender, $mobile_number, $email, $barangay);
-
 if (!$stmt->execute()) {
     echo json_encode(['error' => 'Database error: ' . $stmt->error]);
     exit;
@@ -132,12 +124,9 @@ foreach ($uploadedPaths as $idx => $path) {
     $originalName = $files['name'][$idx];
     $photoStmt->bind_param("iss", $application_id, $path, $originalName);
     if (!$photoStmt->execute()) {
-        // Rollback? For simplicity, just error and delete uploaded files
         foreach ($uploadedPaths as $p) {
             $fullPath = $_SERVER['DOCUMENT_ROOT'] . '/GREENTRACE/' . $p;
             if (file_exists($fullPath)) unlink($fullPath);
-
-        
         }
         echo json_encode(['error' => 'Failed to save photo: ' . $originalName]);
         exit;
@@ -145,13 +134,21 @@ foreach ($uploadedPaths as $idx => $path) {
 }
 $photoStmt->close();
 
-// Fetch activity title for logging
+// Fetch activity title
 $actTitleStmt = $conn->prepare("SELECT title FROM activities WHERE id = ?");
 $actTitleStmt->bind_param("i", $activity_id);
 $actTitleStmt->execute();
 $actTitle = $actTitleStmt->get_result()->fetch_assoc()['title'] ?? 'the activity';
 $actTitleStmt->close();
 
+// Log activity
 logActivity($user_id, 'application', $application_id, $actTitle, 'pending', "Your application for <strong>$actTitle</strong> is pending. It will be reviewed soon.");
 
+// SEND NOTIFICATION (JOIN) 
+$notifTitle = "Application Submitted";
+$notifMessage = "Your application for <strong>$actTitle</strong> has been submitted and is pending admin review.";
+$link = "activities.php";
+createNotification($user_id, 'application', $notifTitle, $notifMessage, $link);
+
 echo json_encode(['success' => true]);
+?>

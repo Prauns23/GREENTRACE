@@ -74,7 +74,7 @@ include 'header.php';
             </button>
             <div class="user-menu-dropdown" id="userMenuDropdown" style="display: none;">
                 <button onclick="window.parent.showEditProfileModal()"> <i class="fa-solid fa-pen"></i> Edit Profile</button>
-                <button onclick="window.location.href='logout_action.php'"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                <button onclick="<?php echo isset($_SESSION['first_name']) ? 'showLogout()' : 'showLogin()'; ?>"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
             </div>
         </div>
     </div>

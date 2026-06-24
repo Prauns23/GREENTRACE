@@ -6,6 +6,7 @@ header('Content-Type: application/json');
 
 require_once '../init_session.php';
 require_once '../config.php';
+require_once '../notifications_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['error' => 'Method not allowed']);
@@ -62,10 +63,29 @@ if (!$stmt) {
 $stmt->bind_param("sssssssisss", $title, $description, $date, $time_start, $time_end, $location, $meetup_point, $capacity, $badge_primary, $badge_secondary, $image_url);
 
 if ($stmt->execute()) {
+    // Store the activity title for notification BEFORE overwriting the variable
+    $activityTitle = $title; // <-- Save the original title here
+
+    // Send notifications to all active users (except admins)
+    $userStmt = $conn->prepare("SELECT id FROM users_tbl WHERE archived = 0 AND role = 'user'");
+    $userStmt->execute();
+    $users = $userStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $userStmt->close();
+
+    // Notification details (using the actual activity title)
+    $notifTitle = "New Activity!";
+    $notifMessage = "A new activity \"<strong>$activityTitle</strong>\" has been added. Come join and apply!";
+    $link = "activities.php";
+
+    foreach ($users as $user) {
+        createNotification($user['id'], 'activity', $notifTitle, $notifMessage, $link);
+    }
+
     echo json_encode(['success' => true, 'message' => 'Activity created successfully']);
 } else {
     echo json_encode(['error' => 'Database error: ' . $stmt->error]);
 }
+
 $stmt->close();
 $conn->close();
 ?>

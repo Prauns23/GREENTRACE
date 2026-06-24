@@ -2,12 +2,15 @@
 require_once __DIR__ . '/../init_session.php';
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../log_activity.php';
+require_once __DIR__ . '/../notifications_helper.php';
+require_once __DIR__ . '/error_logger.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../index.php');
     exit;
 }
 
+// SINGLE ACTION (approve / reject / restore) 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_POST['action']) && !isset($_POST['bulk_action'])) {
     $app_id = (int)$_POST['application_id'];
     $action = $_POST['action'];
@@ -20,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
     $stmt->execute();
     $app = $stmt->get_result()->fetch_assoc();
 
-    // CSRF validation for single actions 
+    // CSRF validation for single actions
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $message = 'Invalid CSRF Token. Please refresh and try again.';
         $type = 'error';
@@ -32,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
         $message = 'Application not found.';
         $type = 'error';
     } else {
-        // Handle restore (works on archived records)
+        // RESTORE 
         if ($action === 'restore') {
             if ($app['archived'] == 1) {
                 $conn->begin_transaction();
@@ -51,21 +54,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                     $conn->rollback();
                     $message = 'Error: ' . $e->getMessage();
                     $type = 'error';
+                    // Log the exception
+                    logError($e->getMessage(), [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
                 }
             } else {
                 $message = 'Application is not archived.';
                 $type = 'error';
             }
         }
-        // Approve / reject only for non-archived pending records
+
+        // APPROVE or REJECT 
         elseif ($action === 'approve' || $action === 'reject') {
             if (($app['archived'] != 1) && $app['status'] === 'pending') {
+                // Fetch activity title once (needed for logging and notification)
+                $actTitleStmt = $conn->prepare("SELECT title FROM activities WHERE id = ?");
+                $actTitleStmt->bind_param("i", $app['activity_id']);
+                $actTitleStmt->execute();
+                $actTitle = $actTitleStmt->get_result()->fetch_assoc()['title'] ?? 'the activity';
+                $actTitleStmt->close();
+
                 if ($action === 'approve') {
-                    //  CAPACITY CHECK
+                    // Capacity check
                     $capStmt = $conn->prepare("SELECT capacity, participants_count FROM activities WHERE id = ?");
                     $capStmt->bind_param("i", $app['activity_id']);
                     $capStmt->execute();
                     $activity = $capStmt->get_result()->fetch_assoc();
+                    $capStmt->close();
+
                     if ($activity && $activity['participants_count'] >= $activity['capacity']) {
                         $message = 'Cannot approve: Activity is full.';
                         $type = 'error';
@@ -75,28 +94,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                             $update = $conn->prepare("UPDATE volunteer_applications SET status = 'approved' WHERE id = ?");
                             $update->bind_param("i", $app_id);
                             $update->execute();
+
                             $inc = $conn->prepare("UPDATE activities SET participants_count = participants_count + 1 WHERE id = ?");
                             $inc->bind_param("i", $app['activity_id']);
                             $inc->execute();
+
                             $conn->commit();
                             $message = "Application approved.";
 
-                            // LOG ACTIVITY FOR APPROVE
-                            $actTitleStmt = $conn->prepare("SELECT title FROM activities WHERE id = ?");
-                            $actTitleStmt->bind_param("i", $app['activity_id']);
-                            $actTitleStmt->execute();
-                            $actTitle = $actTitleStmt->get_result()->fetch_assoc()['title'] ?? 'the activity';
-                            $actTitleStmt->close();
-                            require_once __DIR__ . '/../log_activity.php';
+                            // Log activity
                             logActivity($app['user_id'], 'application', $app_id, $actTitle, 'approved', "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>.");
+
+                            // Send notification
+                            $notifTitle = "Application Approved";
+                            $notifMessage = "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>! Please check the event date.";
+                            $link = "activities.php";
+                            createNotification($app['user_id'], 'application', $notifTitle, $notifMessage, $link);
                         } catch (Exception $e) {
                             $conn->rollback();
                             $message = 'Error: ' . $e->getMessage();
                             $type = 'error';
+                            // Log the exception
+                            logError($e->getMessage(), [
+                                'file' => $e->getFile(),
+                                'line' => $e->getLine(),
+                                'trace' => $e->getTraceAsString()
+                            ]);
                         }
                     }
-                    $capStmt->close();
-                } else { // reject
+                } else { // REJECT
                     $conn->begin_transaction();
                     try {
                         $update = $conn->prepare("UPDATE volunteer_applications SET status = 'rejected' WHERE id = ?");
@@ -105,18 +131,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                         $conn->commit();
                         $message = "Application rejected.";
 
-                        // LOG ACTIVITY FOR REJECT
-                        $actTitleStmt = $conn->prepare("SELECT title FROM activities WHERE id = ?");
-                        $actTitleStmt->bind_param("i", $app['activity_id']);
-                        $actTitleStmt->execute();
-                        $actTitle = $actTitleStmt->get_result()->fetch_assoc()['title'] ?? 'the activity';
-                        $actTitleStmt->close();
-                        require_once __DIR__ . '/../log_activity.php';
+                        // Log activity
                         logActivity($app['user_id'], 'application', $app_id, $actTitle, 'rejected', "Your application for <strong>$actTitle</strong> has been <strong>rejected</strong>.");
+
+                        // Send notification
+                        $notifTitle = "Application Rejected";
+                        $notifMessage = "Your application for <strong>$actTitle</strong> was <strong>rejected</strong>. Please recheck your documents and resubmit.";
+                        $link = "activities.php";
+                        createNotification($app['user_id'], 'application', $notifTitle, $notifMessage, $link);
                     } catch (Exception $e) {
                         $conn->rollback();
                         $message = 'Error: ' . $e->getMessage();
                         $type = 'error';
+                        // Add this:
+                        logError($e->getMessage(), [
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
                     }
                 }
             } else {
@@ -133,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
     exit;
 }
 
-// Bulk actions (archive / restore)
+// --- BULK ACTIONS (archive / restore) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && isset($_POST['selected_ids'])) {
     $bulk_action = $_POST['bulk_action'];
     $selected_ids = json_decode($_POST['selected_ids'], true);
@@ -141,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && iss
     $message = '';
     $type = 'success';
 
-    // CSRF validation for bulk actions 
+    // CSRF validation for bulk actions
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $message = 'Invalid CSRF token. Please refresh and try again.';
         $type = 'error';
@@ -192,6 +224,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && iss
             $conn->rollback();
             $message = 'Error: ' . $e->getMessage();
             $type = 'error';
+            // Add this:
+            logError($e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     } else {
         $message = 'No applications selected.';
@@ -202,11 +240,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && iss
     exit;
 }
 
-// Get toast from URL (if any)
+// --- GET TOAST FROM URL (if any) ---
 $toastMessage = isset($_GET['toast']) ? $_GET['toast'] : '';
 $toastType = isset($_GET['type']) && $_GET['type'] === 'error' ? 'error' : 'success';
 
-// Sorting logic – also determines whether to show archived
+// --- SORTING LOGIC ---
 $sort = $_GET['sort'] ?? 'latest';
 $showArchived = ($sort === 'archived');
 
@@ -230,11 +268,11 @@ switch ($sort) {
         $orderBy = "va.submitted_at DESC";
 }
 
-// Fetch statistics (only non‑archived for totals)
+//  FETCH STATISTICS 
 $totalActivities = $conn->query("SELECT COUNT(*) as count FROM activities")->fetch_assoc()['count'];
 $totalJoined = $conn->query("SELECT COUNT(*) as count FROM volunteer_applications WHERE status = 'approved' AND archived = 0")->fetch_assoc()['count'];
 
-// Fetch applications – condition based on $showArchived
+// FETCH APPLICATIONS 
 $archivedCondition = $showArchived ? "va.archived = 1" : "va.archived = 0";
 $query = "
     SELECT 

@@ -162,7 +162,7 @@ include 'header.php';
                                     <?= time_ago(strtotime($notif['created_at'])) ?>
                                 </div>
                             </div>
-                            <div class="message"><?= htmlspecialchars($notif['message']) ?></div>
+                            <div class="message"><?= $notif['message'] ?></div>
                         </div>
                         <?php if (!$notif['is_read']): ?>
                             <div class="unread-dot"></div>
