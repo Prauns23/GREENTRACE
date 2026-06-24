@@ -2,6 +2,8 @@
 require_once 'init_session.php';
 require_once 'config.php';
 
+$conn->query("SET time_zone = '" . date('P') . "'");
+
 // Helper: time ago
 function time_ago($unix)
 {
@@ -21,7 +23,7 @@ function getIconClass($type)
         case 'application':
             return 'fa-file-alt';
         case 'activity':
-            return 'fa-calendar-check';
+            return 'fa-bell';
         case 'report':
             return 'fa-exclamation-triangle';
         default:
@@ -153,12 +155,14 @@ include 'header.php';
                             <i class="fas <?= getIconClass($notif['type']) ?>"></i>
                         </div>
                         <div class="notification-content">
-                            <div class="title"><?= htmlspecialchars($notif['title']) ?></div>
-                            <div class="message"><?= htmlspecialchars($notif['message']) ?></div>
-                            <div class="time">
-                                <i class="far fa-clock"></i>
-                                <?= time_ago(strtotime($notif['created_at'])) ?>
+                            <div class="title-row">
+                                <div class="title"><?= htmlspecialchars($notif['title']) ?></div>
+                                <div class="time">
+                                    <!-- <i class="far fa-clock"></i> -->
+                                    <?= time_ago(strtotime($notif['created_at'])) ?>
+                                </div>
                             </div>
+                            <div class="message"><?= htmlspecialchars($notif['message']) ?></div>
                         </div>
                         <?php if (!$notif['is_read']): ?>
                             <div class="unread-dot"></div>
