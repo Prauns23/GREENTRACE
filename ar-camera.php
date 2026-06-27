@@ -14,6 +14,7 @@ require_once 'config.php';
     </div>
 
     <div class="ar-grid">
+
         <!-- Left grid/Selection -->
         <div class="ar-left">
             <!-- Scan QR button -->
@@ -24,7 +25,7 @@ require_once 'config.php';
                 </button>
                 <button class="start-ar-btn">
                     <img src="components\icons\start-ar.svg" alt="">
-                    Scan QR
+                    Start AR
                 </button>
             </div>
 
@@ -55,14 +56,15 @@ require_once 'config.php';
         <!-- Right grid/Simulation -->
         <div class="ar-right">
             <div class="simulation-box" id="simulationBox">
-                <div class="placeholder-content">
+                <div class="tree-details">
+                    <i class="fa-solid fa-expand"></i>
+                    <p><span>Narra: </span>33m</p>
+                </div>
+                <!-- <div class="placeholder-content">
                     <i class="fas fa-tree"></i>
                     <p>Select a tree to visualize</p>
                     <span class="hint">The Model will appear here</span>
-                </div>
-            </div>
-            <div class="selected-info" id="selectedInfo">
-                <p>Select a tree from the list to see its projected.</p>
+                </div> -->
             </div>
         </div>
     </div>
