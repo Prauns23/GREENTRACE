@@ -22,6 +22,9 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false || strpos($_SERVE
         window.basePath = '<?php echo $basePath; ?>';
     </script>
 
+    <!-- Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
     <meta charset="UTF-8">

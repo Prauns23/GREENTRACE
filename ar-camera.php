@@ -1,6 +1,12 @@
 <?php
 require_once 'init_session.php';
 require_once 'config.php';
+
+// Fetch all tree species with the new AR columns
+$stmt = $conn->prepare("SELECT id, name, scientific_name, mature_height, trunk_diameter, canopy_diameter, leaf_color, trunk_color, planting_spacing, image_url FROM tree_species ORDER BY name ASC");
+$stmt->execute();
+$trees = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 ?>
 
 <?php include 'header.php' ?>
@@ -30,20 +36,22 @@ require_once 'config.php';
             </div>
 
 
-            <div class="tree-list">
-                <div class="tree-card" data-tree="">
-                    <div class="tree-info">
-                        <div class="top-info">
-                            <h3>Narra</h3>
-                            <button class="qr-btn" title="Generate QR Code"><i class="fas fa-qrcode"></i>
-                            </button>
-                        </div>
-                        <div class="bottom-info">
-                            <p><span class="label">Height:</span> 33m</p>
-                            <p><span class="label">Trunk:</span> 1m</p>
+            <div class="tree-list" id="treeList">
+                <?php foreach ($trees as $tree): ?>
+                    <div class="tree-card" data-tree="<?= $tree['id'] ?>">
+                        <div class="tree-info">
+                            <div class="top-info">
+                                <h3><?= htmlspecialchars($tree['name']) ?></h3>
+                                <button class="qr-btn" title="Generate QR Code"><i class="fas fa-qrcode"></i>
+                                </button>
+                            </div>
+                            <div class="bottom-info">
+                                <p><span class="label">Height:</span> <?= $tree['mature_height'] ?>m</p>
+                                <p><span class="label">Trunk:</span> <?= $tree['trunk_diameter'] ?>m</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                <?php endforeach; ?>
             </div>
 
             <!-- Small Note -->
@@ -53,23 +61,27 @@ require_once 'config.php';
             </div>
         </div>
 
+
         <!-- Right grid/Simulation -->
         <div class="ar-right">
             <div class="simulation-box" id="simulationBox">
-                <div class="tree-details">
-                    <i class="fa-solid fa-expand"></i>
-                    <p><span>Narra: </span>33m</p>
-                </div>
-                <!-- <div class="placeholder-content">
+                <div id="threeContainer" style="width:100%;height:100%;"></div>
+                <div class="placeholder-content" id="placeholderContent">
                     <i class="fas fa-tree"></i>
                     <p>Select a tree to visualize</p>
-                    <span class="hint">The Model will appear here</span>
-                </div> -->
+                    <span class="hint">3D model will appear here</span>
+                </div>
+            </div>
+            <div class="selected-info" id="selectedInfo">
+                <p>Select a tree from the list to see its projected size.</p>
             </div>
         </div>
     </div>
 </div>
 
-<script src="ar-camera.js"></script>
+<script>
+    const treeData = <?= json_encode($trees) ?>;
+</script>
 
+<script src="ar-camera.js"></script>
 <?php include 'footer.php'; ?>
