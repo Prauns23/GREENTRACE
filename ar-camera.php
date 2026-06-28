@@ -66,14 +66,11 @@ $stmt->close();
         <div class="ar-right">
             <div class="simulation-box" id="simulationBox">
                 <div id="threeContainer" style="width:100%;height:100%;"></div>
-                <div class="placeholder-content" id="placeholderContent">
-                    <i class="fas fa-tree"></i>
-                    <p>Select a tree to visualize</p>
-                    <span class="hint">3D model will appear here</span>
+                <div class="tree-info-overlay" id="treeInfoOverlay">
+                    <!-- Populated by JavaScript -->
                 </div>
-            </div>
-            <div class="selected-info" id="selectedInfo">
-                <p>Select a tree from the list to see its projected size.</p>
+                <div class="placeholder-content" id="placeholderContent">
+                </div>
             </div>
         </div>
     </div>

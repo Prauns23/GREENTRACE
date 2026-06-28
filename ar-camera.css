@@ -235,6 +235,7 @@
 }
 
 /* Right column */
+
 .ar-right {
   display: flex;
   flex-direction: column;
@@ -245,7 +246,7 @@
 .simulation-box {
   background: #f5faf5;
   border-radius: 16px;
-  border: 1px solid #5E5E5E30;
+  border: 1px solid #5e5e5e30;
   height: 640px;
   width: 100%;
   max-width: 100%;
@@ -261,6 +262,58 @@
   border-color: #2e7d32;
   border-style: solid;
   background: #f0fdf4;
+}
+
+.tree-info-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.575);
+    backdrop-filter: blur(4px);
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid #e2e8f0;
+    max-width: 280px;
+    pointer-events: none;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    transition: opacity 0.3s ease;
+}
+
+.tree-info-overlay h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 6px 0;
+}
+
+.tree-info-overlay p {
+    margin: 2px 0;
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.tree-info-overlay .label {
+    font-weight: 500;
+    color: #666;
+}
+
+.tree-info-overlay .human-note {
+    margin-top: 8px;
+    color: #2e7d32;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.tree-info-overlay .human-note i {
+    margin-right: 6px;
+}
+
+/* Hide overlay when no tree is selected */
+.tree-info-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* .tree-details {
@@ -280,23 +333,23 @@
 } */
 
 #threeContainer {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 .placeholder-content {
-    position: relative;
-    z-index: 2;
-    pointer-events: none; /* allow clicks to pass to Three.js canvas */
+  position: relative;
+  z-index: 2;
+  pointer-events: none; /* allow clicks to pass to Three.js canvas */
 }
 
 .simulation-box {
-    position: relative;
-    overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Responsive */
