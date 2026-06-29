@@ -23,16 +23,18 @@ if (!$activity) {
 $user_status = null;
 $isFull = ($activity['participants_count'] >= $activity['capacity']);
 $isPast = (strtotime($activity['date']) < strtotime(date('Y-m-d')));
+$application_id = null; 
 
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
-    $statusStmt = $conn->prepare("SELECT status FROM volunteer_applications WHERE user_id = ? AND activity_id = ? ORDER BY submitted_at DESC LIMIT 1");
+    $statusStmt = $conn->prepare("SELECT id, status FROM volunteer_applications WHERE user_id = ? AND activity_id = ? ORDER BY submitted_at DESC LIMIT 1");
     $statusStmt->bind_param("ii", $user_id, $id);
     $statusStmt->execute();
     $result = $statusStmt->get_result();
     $app = $result->fetch_assoc();
     if ($app) {
         $user_status = $app['status'];
+        $application_id = $app['id']; 
     }
 }
 ?>
@@ -126,7 +128,7 @@ if (isset($_SESSION['user_id'])) {
                 } elseif ($isFull && $user_status !== 'approved') {
                     echo 'Full';
                 } elseif ($user_status === 'pending') {
-                    echo 'Pending';
+                    echo 'Cancel Application';
                 } elseif ($user_status === 'approved') {
                     echo 'Leave Activity';
                 } else {
@@ -137,61 +139,217 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div>
 
-    <script>
+    <!-- <script>
         const actionBtn = document.getElementById('actionBtn');
         const activityId = <?php echo $id; ?>;
         const userStatus = <?php echo json_encode($user_status); ?>;
         const isPast = <?php echo json_encode($isPast); ?>;
         const isFull = <?php echo json_encode($isFull); ?>;
 
-        async function handleJoinLeave() {
-            if (actionBtn.disabled) return;
+        function getCSRFToken() {
+            try {
+                return parent.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            } catch (e) {
+                return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            }
+        }
 
-            // Leave (approved → cancel)
-            if (userStatus === 'approved') {
-                if (!confirm('Are you sure you want to leave this activity?')) return;
-                actionBtn.disabled = true;
-                actionBtn.textContent = 'Leaving...';
-                try {
-                    const response = await fetch('../actions/update_application_status.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: `activity_id=${activityId}&action=cancel`
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        parent.location.href = '../activities.php?toast=' + encodeURIComponent('You have left the activity') + '&type=success';
-                    } else {
-                        alert(data.error);
-                        actionBtn.disabled = false;
-                        actionBtn.textContent = 'Leave Activity';
-                    }
-                } catch (e) {
-                    alert('An error occurred. Please try again.');
-                    actionBtn.disabled = false;
-                    actionBtn.textContent = 'Leave Activity';
+        async function handleAction(action) {
+            const token = getCSRFToken();
+            if (!token) {
+                alert('CSRF token missing. Please refresh.');
+                return;
+            }
+
+            const url = '../actions/update_application_status.php';
+            const body = `application_id=${activityId}&action=${action}&csrf_token=${encodeURIComponent(token)}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: body
+                });
+                const data = await response.json();
+                if (data.success) {
+                    parent.location.href = '../activities.php?toast=' + encodeURIComponent(data.message || 'Action completed') + '&type=success';
+                } else {
+                    alert(data.error || 'Action failed');
+                }
+            } catch (e) {
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Join (open volunteer form)
+        function handleJoin() {
+            if (typeof parent.showVolunteerForm === 'function') {
+                parent.showVolunteerForm(activityId);
+            } else {
+                alert('Application form not available. Please refresh.');
+            }
+        }
+
+        // Event listener for the main button
+        actionBtn.addEventListener('click', function() {
+            if (this.disabled) return;
+
+            // If button says "Leave Activity" → cancel (approved)
+            if (this.textContent.trim() === 'Leave Activity') {
+                if (confirm('Are you sure you want to leave this activity?')) {
+                    handleAction('cancel');
                 }
                 return;
             }
 
-            // Join (if not pending/approved and not full/ended)
-            if (userStatus !== 'pending' && userStatus !== 'approved' && !isPast && !isFull) {
-                if (typeof parent.showVolunteerForm === 'function') {
-                    parent.showVolunteerForm(activityId);
-                } else {
-                    alert('Application form not available. Please refresh.');
-                }
-            } else if (isFull) {
-                alert('This activity has reached its maximum capacity.');
-            } else if (isPast) {
-                alert('This activity has already ended.');
+            // If button says "Join Activity"
+            if (this.textContent.trim() === 'Join Activity') {
+                handleJoin();
+                return;
             }
+
+            // Other cases (should not happen)
+        });
+
+        // Separate "Cancel Application" button for pending status (added dynamically)
+        function addCancelButton() {
+            const bottomDiv = document.querySelector('.bottom-button');
+            if (!bottomDiv) return;
+
+            // Remove existing cancel button if any
+            const existingCancel = document.getElementById('cancelBtn');
+            if (existingCancel) existingCancel.remove();
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.id = 'cancelBtn';
+            cancelBtn.className = 'cancel-btn';
+            cancelBtn.textContent = 'Cancel Application';
+            cancelBtn.onclick = function() {
+                if (confirm('Cancel your pending application? This cannot be undone.')) {
+                    handleAction('cancel');
+                }
+            };
+            bottomDiv.insertBefore(cancelBtn, bottomDiv.lastElementChild);
         }
 
-        actionBtn.addEventListener('click', handleJoinLeave);
-    </script>
+        // On page load, decide button state
+        document.addEventListener('DOMContentLoaded', function() {
+            if (userStatus === 'pending') {
+                actionBtn.textContent = 'Pending';
+                actionBtn.disabled = true;
+                addCancelButton();
+            } else if (userStatus === 'approved') {
+                actionBtn.textContent = 'Leave Activity';
+                actionBtn.disabled = false;
+            } else if (isPast) {
+                actionBtn.textContent = 'Activity Ended';
+                actionBtn.disabled = true;
+            } else if (isFull) {
+                actionBtn.textContent = 'Full';
+                actionBtn.disabled = true;
+            } else {
+                actionBtn.textContent = 'Join Activity';
+                actionBtn.disabled = false;
+            }
+        });
+    </script> -->
+    <script>
+    const actionBtn = document.getElementById('actionBtn');
+    const activityId = <?php echo $id; ?>;
+    const applicationId = <?php echo json_encode($application_id); ?>;
+    const userStatus = <?php echo json_encode($user_status); ?>;
+    const isPast = <?php echo json_encode($isPast); ?>;
+    const isFull = <?php echo json_encode($isFull); ?>;
+
+    function getCSRFToken() {
+        try {
+            return parent.document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        } catch(e) {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
+    }
+
+    async function handleAction(action) {
+        if (!applicationId) {
+            alert('No application found. Please refresh.');
+            return;
+        }
+        const token = getCSRFToken();
+        if (!token) {
+            alert('CSRF token missing. Please refresh.');
+            return;
+        }
+
+        const url = '../actions/update_application_status.php';
+        const body = `application_id=${applicationId}&action=${action}&csrf_token=${encodeURIComponent(token)}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: body
+            });
+            const data = await response.json();
+            if (data.success) {
+                parent.location.href = '../activities.php?toast=' + encodeURIComponent(data.message || 'Action completed') + '&type=success';
+            } else {
+                alert(data.error || 'Action failed');
+            }
+        } catch (e) {
+            alert('An error occurred. Please try again.');
+        }
+    }
+
+    function handleJoin() {
+        if (typeof parent.showVolunteerForm === 'function') {
+            parent.showVolunteerForm(activityId);
+        } else {
+            alert('Application form not available. Please refresh.');
+        }
+    }
+
+    actionBtn.addEventListener('click', function() {
+        if (this.disabled) return;
+        const text = this.textContent.trim();
+        if (text === 'Leave Activity' || text === 'Cancel Application') {
+            const confirmMessage = text === 'Leave Activity'
+                ? 'Are you sure you want to leave this activity?'
+                : 'Cancel your pending application? This cannot be undone.';
+            if (confirm(confirmMessage)) {
+                handleAction('cancel');
+            }
+            return;
+        }
+        if (text === 'Join Activity') {
+            handleJoin();
+            return;
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (userStatus === 'pending') {
+            actionBtn.textContent = 'Cancel Application';
+            actionBtn.disabled = false;
+        } else if (userStatus === 'approved') {
+            actionBtn.textContent = 'Leave Activity';
+            actionBtn.disabled = false;
+        } else if (isPast) {
+            actionBtn.textContent = 'Activity Ended';
+            actionBtn.disabled = true;
+        } else if (isFull) {
+            actionBtn.textContent = 'Full';
+            actionBtn.disabled = true;
+        } else {
+            actionBtn.textContent = 'Join Activity';
+            actionBtn.disabled = false;
+        }
+    });
+</script>
+
 </body>
 
 </html>

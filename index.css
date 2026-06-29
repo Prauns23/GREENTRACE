@@ -240,6 +240,9 @@ body.overlay-active .footer {
   color: #3f3f3f;
   margin-top: 4.2px;
   font-weight: 600;
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
 }
 
 .notification-badge {
@@ -259,6 +262,16 @@ body.overlay-active .footer {
   justify-content: center;
   line-height: 1;
   font-family: "Inter", sans-serif;
+}
+
+.notification-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: #2e7d32;
+  border-radius: 50%;
 }
 
 .nav-right .profile {

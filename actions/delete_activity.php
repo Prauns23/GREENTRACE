@@ -1,6 +1,7 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
+// require_once '../csrf.php';
 
 // CSRF Validation
 

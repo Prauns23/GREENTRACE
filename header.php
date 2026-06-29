@@ -1,5 +1,17 @@
-<?php require_once __DIR__ . '/init_session.php';
+<?php 
+require_once __DIR__ . '/init_session.php';
+require_once __DIR__ . '/config.php';
 $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false || strpos($_SERVER['PHP_SELF'], '/pages/') !== false) ? '../' : '';
+
+$unreadCount = 0;
+if (isset($_SESSION['user_id'])) {
+    $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM notifications WHERE user_id = ? AND is_read = 0");
+    $stmt->bind_param("i", $_SESSION['user_id']);
+    $stmt->execute();
+    $unreadCount = $stmt->get_result()->fetch_assoc()['cnt'] ?? 0;
+    $stmt->close();
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -142,7 +154,7 @@ $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false || strpos($_SERVE
                 <div class="notification-bell-container">
                     <span class="material-symbols-rounded bell-icon" id="fa-bell" onclick="window.location.href='<?php echo $basePath; ?>notifications.php'">
                         notifications
-                        <span class="notification-badge" id="notificationBadge" style="display: none;">3</span>
+                        <span class="notification-dot" id="notificationDot" style="display: none;"></span>
                     </span>
                 </div>
                 <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="" class="profile"

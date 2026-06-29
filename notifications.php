@@ -233,7 +233,7 @@ include 'header.php';
                     el.classList.add('read');
                     const dot = el.querySelector('.unread-dot');
                     if (dot) dot.remove();
-                    updateBadgeCount();
+                    window.updateBadgeCount();
                 }
             });
 
@@ -263,29 +263,11 @@ include 'header.php';
                         const dot = el.querySelector('.unread-dot');
                         if (dot) dot.remove();
                     });
-                    updateBadgeCount();
+                    window.updateBadgeCount();
                     document.querySelector('.notifications-header p strong').textContent = '0';
                 }
             });
     });
-
-    function updateBadgeCount() {
-        const unread = document.querySelectorAll('.notification-item.unread').length;
-        const badge = document.getElementById('notificationBadge');
-        if (badge) {
-            if (unread > 0) {
-                badge.textContent = unread;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-        const strong = document.querySelector('.notifications-header p strong');
-        if (strong) strong.textContent = unread;
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', updateBadgeCount);
 </script>
 
 <?php include 'footer.php'; ?>

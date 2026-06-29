@@ -334,6 +334,26 @@ function showEditProfileModal() {
   activeContainer = container;
 }
 
+function updateBadgeCount() {
+  
+    fetch('get_unread_count.php') 
+        .then(response => response.json())
+        .then(data => {
+            const dot = document.getElementById('notificationDot');
+            if (dot) {
+                if (data.unread > 0) {
+                    dot.style.display = 'block';
+                } else {
+                    dot.style.display = 'none';
+                }
+            }
+        })
+        .catch(err => console.error('Error fetching unread count:', err));
+}
+
+// Call it on page load
+document.addEventListener('DOMContentLoaded', updateBadgeCount);
+
 window.showEditProfileModal = showEditProfileModal;
 window.showAddActivityModal = showAddActivityModal;
 window.showEditActivityModal = showEditActivityModal;

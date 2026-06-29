@@ -108,14 +108,14 @@
 
 /* Notification groups */
 .notification-group {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .group-title {
   font-size: 1.1rem;
   font-weight: 600;
   color: #334155;
-  padding: 28px 0;
+  padding: 20px 0;
 }
 
 /* Individual notification */

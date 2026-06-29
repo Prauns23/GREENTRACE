@@ -11,6 +11,15 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+$headers = getallheaders();
+
+
+$csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
+if (!verifyCSRFToken($csrf_token)) {
+    echo json_encode(['error' => 'Invalid CSRF token']);
+    exit;
+}
+
 $user_id = $_SESSION['user_id'];
 $activity_id = (int)($_POST['activity_id'] ?? 0);
 $date_of_birth = trim($_POST['date_of_birth'] ?? '');
@@ -150,6 +159,19 @@ $notifMessage = "Your application for <strong>$actTitle</strong> has been submit
 $link = "activities.php?open_activity={$activity_id}";
 createNotification($user_id, 'application', $notifTitle, $notifMessage, $link);
 
-echo json_encode(['success' => true]);
+// Notify all admins about the new application 
+$adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role = 'admin' AND archived = 0");
+$adminStmt->execute();
+$admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$adminStmt->close();
 
-?>
+
+$adminNotifTitle = "New volunteer Application";
+$adminNotifMessage = "A new application for <strong>$actTitle</strong> has been submitted by <strong>$full_name</strong>.";
+$adminLink = "admin/application_activity.php";
+
+foreach ($admins as $admin) {
+    createNotification($admin['id'], 'application', $adminNotifTitle, $adminNotifMessage, $adminLink);
+}
+
+echo json_encode(['success' => true]);

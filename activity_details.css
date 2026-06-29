@@ -159,6 +159,23 @@ h1 {
   font-family: "Inter", sans-serif;
 }
 
+.cancel-btn {
+    background: #e53935;
+    color: white;
+    border: none;
+    border-radius: 40px;
+    padding: 12px 24px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 
+    background 0.2s,
+    transform 0.2s ease;
+    font-family: "Inter", sans-serif;
+}
+.cancel-btn:hover {
+    background: #c62828;
+}
+
 .close-button {
   padding: 12px 24px;
   background: #fafafa;

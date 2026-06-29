@@ -60,6 +60,7 @@ $maxDate = (clone $today)->sub(new DateInterval('P18Y'))->format('Y-m-d');
             <?php endif; ?>
 
             <form id="applicationForm" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
                 <input type="hidden" name="activity_id" value="<?php echo $activity_id; ?>">
 
                 <div class="form-group">

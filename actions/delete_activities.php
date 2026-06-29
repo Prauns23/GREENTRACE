@@ -2,6 +2,16 @@
 require_once '../init_session.php';
 require_once '../config.php';
 
+
+$headers = getallheaders();
+
+$csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
+if (!verifyCSRFToken($csrf_token)) {
+    echo json_encode(['error' => 'Invalid CSRF Token']);
+    exit;
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') exit(json_encode(['error' => 'Unauthorized']));
 $input = json_decode(file_get_contents('php://input'), true);
 $ids = isset($input['ids']) ? $input['ids'] : (isset($_POST['ids']) ? json_decode($_POST['ids'], true) : []);
@@ -14,4 +24,3 @@ $success = $stmt->execute();
 $stmt->close();
 $conn->close();
 echo json_encode($success ? ['success' => true, 'message' => count($ids) . ' activities permanently deleted.'] : ['error' => 'Database error']);
-?>
