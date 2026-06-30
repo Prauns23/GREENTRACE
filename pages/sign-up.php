@@ -211,8 +211,12 @@ function isActiveForm($formName, $activeForm)
             formData.append('sign-up', '1');
 
             try {
+                const csrfToken = this.querySelector('input[name="csrf_token"]')?.value || '';
                 const response = await fetch('../login_register.php', {
                     method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': csrfToken
+                    },
                     body: formData
                 });
                 const data = await response.json();
