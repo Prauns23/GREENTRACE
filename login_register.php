@@ -1,7 +1,7 @@
 <?php
 require_once 'init_session.php';
 require_once 'config.php';
-require_once 'rate_limit.php'; // <-- ADD THIS
+require_once 'rate_limit.php'; 
 
 // Get client IP
 $ip = $_SERVER['REMOTE_ADDR'];

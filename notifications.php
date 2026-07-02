@@ -125,13 +125,19 @@ include 'header.php';
     <div class="filter-buttons">
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="application">Applications</button>
+
+        <div class="action-btn-wrapper">
+            <button class="action-btn" onclick="toggleBulkDropdown(event)">
+                <i class="fas fa-ellipsis-vertical"></i>
+            </button>
+            <div class="action-dropdown" id="bulkDropdown" style="display: none;">
+                <button type="button" id="toggleAllCheckboxesBtn" onclick="event.stopPropagation(); toggleAllCheckboxes()">Select all</button>
+                <button onclick="bulkMarkRead(event)">Mark as read</button>
+                <button onclick="bulkArchive(event)">Archive</button>
+                <button onclick="bulkDelete(event)">Delete</button>
+            </div>
+        </div>
     </div>
-
-    <!-- Mark all as read (centered) -->
-    <!-- <div class="mark-all-wrapper">
-        <button class="mark-all-btn" id="markAllBtn"><i class="fa-solid fa-envelope-open"></i></button>
-    </div> -->
-
 
     <!-- Notification Groups -->
     <?php if (empty($groups)): ?>
@@ -149,11 +155,16 @@ include 'header.php';
                         data-link="<?= htmlspecialchars($notif['link'] ?? '#') ?>"
                         data-type="<?= $notif['type'] ?>"
                         onclick="handleNotificationClick(this)">
+
                         <!-- Checkbox -->
                         <input type="checkbox" class="notification-checkbox" data-id="<?= $notif['id'] ?>">
+
+                        <!-- Icon -->
                         <div class="notification-icon icon-<?= $notif['type'] ?>">
                             <i class="fas <?= getIconClass($notif['type']) ?>"></i>
                         </div>
+
+                        <!-- Content -->
                         <div class="notification-content">
                             <div class="title-row">
                                 <div class="title"><?= htmlspecialchars($notif['title']) ?></div>
@@ -164,6 +175,8 @@ include 'header.php';
                             </div>
                             <div class="message"><?= $notif['message'] ?></div>
                         </div>
+
+                        <!-- Unread dot (if not clicked yet) -->
                         <?php if (!$notif['is_read']): ?>
                             <div class="unread-dot"></div>
                         <?php endif; ?>
@@ -268,6 +281,125 @@ include 'header.php';
                 }
             });
     });
+
+    // Toggle bulk drodown
+    function toggleBulkDropdown(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('bulkDropdown');
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Click outside to close dropdown
+    document.addEventListener('click', function(e) {
+        const wrapper = document.querySelector('.action-btn-wrapper');
+        const dropdown = document.getElementById('bulkDropdown');
+
+        if (!wrapper || !dropdown) return;
+
+        if (!wrapper.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Get selected notification IDs
+    function getSelectedIds() {
+        const checkboxes = document.querySelectorAll('.notification-checkbox:checked');
+        return Array.from(checkboxes).map(cb => cb.dataset.id);
+    }
+
+    // Bulk Mark as Read
+    function bulkMarkRead(event) {
+        if (event) event.stopPropagation();
+        const ids = getSelectedIds();
+        if (ids.length == 0) {
+            alert('Please select one notification.');
+            return;
+        }
+        console.log('Mark as read:', ids)
+        // For UI feedback, toggle the items
+        ids.forEach(id => {
+            const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+            if (item) {
+                item.classList.remove('unread');
+                item.classList.add('read');
+                const dot = item.querySelector('.unread-dot');
+                if (dot) dot.remove();
+            }
+        });
+        // Close dropdown
+        document.getElementById('bulkDropdown').style.display = 'none';
+        // Update badge count
+        if (typeof window.updateBadgeCount === 'function') {
+            window.updateBadgeCount();
+        }
+        // AJAX later
+    }
+
+    // Bulk archive
+    function bulkArchive(event) {
+        if (event) event.stopPropagation();
+        const ids = getSelectedIds();
+        if (ids.length === 0) {
+            alert('Please select one notification.')
+            return;
+        }
+        if (!confirm('Archive selected notifications?')) return;
+        console.log('Archive:', ids);
+        // Hide selected items
+        ids.forEach(id => {
+            const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+            if (item) item.style.display = 'none';
+        });
+        document.getElementById('bulkdDropdown').style.display = 'none';
+    }
+
+    // Bulk Delete
+    function bulkDelete(event) {
+        if (event) event.stopPropagation();
+        const ids = getSelectedIds();
+        if (ids.length === 0) {
+            alert('Please select one notification.');
+            return;
+        }
+        if (!confirm('Delete selected notifications permanently?')) return;
+        console.log('Delete:', ids);
+        // Hide selected items
+        ids.forEach(id => {
+            const item = document.querySelector('.notification-item[data-id="${id}"]');
+            if (item) item.style.display = 'none';
+        });
+        document.getElementById('bulkDropdown').style.display = 'none';
+    }
+
+    function updateSelectAllButtonLabel() {
+        const button = document.getElementById('toggleAllCheckboxesBtn');
+        if (!button) return;
+
+        const checkboxes = document.querySelectorAll('.notification-checkbox');
+        const hasSelected = Array.from(checkboxes).some(cb => cb.checked);
+        button.textContent = hasSelected ? 'Unselect all' : 'Select all';
+    }
+
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('notification-checkbox')) {
+            updateSelectAllButtonLabel();
+        }
+    });
+
+    // Toggle all checkboxes
+    function toggleAllCheckboxes() {
+        const button = document.getElementById('toggleAllCheckboxesBtn');
+        const checkboxes = document.querySelectorAll('.notification-checkbox');
+        const shouldCheck = button && button.textContent.trim() !== 'Unselect all';
+
+        checkboxes.forEach(cb => {
+            cb.checked = shouldCheck;
+        });
+
+        updateSelectAllButtonLabel();
+    }
+
+    updateSelectAllButtonLabel();
 </script>
 
 <?php include 'footer.php'; ?>
