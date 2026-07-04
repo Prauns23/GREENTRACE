@@ -5,8 +5,7 @@ require_once 'config.php';
 $conn->query("SET time_zone = '" . date('P') . "'");
 
 // Helper: time ago
-function time_ago($unix)
-{
+function time_ago($unix) {
     $diff = time() - $unix;
     if ($diff < 60)      return 'Just now';
     if ($diff < 3600)    return floor($diff / 60) . ' minutes ago';
@@ -16,22 +15,15 @@ function time_ago($unix)
     return date('M j, Y', $unix);
 }
 
-// Helper: icon class
-function getIconClass($type)
-{
+function getIconClass($type) {
     switch ($type) {
-        case 'application':
-            return 'fa-file-alt';
-        case 'activity':
-            return 'fa-bell';
-        case 'report':
-            return 'fa-exclamation-triangle';
-        default:
-            return 'fa-bell';
+        case 'application': return 'fa-file-alt';
+        case 'activity':    return 'fa-bell';
+        case 'report':      return 'fa-exclamation-triangle';
+        default:            return 'fa-bell';
     }
 }
 
-// Redirect if not logged in
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['open_signup_modal'] = true;
     header('Location: index.php');
@@ -40,52 +32,92 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Handle AJAX: mark notification as read
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'mark_read') {
+// ---- AJAX handlers ----
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
-    $notif_id = (int)($_POST['notification_id'] ?? 0);
-    if ($notif_id) {
-        $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
-        $stmt->bind_param("ii", $notif_id, $user_id);
+
+    // CSRF validation for all POST actions
+    $headers = getallheaders();
+    $csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
+    if (!verifyCSRFToken($csrf_token)) {
+        echo json_encode(['error' => 'Invalid CSRF token']);
+        exit;
+    }
+
+    $action = $_POST['action'] ?? '';
+
+    // Single mark as read
+    if ($action === 'mark_read') {
+        $notif_id = (int)($_POST['notification_id'] ?? 0);
+        if ($notif_id) {
+            $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
+            $stmt->bind_param("ii", $notif_id, $user_id);
+            $stmt->execute();
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['error' => 'Invalid ID']);
+        }
+        exit;
+    }
+
+    // Mark all as read
+    if ($action === 'mark_all_read') {
+        $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND archived = 0");
+        $stmt->bind_param("i", $user_id);
         $stmt->execute();
         echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['error' => 'Invalid ID']);
+        exit;
     }
+
+    // ---- Bulk actions ----
+    if (in_array($action, ['bulk_mark_read', 'bulk_archive', 'bulk_delete'])) {
+        $ids = json_decode($_POST['ids'] ?? '[]', true);
+        if (!is_array($ids) || empty($ids)) {
+            echo json_encode(['error' => 'No IDs provided']);
+            exit;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $types = str_repeat('i', count($ids));
+
+        if ($action === 'bulk_mark_read') {
+            $sql = "UPDATE notifications SET is_read = 1 WHERE id IN ($placeholders) AND user_id = ?";
+        } elseif ($action === 'bulk_archive') {
+            $sql = "UPDATE notifications SET archived = 1 WHERE id IN ($placeholders) AND user_id = ?";
+        } else { // bulk_delete
+            $sql = "DELETE FROM notifications WHERE id IN ($placeholders) AND user_id = ?";
+        }
+
+        $stmt = $conn->prepare($sql);
+        $params = array_merge($ids, [$user_id]);
+        $stmt->bind_param($types . 'i', ...$params);
+        $success = $stmt->execute();
+        $stmt->close();
+
+        echo json_encode(['success' => $success]);
+        exit;
+    }
+
+    // Invalid action
+    echo json_encode(['error' => 'Invalid action']);
     exit;
 }
 
-// Handle "Mark all as read"
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'mark_all_read') {
-    header('Content-Type: application/json');
-    $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    echo json_encode(['success' => true]);
-    exit;
-}
-
-// Fetch notifications
-$stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC");
+// ---- Main page ----
+// Fetch only non‑archived notifications
+$stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND archived = 0 ORDER BY created_at DESC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Count unread
 $unreadCount = 0;
 foreach ($notifications as $n) {
     if (!$n['is_read']) $unreadCount++;
 }
 
-// Group by time
-$groups = [
-    'Today' => [],
-    'This Week' => [],
-    'This Month' => [],
-    'Older' => []
-];
-
+// Group by time (same as before)
+$groups = ['Today' => [], 'This Week' => [], 'This Month' => [], 'Older' => []];
 $now = new DateTime();
 $today = $now->format('Y-m-d');
 $weekStart = (clone $now)->modify('this week')->format('Y-m-d');
@@ -103,7 +135,6 @@ foreach ($notifications as $n) {
         $groups['Older'][] = $n;
     }
 }
-
 $groups = array_filter($groups);
 
 include 'header.php';
@@ -116,12 +147,13 @@ include 'header.php';
         <h1>Notifications</h1>
         <p>You have <strong><?= $unreadCount ?></strong> notification<?= $unreadCount !== 1 ? '(s)' : '' ?> to go through — Click a notification to view details.</p>
     </div>
+
     <!-- Search Bar -->
     <div class="search-bar">
         <input type="text" id="searchInput" placeholder="Search your notifications here">
     </div>
 
-    <!-- Filter Buttons -->
+    <!-- Filter Buttons with dropdown inside wrapper -->
     <div class="filter-buttons">
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="application">Applications</button>
@@ -156,27 +188,20 @@ include 'header.php';
                         data-type="<?= $notif['type'] ?>"
                         onclick="handleNotificationClick(this)">
 
-                        <!-- Checkbox -->
                         <input type="checkbox" class="notification-checkbox" data-id="<?= $notif['id'] ?>">
 
-                        <!-- Icon -->
                         <div class="notification-icon icon-<?= $notif['type'] ?>">
                             <i class="fas <?= getIconClass($notif['type']) ?>"></i>
                         </div>
 
-                        <!-- Content -->
                         <div class="notification-content">
                             <div class="title-row">
                                 <div class="title"><?= htmlspecialchars($notif['title']) ?></div>
-                                <div class="time">
-                                    <!-- <i class="far fa-clock"></i> -->
-                                    <?= time_ago(strtotime($notif['created_at'])) ?>
-                                </div>
+                                <div class="time"><?= time_ago(strtotime($notif['created_at'])) ?></div>
                             </div>
                             <div class="message"><?= $notif['message'] ?></div>
                         </div>
 
-                        <!-- Unread dot (if not clicked yet) -->
                         <?php if (!$notif['is_read']): ?>
                             <div class="unread-dot"></div>
                         <?php endif; ?>
@@ -188,28 +213,68 @@ include 'header.php';
 </div>
 
 <script>
-    // Search filter
+    // ---- UI helpers ----
+    function getCSRFToken() {
+        return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    }
+
+    function getSelectedIds() {
+        const checkboxes = document.querySelectorAll('.notification-checkbox:checked');
+        return Array.from(checkboxes).map(cb => cb.dataset.id);
+    }
+
+    function updateSelectAllButtonLabel() {
+        const button = document.getElementById('toggleAllCheckboxesBtn');
+        if (!button) return;
+        const checkboxes = document.querySelectorAll('.notification-checkbox');
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        button.textContent = anyChecked ? 'Unselect all' : 'Select all';
+    }
+
+    function toggleAllCheckboxes() {
+        const button = document.getElementById('toggleAllCheckboxesBtn');
+        const checkboxes = document.querySelectorAll('.notification-checkbox');
+        const shouldCheck = button.textContent.trim() !== 'Unselect all';
+        checkboxes.forEach(cb => cb.checked = shouldCheck);
+        updateSelectAllButtonLabel();
+    }
+
+    // ---- Dropdown toggle ----
+    function toggleBulkDropdown(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('bulkDropdown');
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Click outside to close
+    document.addEventListener('click', function(e) {
+        const wrapper = document.querySelector('.action-btn-wrapper');
+        const dropdown = document.getElementById('bulkDropdown');
+        if (!wrapper || !dropdown) return;
+        if (!wrapper.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // ---- Search & Filter ----
     document.getElementById('searchInput').addEventListener('input', function() {
         const term = this.value.toLowerCase();
         document.querySelectorAll('.notification-item').forEach(item => {
-            const text = item.textContent.toLowerCase();
-            item.style.display = text.includes(term) ? '' : 'none';
+            item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none';
         });
         updateGroupVisibility();
     });
 
-    // Filter buttons (All / Applications)
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const filter = this.dataset.filter;
             document.querySelectorAll('.notification-item').forEach(item => {
-                if (filter === 'all') {
+                if (filter === 'all' || item.dataset.type === filter) {
                     item.style.display = '';
                 } else {
-                    const type = item.dataset.type;
-                    item.style.display = (type === filter) ? '' : 'none';
+                    item.style.display = 'none';
                 }
             });
             updateGroupVisibility();
@@ -218,188 +283,145 @@ include 'header.php';
 
     function updateGroupVisibility() {
         document.querySelectorAll('.notification-group').forEach(group => {
-            const visibleItems = group.querySelectorAll('.notification-item[style*="display: none"]');
-            const totalItems = group.querySelectorAll('.notification-item').length;
-            group.style.display = (visibleItems.length === totalItems) ? 'none' : '';
+            const visible = group.querySelectorAll('.notification-item:not([style*="display: none"])');
+            group.style.display = visible.length > 0 ? '' : 'none';
         });
     }
 
-    // Click notification: mark as read and navigate
+    // ---- Single click: mark as read and navigate ----
     function handleNotificationClick(el) {
-        // If the click was on the checkbox, don't mark as read or navigate
         if (event.target.classList.contains('notification-checkbox')) return;
 
         const id = el.dataset.id;
         const link = el.dataset.link;
 
         fetch(window.location.href, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'action=mark_read&notification_id=' + id
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    el.classList.remove('unread');
-                    el.classList.add('read');
-                    const dot = el.querySelector('.unread-dot');
-                    if (dot) dot.remove();
-                    window.updateBadgeCount();
-                }
-            });
-
-        if (link && link !== '#') {
-            setTimeout(() => {
-                window.location.href = link;
-            }, 200);
-        }
-    }
-
-    // Mark all as read
-    document.getElementById('markAllBtn').addEventListener('click', function() {
-        if (!confirm('Mark all notifications as read?')) return;
-        fetch(window.location.href, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'action=mark_all_read'
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    document.querySelectorAll('.notification-item.unread').forEach(el => {
-                        el.classList.remove('unread');
-                        el.classList.add('read');
-                        const dot = el.querySelector('.unread-dot');
-                        if (dot) dot.remove();
-                    });
-                    window.updateBadgeCount();
-                    document.querySelector('.notifications-header p strong').textContent = '0';
-                }
-            });
-    });
-
-    // Toggle bulk drodown
-    function toggleBulkDropdown(event) {
-        event.stopPropagation();
-        const dropdown = document.getElementById('bulkDropdown');
-        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-    }
-
-    // Click outside to close dropdown
-    document.addEventListener('click', function(e) {
-        const wrapper = document.querySelector('.action-btn-wrapper');
-        const dropdown = document.getElementById('bulkDropdown');
-
-        if (!wrapper || !dropdown) return;
-
-        if (!wrapper.contains(e.target)) {
-            dropdown.style.display = 'none';
-        }
-    });
-
-    // Get selected notification IDs
-    function getSelectedIds() {
-        const checkboxes = document.querySelectorAll('.notification-checkbox:checked');
-        return Array.from(checkboxes).map(cb => cb.dataset.id);
-    }
-
-    // Bulk Mark as Read
-    function bulkMarkRead(event) {
-        if (event) event.stopPropagation();
-        const ids = getSelectedIds();
-        if (ids.length == 0) {
-            alert('Please select one notification.');
-            return;
-        }
-        console.log('Mark as read:', ids)
-        // For UI feedback, toggle the items
-        ids.forEach(id => {
-            const item = document.querySelector(`.notification-item[data-id="${id}"]`);
-            if (item) {
-                item.classList.remove('unread');
-                item.classList.add('read');
-                const dot = item.querySelector('.unread-dot');
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': getCSRFToken()
+            },
+            body: 'action=mark_read&notification_id=' + id
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                el.classList.remove('unread');
+                el.classList.add('read');
+                const dot = el.querySelector('.unread-dot');
                 if (dot) dot.remove();
+                window.updateBadgeCount();
             }
         });
-        // Close dropdown
-        document.getElementById('bulkDropdown').style.display = 'none';
-        // Update badge count
-        if (typeof window.updateBadgeCount === 'function') {
-            window.updateBadgeCount();
+
+        if (link && link !== '#') {
+            setTimeout(() => window.location.href = link, 200);
         }
-        // AJAX later
     }
 
-    // Bulk archive
+    // ---- Bulk actions ----
+    function sendBulkAction(action, confirmMessage) {
+        const ids = getSelectedIds();
+        if (ids.length === 0) {
+            alert('Please select at least one notification.');
+            return;
+        }
+        if (confirmMessage && !confirm(confirmMessage)) return;
+
+        const token = getCSRFToken();
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': token
+            },
+            body: 'action=' + action + '&ids=' + JSON.stringify(ids)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Update UI
+                ids.forEach(id => {
+                    const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+                    if (item) {
+                        if (action === 'bulk_mark_read') {
+                            item.classList.remove('unread');
+                            item.classList.add('read');
+                            const dot = item.querySelector('.unread-dot');
+                            if (dot) dot.remove();
+                        } else {
+                            // archive or delete – remove from DOM
+                            item.style.display = 'none';
+                        }
+                    }
+                });
+                document.getElementById('bulkDropdown').style.display = 'none';
+                if (typeof window.updateBadgeCount === 'function') {
+                    window.updateBadgeCount();
+                }
+                updateSelectAllButtonLabel();
+                updateGroupVisibility();
+            } else {
+                alert(data.error || 'Action failed.');
+            }
+        })
+        .catch(err => {
+            alert('An error occurred.');
+            console.error(err);
+        });
+    }
+
+    function bulkMarkRead(event) {
+        event.stopPropagation();
+        sendBulkAction('bulk_mark_read', null);
+    }
+
     function bulkArchive(event) {
-        if (event) event.stopPropagation();
-        const ids = getSelectedIds();
-        if (ids.length === 0) {
-            alert('Please select one notification.')
-            return;
-        }
-        if (!confirm('Archive selected notifications?')) return;
-        console.log('Archive:', ids);
-        // Hide selected items
-        ids.forEach(id => {
-            const item = document.querySelector(`.notification-item[data-id="${id}"]`);
-            if (item) item.style.display = 'none';
-        });
-        document.getElementById('bulkdDropdown').style.display = 'none';
+        event.stopPropagation();
+        sendBulkAction('bulk_archive', 'Archive selected notifications?');
     }
 
-    // Bulk Delete
     function bulkDelete(event) {
-        if (event) event.stopPropagation();
-        const ids = getSelectedIds();
-        if (ids.length === 0) {
-            alert('Please select one notification.');
-            return;
-        }
-        if (!confirm('Delete selected notifications permanently?')) return;
-        console.log('Delete:', ids);
-        // Hide selected items
-        ids.forEach(id => {
-            const item = document.querySelector('.notification-item[data-id="${id}"]');
-            if (item) item.style.display = 'none';
-        });
-        document.getElementById('bulkDropdown').style.display = 'none';
+        event.stopPropagation();
+        sendBulkAction('bulk_delete', 'Delete selected notifications permanently?');
     }
 
-    function updateSelectAllButtonLabel() {
-        const button = document.getElementById('toggleAllCheckboxesBtn');
-        if (!button) return;
-
-        const checkboxes = document.querySelectorAll('.notification-checkbox');
-        const hasSelected = Array.from(checkboxes).some(cb => cb.checked);
-        button.textContent = hasSelected ? 'Unselect all' : 'Select all';
-    }
-
+    // ---- Update label on checkbox change ----
     document.addEventListener('change', function(e) {
         if (e.target.classList.contains('notification-checkbox')) {
             updateSelectAllButtonLabel();
         }
     });
 
-    // Toggle all checkboxes
-    function toggleAllCheckboxes() {
-        const button = document.getElementById('toggleAllCheckboxesBtn');
-        const checkboxes = document.querySelectorAll('.notification-checkbox');
-        const shouldCheck = button && button.textContent.trim() !== 'Unselect all';
-
-        checkboxes.forEach(cb => {
-            cb.checked = shouldCheck;
+    // ---- Mark all as read (hidden button) ----
+    document.getElementById('markAllBtn')?.addEventListener('click', function() {
+        if (!confirm('Mark all notifications as read?')) return;
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': getCSRFToken()
+            },
+            body: 'action=mark_all_read'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelectorAll('.notification-item.unread').forEach(el => {
+                    el.classList.remove('unread');
+                    el.classList.add('read');
+                    const dot = el.querySelector('.unread-dot');
+                    if (dot) dot.remove();
+                });
+                window.updateBadgeCount();
+                document.querySelector('.notifications-header p strong').textContent = '0';
+            }
         });
+    });
 
-        updateSelectAllButtonLabel();
-    }
-
+    // ---- Init ----
     updateSelectAllButtonLabel();
+    updateGroupVisibility();
 </script>
 
 <?php include 'footer.php'; ?>
