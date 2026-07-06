@@ -25,11 +25,11 @@ $stmt->close();
         <div class="ar-left">
             <!-- Scan QR button -->
             <div class="ar-buttons">
-                <button class="scan-qr-btn active">
+                <button class="scan-qr-btn active" id="scanQrBtn">
                     <img src="components\icons\scan-qr.svg" alt="">
                     Scan QR
                 </button>
-                <button class="start-ar-btn">
+                <button class="start-ar-btn" id="startArBtn">
                     <img src="components\icons\start-ar.svg" alt="">
                     Start AR
                 </button>
@@ -65,12 +65,22 @@ $stmt->close();
         <!-- Right grid/Simulation -->
         <div class="ar-right">
             <div class="simulation-box" id="simulationBox">
+                <div id="arOverlay" style="display: none; position: absolute; inset: 0; z-index: 10; pointer-events: none; background: rgba(0,0,0,0.1);">
+                    <div id="arHint" style="position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; font-size: 14px; pointer-events: none;">
+                        Tap the ground to place the tree
+                    </div>
+                </div>
+                <input type="hidden" id="selectedTreeId" value="">
                 <div id="threeContainer" style="width:100%;height:100%;"></div>
-                <div class="tree-info-overlay" id="treeInfoOverlay">
-                    <!-- Populated by JavaScript -->
-                </div>
-                <div class="placeholder-content" id="placeholderContent">
-                </div>
+                <div class="tree-info-overlay" id="treeInfoOverlay"></div>
+                <div class="placeholder-content" id="placeholderContent"></div>
+            </div>
+
+            <!-- Exit AR button -->
+            <div id="exitArBtnWrapper" style="display: none; position: fixed; bottom: -10px; left: 50%; transform: translateX(-50%); z-index: 99999;">
+                <button id="exitArBtn" onclick="exitAR()" style="padding: 12px 80px; background: rgba(0,0,0,0.8); color: white; border: 1px solid #b9b9b9ce; border-radius: 16px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                    Exit AR
+                </button>
             </div>
         </div>
     </div>

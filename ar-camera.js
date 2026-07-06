@@ -1,8 +1,15 @@
-// Three.js tree viewer
+// Three.js tree viewer + AR (WebXR)
 
 let scene, camera, renderer, controls;
 let treeGroup = null;
 let selectedTreeId = null;
+let arSession = null;
+let arRenderer = null;
+let arCamera = null;
+let hitTestSource = null;
+let localSpace = null;
+let arTreeGroup = null;
+let isArMode = false;
 
 function initThree() {
   const container = document.getElementById("threeContainer");
@@ -173,6 +180,7 @@ function createHumanFigure(height = 1.63) {
   return group;
 }
 
+// Build tree for simulation
 function buildTree(species) {
   if (treeGroup) {
     scene.remove(treeGroup);
@@ -191,7 +199,6 @@ function buildTree(species) {
 
   treeGroup = new THREE.Group();
 
-  // TREE 
   // Trunk
   const trunkGeo = new THREE.CylinderGeometry(
     trunkRadius,
@@ -319,9 +326,7 @@ function buildTree(species) {
 
   // HUMAN REFERENCE (1.63m)
   const human = createHumanFigure(1.63);
-  // Position the human 2.5 meters to the right of the tree (x positive)
   human.position.set(3, 0, 0);
-  // Rotate slightly toward the tree
   human.rotation.y = -0.3;
   treeGroup.add(human);
 
@@ -349,13 +354,256 @@ function buildTree(species) {
   overlay.classList.remove("hidden");
 }
 
-// EVENT LISTENERS
+// Build tree for AR
+function buildTreeForAR(species) {
+  const group = new THREE.Group();
+  const height = species.mature_height || 15;
+  const trunkRadius = (species.trunk_diameter || 0.5) / 2;
+  const canopyRadius = (species.canopy_diameter || 5) / 2;
+  const leafColor = new THREE.Color(species.leaf_color || "#2e7d32");
+  const trunkColor = new THREE.Color(species.trunk_color || "#8d6e63");
+
+  // Trunk
+  const trunkGeo = new THREE.CylinderGeometry(
+    trunkRadius,
+    trunkRadius * 1.2,
+    height * 0.6,
+    8,
+  );
+  const trunkMat = new THREE.MeshStandardMaterial({
+    color: trunkColor,
+    roughness: 0.8,
+  });
+  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+  trunk.castShadow = true;
+  trunk.position.y = height * 0.3;
+  group.add(trunk);
+
+  // Crown
+  const crownGeo = new THREE.SphereGeometry(canopyRadius, 16, 12);
+  const crownMat = new THREE.MeshStandardMaterial({
+    color: leafColor,
+    roughness: 0.7,
+  });
+  const crown = new THREE.Mesh(crownGeo, crownMat);
+  crown.castShadow = true;
+  crown.position.y = height * 0.7 + canopyRadius * 0.3;
+  group.add(crown);
+
+  // Human reference
+  const human = createHumanFigure(1.63);
+  human.position.set(trunkRadius + 0.6, 0, 0);
+  group.add(human);
+
+  return group;
+}
+
+//  AR Functions
+async function startAR() {
+  console.log("startAR called");
+  if (!selectedTreeId) {
+    alert("Please select a tree first.");
+    return;
+  }
+  const species = treeData.find((t) => t.id === selectedTreeId);
+  if (!species) {
+    alert("Tree data not found.");
+    return;
+  }
+
+  // Check WebXR support
+  if (
+    !navigator.xr ||
+    !(await navigator.xr.isSessionSupported("immersive-ar"))
+  ) {
+    alert("AR not supported. Please use Chrome on Android.");
+    return;
+  }
+
+  // Make simulationBox fullscreen
+  const container = document.getElementById("simulationBox");
+  window._originalContainerStyle = container.getAttribute("style") || "";
+  container.style.position = "fixed";
+  container.style.top = "0";
+  container.style.left = "0";
+  container.style.width = "100vw";
+  container.style.height = "100vh";
+  container.style.zIndex = "9999";
+  container.style.background = "transparent";
+  container.style.overflow = "hidden";
+
+  // Hide simulation, show AR overlay
+  document.getElementById("threeContainer").style.display = "none";
+  document.getElementById("arOverlay").style.display = "block";
+  document.getElementById("placeholderContent").style.display = "none";
+
+  // Create AR renderer (transparent background for camera feed)
+  arRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  arRenderer.setPixelRatio(window.devicePixelRatio);
+  arRenderer.setSize(window.innerWidth, window.innerHeight);
+  arRenderer.xr.enabled = true;
+
+  // --- CRITICAL Fix: Keep the AR canvas behind the HTML overlay ---
+  arRenderer.domElement.style.position = "absolute";
+  arRenderer.domElement.style.top = "0";
+  arRenderer.domElement.style.left = "0";
+  arRenderer.domElement.style.zIndex = "0";
+  arRenderer.domElement.style.pointerEvents = "none"; // ← this lets clicks through
+
+  container.appendChild(arRenderer.domElement);
+
+  // AR scene
+  const arScene = new THREE.Scene();
+  arScene.background = null;
+  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  arScene.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(10, 20, 10);
+  arScene.add(dirLight);
+
+  arCamera = new THREE.PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    0.01,
+    100,
+  );
+
+  // Reticle
+  const reticle = new THREE.Mesh(
+    new THREE.RingGeometry(0.12, 0.15, 32).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x2e7d32 }),
+  );
+  reticle.matrixAutoUpdate = false;
+  reticle.visible = false;
+  arScene.add(reticle);
+
+  // Tree for AR
+  const arTree = buildTreeForAR(species);
+  arTree.visible = false;
+  arScene.add(arTree);
+  arTreeGroup = arTree;
+
+  // Request AR session
+  const session = await navigator.xr.requestSession("immersive-ar", {
+    requiredFeatures: ["hit-test", "local-floor"],
+  });
+  arSession = session;
+
+  // Hit-test source
+  const viewerSpace = await session.requestReferenceSpace("viewer");
+  hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
+  localSpace = await session.requestReferenceSpace("local-floor");
+
+  await arRenderer.xr.setSession(session);
+  isArMode = true;
+
+  // On tap: place tree
+  session.addEventListener("select", () => {
+    if (reticle.visible && arTreeGroup) {
+      arTreeGroup.position.setFromMatrixPosition(reticle.matrix);
+      arTreeGroup.visible = true;
+      reticle.visible = false;
+      document.getElementById("arHint").style.display = "none";
+    }
+  });
+
+  session.addEventListener("end", () => {
+    cleanupAR();
+  });
+
+  // AR animation loop
+  function arAnimate(time, frame) {
+    if (frame && hitTestSource && localSpace) {
+      const hits = frame.getHitTestResults(hitTestSource);
+      if (hits.length) {
+        const pose = hits[0].getPose(localSpace);
+        reticle.visible = true;
+        reticle.matrix.fromArray(pose.transform.matrix);
+      } else {
+        reticle.visible = false;
+      }
+    }
+    arRenderer.render(arScene, arCamera);
+  }
+  arRenderer.setAnimationLoop(arAnimate);
+
+  // Resize handler
+  const arResize = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    arRenderer.setSize(w, h);
+    arCamera.aspect = w / h;
+    arCamera.updateProjectionMatrix();
+  };
+  window.addEventListener("resize", arResize);
+  window._arResize = arResize;
+
+  // Update UI – ensure the button is clickable
+  document.getElementById("startArBtn").textContent = "AR Active";
+  document.getElementById("startArBtn").disabled = true;
+  document.getElementById("exitArBtnWrapper").style.display = "block"; // ← SHOW the button wrapper
+  document.getElementById("arHint").style.display = "block";
+}
+
+function cleanupAR() {
+  isArMode = false;
+  if (arRenderer) {
+    arRenderer.setAnimationLoop(null);
+    arRenderer.domElement.remove();
+    arRenderer = null;
+  }
+  if (arSession) {
+    arSession = null;
+  }
+  hitTestSource = null;
+  localSpace = null;
+  arTreeGroup = null;
+
+  // Restore simulationBox style
+  const container = document.getElementById("simulationBox");
+  if (window._originalContainerStyle !== undefined) {
+    container.setAttribute("style", window._originalContainerStyle);
+  } else {
+    container.removeAttribute("style");
+  }
+
+  // Show simulation again
+  document.getElementById("threeContainer").style.display = "block";
+  document.getElementById("arOverlay").style.display = "none";
+  document.getElementById("placeholderContent").style.display = "block";
+  document.getElementById("exitArBtnWrapper").style.display = "none";
+  document.getElementById("startArBtn").textContent = "Start AR";
+  document.getElementById("startArBtn").disabled = false;
+
+  // Remvoe resize listener
+  if (window._arResize) {
+    window.removeEventListener("resize", window._arResize0);
+      window._arResize = null;
+  }
+
+  // Rebuild the tree in simulation
+  const species = treeData.find((t) => t.id === selectedTreeId);
+  if (species) buildTree(species);
+
+  // Reload the page to fully reset the renderer and controls
+  window.location.reload();
+}
+
+async function exitAR() {
+  console.log("exitAR called");
+  if (arSession) {
+    await arSession.end();
+  }
+  cleanupAR();
+}
+
+//  Event Listeners
 document.addEventListener("DOMContentLoaded", function () {
   initThree();
 
   document.getElementById("treeInfoOverlay").classList.add("hidden");
 
-  // Click on tree cards
+  // Tree cards
   document.querySelectorAll(".tree-card").forEach((card) => {
     card.addEventListener("click", function () {
       const id = parseInt(this.dataset.tree);
@@ -366,12 +614,13 @@ document.addEventListener("DOMContentLoaded", function () {
           .forEach((c) => c.classList.remove("active"));
         this.classList.add("active");
         selectedTreeId = id;
+        document.getElementById("selectedTreeId").value = id;
         buildTree(species);
       }
     });
   });
 
-  // AUTO‑SELECT APITONG
+  // Auto‑select Apitong
   const apitong = treeData.find((t) => t.name.toLowerCase() === "apitong");
   if (apitong) {
     const cards = document.querySelectorAll(".tree-card");
@@ -384,6 +633,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (targetCard) {
       targetCard.classList.add("active");
       selectedTreeId = apitong.id;
+      document.getElementById("selectedTreeId").value = apitong.id;
       buildTree(apitong);
     } else {
       const firstCard = document.querySelector(".tree-card");
@@ -394,18 +644,16 @@ document.addEventListener("DOMContentLoaded", function () {
     if (firstCard) firstCard.click();
   }
 
-  // Scan QR button (placeholder)
+  // Scan QR (placeholder)
   document.getElementById("scanQrBtn").addEventListener("click", function () {
     alert("QR scanner will be implemented later.");
   });
 
-  // Start AR button (placeholder)
-  document.getElementById("startArBtn").addEventListener("click", function () {
-    alert("AR experience will be implemented later.");
-  });
+  // Start AR
+  document.getElementById("startArBtn").addEventListener("click", startAR);
 });
 
-// Polyfill for roundRect
+// ---- Polyfill for roundRect ----
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
     if (r > w / 2) r = w / 2;

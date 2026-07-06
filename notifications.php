@@ -213,7 +213,7 @@ include 'header.php';
 </div>
 
 <script>
-    // ---- UI helpers ----
+    //  UI helpers 
     function getCSRFToken() {
         return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     }
@@ -239,7 +239,7 @@ include 'header.php';
         updateSelectAllButtonLabel();
     }
 
-    // ---- Dropdown toggle ----
+    //  Dropdown toggle 
     function toggleBulkDropdown(event) {
         event.stopPropagation();
         const dropdown = document.getElementById('bulkDropdown');
@@ -256,7 +256,7 @@ include 'header.php';
         }
     });
 
-    // ---- Search & Filter ----
+    // Search & Filter 
     document.getElementById('searchInput').addEventListener('input', function() {
         const term = this.value.toLowerCase();
         document.querySelectorAll('.notification-item').forEach(item => {
@@ -288,7 +288,7 @@ include 'header.php';
         });
     }
 
-    // ---- Single click: mark as read and navigate ----
+    //  Single click: mark as read and navigate 
     function handleNotificationClick(el) {
         if (event.target.classList.contains('notification-checkbox')) return;
 
@@ -319,7 +319,7 @@ include 'header.php';
         }
     }
 
-    // ---- Bulk actions ----
+    //  Bulk actions 
     function sendBulkAction(action, confirmMessage) {
         const ids = getSelectedIds();
         if (ids.length === 0) {
@@ -386,14 +386,14 @@ include 'header.php';
         sendBulkAction('bulk_delete', 'Delete selected notifications permanently?');
     }
 
-    // ---- Update label on checkbox change ----
+    //  Update label on checkbox change 
     document.addEventListener('change', function(e) {
         if (e.target.classList.contains('notification-checkbox')) {
             updateSelectAllButtonLabel();
         }
     });
 
-    // ---- Mark all as read (hidden button) ----
+    // Mark all as read (hidden button)
     document.getElementById('markAllBtn')?.addEventListener('click', function() {
         if (!confirm('Mark all notifications as read?')) return;
         fetch(window.location.href, {
@@ -419,7 +419,7 @@ include 'header.php';
         });
     });
 
-    // ---- Init ----
+    // Init
     updateSelectAllButtonLabel();
     updateGroupVisibility();
 </script>
