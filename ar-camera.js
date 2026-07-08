@@ -19,6 +19,7 @@ function initThree() {
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf0fdf4);
+  scene.fog = new THREE.Fog(0xf0fdf4, 60, 300); // fixed hex
 
   const aspect = container.clientWidth / container.clientHeight || 1.5;
   camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
@@ -51,8 +52,8 @@ function initThree() {
   scene.add(fillLight);
 
   // Grid - increased size for better scale reference
-  const gridSize = 40;
-  const gridDivisions = 20;
+  const gridSize = 500;
+  const gridDivisions = 40;
   const gridHelper = new THREE.GridHelper(
     gridSize,
     gridDivisions,
@@ -73,6 +74,7 @@ function showQrModal(treeId, treeName) {
   const modal = document.getElementById("qrModal");
   const container = document.getElementById("qrCodeContainer");
   const title = document.getElementById("qrModalTitle");
+  const description = document.getElementById("qrDescription");
 
   // Clear previous QR code
   container.innerHTML = "";
@@ -83,6 +85,9 @@ function showQrModal(treeId, treeName) {
 
   // Set title
   title.textContent = `${treeName} QR Code`;
+
+  // Description
+  description.innerHTML = `Print or share this QR code. Scan it with the AR Camera to instantly view the <strong>${treeName}</strong> tree at full scale.`;
 
   // Generate new QR code (using tree ID as content)
   qrCodeInstance = new QRCode(container, {
@@ -319,6 +324,20 @@ function buildTree(species) {
     transparent: true,
     opacity: 0.25,
   });
+
+  const areaCircleGeo = new THREE.CircleGeometry(spacing, 48);
+  const areaCircleMat = new THREE.MeshBasicMaterial({
+    color: 0x2e7d32,
+    transparent: true,
+    opacity: 0.08,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const areaCircle = new THREE.Mesh(areaCircleGeo, areaCircleMat);
+  areaCircle.rotation.x = -Math.PI / 2;
+  areaCircle.position.y = 0.01;
+  treeGroup.add(areaCircle);
+
   const ring = new THREE.Mesh(ringGeo, ringMat);
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = 0.02;
@@ -419,6 +438,7 @@ function buildTreeForAR(species) {
   const height = species.mature_height || 15;
   const trunkRadius = (species.trunk_diameter || 0.5) / 2;
   const canopyRadius = (species.canopy_diameter || 5) / 2;
+  const spacing = species.planting_spacing || species.canopy_diameter * 1.5 || 5;
   const leafColor = new THREE.Color(species.leaf_color || "#2e7d32");
   const trunkColor = new THREE.Color(species.trunk_color || "#8d6e63");
 
@@ -449,6 +469,43 @@ function buildTreeForAR(species) {
   crown.position.y = height * 0.7 + canopyRadius * 0.3;
   group.add(crown);
 
+  // Planting spacing circle and ring
+  const areaCircleGeo = new THREE.CircleGeometry(spacing, 48);
+  const areaCircleMat = new THREE.MeshBasicMaterial({
+    color: 0x2e7d32,
+    transparent: true,
+    opacity: 0.08,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const areaCircle = new THREE.Mesh(areaCircleGeo, areaCircleMat);
+  areaCircle.rotation.x = -Math.PI / 2;
+  areaCircle.position.y = 0.01;
+  group.add(areaCircle);
+
+  // Ring outline (line loop)
+  const points = [];
+  const segments = 48;
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    points.push(
+      new THREE.Vector3(
+        Math.cos(angle) * spacing,
+        0,
+        Math.sin(angle) * spacing,
+      ),
+    );
+  }
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const lineMat = new THREE.LineBasicMaterial({
+    color: 0x2e7d32,
+    transparent: true,
+    opacity: 0.7,
+  });
+  const line = new THREE.Line(lineGeo, lineMat);
+  line.position.y = 0.03;
+  group.add(line);
+
   // Human reference
   const human = createHumanFigure(1.63);
   human.position.set(trunkRadius + 0.6, 0, 0);
@@ -457,7 +514,7 @@ function buildTreeForAR(species) {
   return group;
 }
 
-//  AR Functions
+// AR Functions
 async function startAR() {
   console.log("startAR called");
   if (!selectedTreeId) {
@@ -502,12 +559,12 @@ async function startAR() {
   arRenderer.setSize(window.innerWidth, window.innerHeight);
   arRenderer.xr.enabled = true;
 
-  // --- CRITICAL Fix: Keep the AR canvas behind the HTML overlay ---
+  // Keep the AR canvas behind the HTML overlay
   arRenderer.domElement.style.position = "absolute";
   arRenderer.domElement.style.top = "0";
   arRenderer.domElement.style.left = "0";
   arRenderer.domElement.style.zIndex = "0";
-  arRenderer.domElement.style.pointerEvents = "none"; // ← this lets clicks through
+  arRenderer.domElement.style.pointerEvents = "none";
 
   container.appendChild(arRenderer.domElement);
 
@@ -600,7 +657,7 @@ async function startAR() {
   // Update UI – ensure the button is clickable
   document.getElementById("startArBtn").textContent = "AR Active";
   document.getElementById("startArBtn").disabled = true;
-  document.getElementById("exitArBtnWrapper").style.display = "block"; // ← SHOW the button wrapper
+  document.getElementById("exitArBtnWrapper").style.display = "block";
   document.getElementById("arHint").style.display = "block";
 }
 
@@ -634,9 +691,9 @@ function cleanupAR() {
   document.getElementById("startArBtn").textContent = "Start AR";
   document.getElementById("startArBtn").disabled = false;
 
-  // Remvoe resize listener
+  // Remove resize listener
   if (window._arResize) {
-    window.removeEventListener("resize", window._arResize0);
+    window.removeEventListener("resize", window._arResize);
     window._arResize = null;
   }
 
@@ -656,7 +713,7 @@ async function exitAR() {
   cleanupAR();
 }
 
-//  Event Listeners
+// Event Listeners
 document.addEventListener("DOMContentLoaded", function () {
   initThree();
 
@@ -741,7 +798,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("startArBtn").addEventListener("click", startAR);
 });
 
-// ---- Polyfill for roundRect ----
+// Polyfill for roundRect
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
     if (r > w / 2) r = w / 2;

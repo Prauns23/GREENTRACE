@@ -295,13 +295,13 @@
 .tree-info-overlay h3 {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #333;
+  color: #2e7d32;
   margin: 0 0 4px 0;
 }
 
 .tree-info-overlay p {
   font-size: 0.8rem;
-  color: #333;
+  color: #2e7d32;
   padding-top: 4px;
 }
 
@@ -398,21 +398,6 @@
     justify-content: center;
   }
 }
-
-/* @media (max-width: 1000px) {
-  .ar-grid {
-    grid-template-columns: minmax(280px, 1fr) minmax(0, 1fr);
-  }
-  .ar-left {
-    max-width: none;
-  }
-
-  .ar-buttons {
-    align-items: center;
-    align-content: center;
-    display: flex;
-  }
-} */
 
 @media (max-width: 1024px) {
   .ar-grid {

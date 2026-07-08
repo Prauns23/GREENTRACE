@@ -65,11 +65,12 @@ $stmt->close();
         <!-- Right grid/Simulation -->
         <div class="ar-right">
             <div class="simulation-box" id="simulationBox">
-                <div id="arOverlay" style="display: none; position: absolute; inset: 0; z-index: 10; pointer-events: none; background: rgba(0,0,0,0.1);">
+                <div id="arOverlay" style="display: none; position: fixed; inset: 0; z-index: 10000; pointer-events: none; background: rgba(0,0,0,0.3);">
                     <div id="arHint" style="position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; font-size: 14px; pointer-events: none;">
                         Tap the ground to place the tree
                     </div>
                 </div>
+
                 <input type="hidden" id="selectedTreeId" value="">
                 <div id="threeContainer" style="width:100%;height:100%;"></div>
                 <div class="tree-info-overlay" id="treeInfoOverlay"></div>
@@ -77,22 +78,10 @@ $stmt->close();
             </div>
 
             <!-- Exit AR button -->
-            <div id="exitArBtnWrapper" style="display: none; position: fixed; bottom: -10px; left: 50%; transform: translateX(-50%); z-index: 99999;">
-                <button id="exitArBtn" onclick="exitAR()" style="padding: 12px 80px; background: rgba(0,0,0,0.8); color: white; border: 1px solid #b9b9b9ce; border-radius: 16px; font-weight: 600; font-size: 14px; cursor: pointer;">
+            <div id="exitArBtnWrapper" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10001;">
+                <button id="exitArBtn" onclick="exitAR()" style="padding: 12px 32px; background: rgba(0,0,0,0.8); color: white; border: none; border-radius: 40px; font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); pointer-events: auto;">
                     Exit AR
                 </button>
-            </div>
-        </div>
-    </div>
-    <!-- QR Code Display Modal -->
-    <div id="qrModal" style="display: none; position: fixed; inset: 0; z-index: 10001; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center;">
-        <div style="background: white; border-radius: 24px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-            <h3 id="qrModalTitle" style="margin-top: 0; font-size: 1.3rem;">QR Code</h3>
-            <div id="qrCodeContainer" style="display: flex; justify-content: center; margin: 20px 0;"></div>
-            <p style="font-size: 0.9rem; color: #666;">Scan this QR code with the AR Camera to view this tree.</p>
-            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
-                <button id="downloadQrBtn" style="padding: 10px 24px; background: #2e7d32; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Download QR Code</button>
-                <button id="closeQrModalBtn" style="padding: 10px 24px; background: #f1f1f1; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Close</button>
             </div>
         </div>
     </div>
@@ -104,4 +93,5 @@ $stmt->close();
 
 <script src="ar-camera.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<?php include_once __DIR__ . '/modals/ar-qr.php'; ?>
 <?php include 'footer.php'; ?>

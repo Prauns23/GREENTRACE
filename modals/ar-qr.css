@@ -1,0 +1,115 @@
+/* modals/ar-qr.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  padding: 0;
+  margin: 0;
+  overflow: auto;
+}
+
+#qrModal {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  justify-content: center;
+  align-items: center;
+}
+
+#qrModal .modal-content {
+  background: #e9e9e9;
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 478px;
+  width: 100%;
+  height: 560px;
+  max-height: 90%;
+  text-align: center;
+}
+
+#qrModal .header-qr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+#qrModal .header-qr h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.qr-description {
+  font-size: 1rem;
+  color: #666;
+  margin: 32px 0;
+}
+
+#qrModal .header-qr button {
+  padding: 10px 24px;
+  font-size: 1.5rem;
+  color: #333;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#qrModal .qr-code-container {
+  display: flex;
+  justify-content: center;
+  padding: 30px;
+  flex: 1;
+  margin: 32px 0;
+  border-radius: 12px;
+  background: white;
+}
+
+#qrModal .qr-description {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+#qrModal .qr-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
+}
+
+#qrModal .qr-actions .download-btn {
+  flex: 1;
+  padding: 12px 0;
+  background: #f3f3f3;
+  color: #333;
+  border: none;
+  border-radius: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: "Inter", sans-serif;
+  transition: all 0.2s ease-in-out;
+}
+
+.qr-actions i {
+    font-size: 0.9rem;
+    margin-right: 12px;
+}
+
+#qrModal .qr-actions .download-btn:hover {
+  background: #2e7d32;
+  color: #f3f3f3;
+  transform: translatey(3px);
+}
+
