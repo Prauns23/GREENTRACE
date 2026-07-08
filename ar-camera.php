@@ -84,6 +84,18 @@ $stmt->close();
             </div>
         </div>
     </div>
+    <!-- QR Code Display Modal -->
+    <div id="qrModal" style="display: none; position: fixed; inset: 0; z-index: 10001; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 24px; padding: 32px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <h3 id="qrModalTitle" style="margin-top: 0; font-size: 1.3rem;">QR Code</h3>
+            <div id="qrCodeContainer" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+            <p style="font-size: 0.9rem; color: #666;">Scan this QR code with the AR Camera to view this tree.</p>
+            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
+                <button id="downloadQrBtn" style="padding: 10px 24px; background: #2e7d32; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Download QR Code</button>
+                <button id="closeQrModalBtn" style="padding: 10px 24px; background: #f1f1f1; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -91,4 +103,5 @@ $stmt->close();
 </script>
 
 <script src="ar-camera.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <?php include 'footer.php'; ?>

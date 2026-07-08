@@ -6,7 +6,7 @@
 
 /* Page container */
 .ar-page {
-  max-width: 1600px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 40px 30px;
   font-family: "Inter", sans-serif;
@@ -46,7 +46,6 @@
 /* Two-grid layout */
 .ar-grid {
   display: grid;
-  /* Let the left column grow when space permits; keep a sensible minimum */
   grid-template-columns: minmax(280px, 1fr) minmax(0, 1.6fr);
   gap: 16px;
   align-items: stretch;
@@ -60,7 +59,7 @@
   width: 100%;
   max-width: 360px;
   gap: 20px;
-  min-height: 0; 
+  min-height: 0;
 }
 
 /* Buttons */
@@ -77,6 +76,7 @@
 .start-ar-btn {
   display: inline-flex;
   align-items: center;
+  align-content: center;
   gap: 8px;
   border: none;
   border-radius: 8px;
@@ -86,6 +86,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: "Inter", sans-serif;
+  flex: 1 1 0;
+  min-width: 150px;
+}
+
+.ar-buttons > button {
+  flex: 1 1 0;
 }
 
 .scan-qr-btn img,
@@ -112,6 +118,8 @@
 .start-ar-btn {
   background: #8ee09250;
   color: #1a3b1a;
+  align-items: center;
+  align-content: center;
 }
 
 .start-ar-btn:hover {
@@ -135,9 +143,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1 1 auto; 
+  flex: 1 1 auto;
   min-height: 0;
-  overflow: auto; 
+  overflow: auto;
   padding-right: 6px;
 }
 
@@ -272,55 +280,35 @@
 }
 
 .tree-info-overlay {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.575);
-    backdrop-filter: blur(4px);
-    border-radius: 12px;
-    padding: 16px 20px;
-    border: 1px solid #e2e8f0;
-    max-width: 280px;
-    pointer-events: none;
-    font-size: 0.8rem;
-    line-height: 1.5;
-    transition: opacity 0.3s ease;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  border-radius: 12px;
+  max-width: 280px;
+  pointer-events: none;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  transition: opacity 0.3s ease;
 }
 
 .tree-info-overlay h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin: 0 0 6px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
 }
 
 .tree-info-overlay p {
-    margin: 2px 0;
-    font-size: 0.85rem;
-    color: #444;
-}
-
-.tree-info-overlay .label {
-    font-weight: 500;
-    color: #666;
-}
-
-.tree-info-overlay .human-note {
-    margin-top: 8px;
-    color: #2e7d32;
-    font-weight: 500;
-    font-size: 0.85rem;
-}
-
-.tree-info-overlay .human-note i {
-    margin-right: 6px;
+  font-size: 0.8rem;
+  color: #333;
+  padding-top: 4px;
 }
 
 /* Hide overlay when no tree is selected */
 .tree-info-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* .tree-details {
@@ -344,7 +332,7 @@
   inset: 0;
   z-index: 10;
   pointer-events: none;
-  background: rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 #exitArBtn {
@@ -353,7 +341,7 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 12px 24px;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
   border: none;
   border-radius: 40px;
@@ -369,7 +357,7 @@
   left: 50%;
   transform: translateX(-50%);
   color: white;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 14px;
@@ -397,17 +385,34 @@
 }
 
 /* Responsive */
-@media (max-width: 1000px) {
+@media (max-width: 1300px) {
   .ar-grid {
     grid-template-columns: minmax(280px, 1fr) minmax(0, 1fr);
   }
   .ar-left {
-    max-width: none; /* allow left column to expand to available space */
+    max-width: none;
   }
-  .ar-right {
-    padding-left: 20px;
+  .scan-qr-btn,
+  .start-ar-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
+
+/* @media (max-width: 1000px) {
+  .ar-grid {
+    grid-template-columns: minmax(280px, 1fr) minmax(0, 1fr);
+  }
+  .ar-left {
+    max-width: none;
+  }
+
+  .ar-buttons {
+    align-items: center;
+    align-content: center;
+    display: flex;
+  }
+} */
 
 @media (max-width: 1024px) {
   .ar-grid {
@@ -419,8 +424,15 @@
     flex-grow: 1;
     margin-right: auto;
   }
+
+  .scan-qr-btn,
+  .start-ar-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .simulation-box {
-    height: 400px;
+    height: 600px;
   }
 }
 
@@ -432,7 +444,8 @@
     font-size: 1.6rem;
     flex-wrap: wrap;
   }
-  .scan-qr-btn {
+  .scan-qr-btn,
+  .start-ar-btn {
     width: 100%;
     justify-content: center;
   }
@@ -444,6 +457,10 @@
     margin-top: 8px;
   }
   .simulation-box {
-    height: 300px;
+    height: 500px;
+  }
+  .ar-right {
+    margin: 0;
+    padding: 0;
   }
 }

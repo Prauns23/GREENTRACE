@@ -10,6 +10,8 @@ let hitTestSource = null;
 let localSpace = null;
 let arTreeGroup = null;
 let isArMode = false;
+let currentQrTreeId = null;
+let qrCodeInstance = null;
 
 function initThree() {
   const container = document.getElementById("threeContainer");
@@ -48,8 +50,15 @@ function initThree() {
   fillLight.position.set(-10, 5, -10);
   scene.add(fillLight);
 
-  // Grid
-  const gridHelper = new THREE.GridHelper(20, 20, 0x888888, 0xcccccc);
+  // Grid - increased size for better scale reference
+  const gridSize = 40;
+  const gridDivisions = 20;
+  const gridHelper = new THREE.GridHelper(
+    gridSize,
+    gridDivisions,
+    0x888888,
+    0xcccccc,
+  );
   gridHelper.position.y = 0;
   scene.add(gridHelper);
 
@@ -58,6 +67,59 @@ function initThree() {
   window.addEventListener("resize", onResize);
 
   document.getElementById("placeholderContent").style.display = "block";
+}
+
+function showQrModal(treeId, treeName) {
+  const modal = document.getElementById("qrModal");
+  const container = document.getElementById("qrCodeContainer");
+  const title = document.getElementById("qrModalTitle");
+
+  // Clear previous QR code
+  container.innerHTML = "";
+  if (qrCodeInstance) {
+    qrCodeInstance.clear();
+    qrCodeInstance = null;
+  }
+
+  // Set title
+  title.textContent = `${treeName} QR Code`;
+
+  // Generate new QR code (using tree ID as content)
+  qrCodeInstance = new QRCode(container, {
+    text: treeId.toString(),
+    width: 200,
+    height: 200,
+    colorDark: "#1a1a1a",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H,
+  });
+
+  // Store current tree ID for download
+  currentQrTreeId = treeId;
+
+  // Show modal
+  modal.style.display = "flex";
+}
+
+function closeQrModal() {
+  document.getElementById("qrModal").style.display = "none";
+  if (qrCodeInstance) {
+    qrCodeInstance.clear();
+    qrCodeInstance = null;
+  }
+}
+
+function downloadQrCode() {
+  if (!currentQrTreeId) return;
+
+  const canvas = document.querySelector("#qrCodeContainer canvas");
+  if (!canvas) return;
+
+  // Create a download link
+  const link = document.createElement("a");
+  link.download = `tree_${currentQrTreeId}_qr.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 }
 
 function animate() {
@@ -343,12 +405,9 @@ function buildTree(species) {
   const overlay = document.getElementById("treeInfoOverlay");
   overlay.innerHTML = `
     <div class="tree-info-details">
-        <h3>${species.name}</h3>
-        <p><span class="label">Height:</span> ${species.mature_height}m</p>
-        <p><span class="label">Trunk:</span> ${species.trunk_diameter}m</p>
-        <p><span class="label">Canopy:</span> ${species.canopy_diameter}m</p>
-        <p><span class="label">Plant spacing:</span> ${spacing.toFixed(1)}m</p>
-        <p class="human-note"><i class="fas fa-user"></i> Human: 1.63m</p>
+        <h3><i class="fa-solid fa-expand" style="font-size: 1.2rem; margin-right: 8px;"></i> ${species.name} — ${height}m tall</h3>
+        <p><p><span class="label">Plant spacing:</span> ${spacing.toFixed(1)}m</p></p>
+        <p class="human-note">Human: 1.63m</p>
     </div>
 `;
   overlay.classList.remove("hidden");
@@ -578,7 +637,7 @@ function cleanupAR() {
   // Remvoe resize listener
   if (window._arResize) {
     window.removeEventListener("resize", window._arResize0);
-      window._arResize = null;
+    window._arResize = null;
   }
 
   // Rebuild the tree in simulation
@@ -619,6 +678,35 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
+
+  // QR button on each tree card
+  document.querySelectorAll(".qr-btn").forEach((btn) => {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation(); // prevent triggering the card click
+      const card = this.closest(".tree-card");
+      const treeId = parseInt(card.dataset.tree);
+      const species = treeData.find((t) => t.id === treeId);
+      if (species) {
+        showQrModal(treeId, species.name);
+      }
+    });
+  });
+
+  // Close modal buttons
+  document
+    .getElementById("closeQrModalBtn")
+    .addEventListener("click", closeQrModal);
+  document.getElementById("qrModal").addEventListener("click", function (e) {
+    if (e.target === this) closeQrModal();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeQrModal();
+  });
+
+  // Download button
+  document
+    .getElementById("downloadQrBtn")
+    .addEventListener("click", downloadQrCode);
 
   // Auto‑select Apitong
   const apitong = treeData.find((t) => t.name.toLowerCase() === "apitong");
