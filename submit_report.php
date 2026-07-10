@@ -18,8 +18,25 @@ $longitude = isset($_POST['longitude']) && $_POST['longitude'] !== '' ? (float)$
 
 $anonymous = isset($_POST['anonymous']) && $_POST['anonymous'] === '1' ? 1 : 0;
 
+// User is always logged in because the form is only shown when logged in
+$user_id = $_SESSION['user_id'] ?? null;
+$email = null;
+
+if ($user_id !== null) {
+    // Fetch user's email from database 
+    $emailStmt = $conn->prepare("SELECT email FROM users_tbl WHERE id = ?");
+    $emailStmt->bind_param("i", $user_id);
+    $emailStmt->execute();
+    $result = $emailStmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $email = $row['email'];
+    }
+    $emailStmt->close();
+}
+
+
+// If anonymous, override email to null
 if ($anonymous) {
-    $user_id = null;
     $email = null;
 } else {
     $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
@@ -64,19 +81,7 @@ if (isset($_FILES['photos']) && is_array($_FILES['photos']['name'])) {
     }
 }
 
-// Determine reporter name
-if ($anonymous) {
-    $reporterName = 'anonymously';
-} else {
-    $firstName = $_SESSION['first_name'] ?? '';
-    $lastName  = $_SESSION['last_name'] ?? '';
-    $reporterName = trim($firstName . ' ' . $lastName);
-    if (empty($reporterName)) {
-        $reporterName = 'a user'; // fallback
-    }
-}
-// Notify the user (if not anonymous)
-
+//  Notify the user (if not anonymous) 
 if ($user_id !== null) {
     logActivity($user_id, 'report', $report_id, $issue_type, 'pending', "Your report <strong>$issue_type</strong> is pending review.");
 
@@ -86,23 +91,31 @@ if ($user_id !== null) {
     createNotification($user_id, 'report', $notifTitle, $notifMessage, $link);
 }
 
-
-// Notify all admins
+//  Notify all admins 
 $adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role = 'admin' AND archived = 0");
 $adminStmt->execute();
 $admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $adminStmt->close();
 
 $adminNotifTitle = "New Report Submitted";
-$adminNotifMessage = "A new report \"<strong>$issue_type</strong>\" has been submitted by <strong>$reporterName</strong>.";
-$adminLink = "forestmap.php";
 
-$adminNotifTitle = "New Report Submitted";
-
+// Determine reporter name 
 if ($anonymous) {
-    $adminNotifMessage = "A new report \" <strong>$issue_type</strong>\" has been submitted anonymously.";
+    $adminNotifMessage = "A new report \"<strong>$issue_type</strong>\" has been submitted anonymously.";
 } else {
-    $adminNotifMessage = "A new report \"<strong>$issue_type</strong>\" has been submitted by <strong>$reporterName</strong>";
+    // Fetch reporter's full name from database 
+    $reporterName = 'a user';
+    if ($user_id !== null) {
+        $nameStmt = $conn->prepare("SELECT CONCAT(fname, ' ', lname) as full_name FROM users_tbl WHERE id = ?");
+        $nameStmt->bind_param("i", $user_id);
+        $nameStmt->execute();
+        $nameResult = $nameStmt->get_result()->fetch_assoc();
+        if ($nameResult && !empty($nameResult['full_name'])) {
+            $reporterName = $nameResult['full_name'];
+        }
+        $nameStmt->close();
+    }
+    $adminNotifMessage = "A new report \"<strong>$issue_type</strong>\" has been submitted by <strong>$reporterName</strong>.";
 }
 
 $adminLink = "forestmap.php";

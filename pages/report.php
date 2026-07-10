@@ -85,10 +85,10 @@ $is_logged_in = isset($_SESSION['first_name']);
         </div>
 
         <!-- Contact Information -->
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label>Your Email</label>
             <input type="email" name="email" id="reportEmail" placeholder="JohnDoe@email.com">
-        </div>
+        </div> -->
 
         <!-- Anonymous checkbox -->
         <div class="checkbox-group">

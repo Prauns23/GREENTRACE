@@ -407,7 +407,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const issueType = document.querySelector(".form-select");
       const description = document.getElementById("report-description");
       const location = document.querySelector(".location-search");
-      const email = document.querySelector('input[type="email"]');
       const anonymous = document.getElementById("anonymous");
       const latitude = document.getElementById("latitude");
       const longitude = document.getElementById("longitude");
@@ -431,7 +430,6 @@ document.addEventListener("DOMContentLoaded", function () {
       formData.append("issue_type", issueType.value);
       formData.append("description", description.value.trim());
       formData.append("location", location.value.trim());
-      formData.append("email", email ? email.value.trim() : "");
       formData.append(
         "anonymous",
         anonymous ? (anonymous.checked ? "1" : "0") : "0",
@@ -489,28 +487,4 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
   }
-});
-
-
-// Fill email field if not anonymous function
-
-document.addEventListener("DOMContentLoaded", function () {
-  const anonymousCheckbox = document.getElementById("anonymous");
-  const emailField = document.getElementById("reportEmail");
-
-  if (anonymousCheckbox && emailField) {
-    // Store the original email value
-    emailField.addEventListener("focus", function () {
-      if (this.value === "" && typeof userEmail !== "undefined" && userEmail) {
-        this.value = userEmail;
-      }
-    });
-
-    // Clear email when anonymous is checked
-        anonymousCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                emailField.value = '';
-            }
-        });
-    }
 });
