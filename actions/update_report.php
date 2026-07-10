@@ -42,16 +42,21 @@ $stmt = $conn->prepare("UPDATE reports SET status = ? WHERE id = ?");
 $stmt->bind_param("si", $new_status, $report_id);
 
 if ($stmt->execute()) {
-    // Log activity only if the report belongs to a logged‑in user (not anonymous)
-    if ($user_id !== null) {
-        logActivity($user_id, 'report', $report_id, $issue_type, $new_status, "Your report <strong>$issue_type</strong> has been <strong>$new_status</strong>.");
+    $recipientUserId = !empty($user_id) ? (int)$user_id : null;
 
-        // Send notification (report status updated)
+    // Log activity and send a notification only if the report is linked to a real user account.
+    if ($recipientUserId !== null) {
+        logActivity($recipientUserId, 'report', $report_id, $issue_type, $new_status, "Your report <strong>$issue_type</strong> has been <strong>$new_status</strong>.");
+
         $notifTitle = "Report Update";
-        $notifMessage = "Your report \"<strong>$issue_type</strong>\" has is <strong>$new_status</strong>.";
+        $notifMessage = "Your report \"<strong>$issue_type</strong>\" has been <strong>$new_status</strong>.";
         $link = "forestmap.php";
-        createNotification($user_id, 'report', $notifTitle, $notifMessage, $link);
+
+        if (!createNotification($recipientUserId, 'report', $notifTitle, $notifMessage, $link)) {
+            error_log("Failed to create report notification for report_id=$report_id user_id=$recipientUserId");
+        }
     }
+
     echo json_encode(['success' => true]);
 } else {
     echo json_encode(['error' => 'Database error: ' . $conn->error]);

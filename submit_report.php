@@ -64,16 +64,52 @@ if (isset($_FILES['photos']) && is_array($_FILES['photos']['name'])) {
     }
 }
 
+// Determine reporter name
+if ($anonymous) {
+    $reporterName = 'anonymously';
+} else {
+    $firstName = $_SESSION['first_name'] ?? '';
+    $lastName  = $_SESSION['last_name'] ?? '';
+    $reporterName = trim($firstName . ' ' . $lastName);
+    if (empty($reporterName)) {
+        $reporterName = 'a user'; // fallback
+    }
+}
+// Notify the user (if not anonymous)
+
 if ($user_id !== null) {
     logActivity($user_id, 'report', $report_id, $issue_type, 'pending', "Your report <strong>$issue_type</strong> is pending review.");
-}
 
-// Send Notification (Report Submitted)
-if ($user_id !== null) {
-    $notifTile = "Report Submitted";
+    $notifTitle = "Report Submitted";
     $notifMessage = "Your report \"<strong>$issue_type</strong>\" has been submitted and is pending review.";
     $link = "forestmap.php";
     createNotification($user_id, 'report', $notifTitle, $notifMessage, $link);
 }
 
+
+// Notify all admins
+$adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role = 'admin' AND archived = 0");
+$adminStmt->execute();
+$admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$adminStmt->close();
+
+$adminNotifTitle = "New Report Submitted";
+$adminNotifMessage = "A new report \"<strong>$issue_type</strong>\" has been submitted by <strong>$reporterName</strong>.";
+$adminLink = "forestmap.php";
+
+$adminNotifTitle = "New Report Submitted";
+
+if ($anonymous) {
+    $adminNotifMessage = "A new report \" <strong>$issue_type</strong>\" has been submitted anonymously.";
+} else {
+    $adminNotifMessage = "A new report \"<strong>$issue_type</strong>\" has been submitted by <strong>$reporterName</strong>";
+}
+
+$adminLink = "forestmap.php";
+
+foreach ($admins as $admin) {
+    createNotification($admin['id'], 'report', $adminNotifTitle, $adminNotifMessage, $adminLink);
+}
+
 echo json_encode(['success' => true, 'message' => 'Report submitted successfully']);
+?>

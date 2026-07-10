@@ -138,6 +138,10 @@
   border-color: #2e7d32;
 }
 
+.notification-item[data-type="report"]:hover {
+    border-color: #e53935; /* red */
+}
+
 .notification-item.unread {
   background: #ffffff;
 }
