@@ -90,11 +90,11 @@ if (!$forest) {
                     <label for="description">Description</label>
                     <textarea id="description" name="description" placeholder="Describe the reforestation area, species planted, and etc..."><?php echo htmlspecialchars($forest['description']); ?></textarea>
                 </div>
+                <div class="button-group">
+                    <button class="btn-cancel" type="button" onclick="parent.hideFloating()">Cancel</button>
+                    <button class="btn-submit" type="submit">Save Changes</button>
+                </div>
             </form>
-            <div class="button-group">
-                <button class="btn-cancel" type="button" onclick="parent.hideFloating()">Cancel</button>
-                <button class="btn-submit" type="submit">Save Changes</button>
-            </div>
         </div>
     </div>
 

@@ -101,26 +101,30 @@ function setupFormSubmit() {
         submitBtn.disabled = true;
         submitBtn.textContent = "Saving...";
 
+        // DEBUG: confirm what the date field actually holds right before sending
+        console.log("dateEstablished value being sent:", dateEstablished);
+
         // Send data to server
         try {
             const response = await fetch("../actions/update_forest_area.php", {
-                method: "POST",
+                method: "PATCH",
                 headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Content-Type": "application/json",
                 },
-                body: new URLSearchParams({
+                body: JSON.stringify({
                     id: id,
                     name: name,
                     location_name: locationName,
                     latitude: latitude,
                     longitude: longitude,
-                    date_established: dateEstablished,
+                    date_started: dateEstablished,
                     status: status,
                     description: description,
                 }),
             });
 
             const data = await response.json();
+            console.log("Server response:", data);
 
             if (data.success) {
                 // Show success message via parent toast

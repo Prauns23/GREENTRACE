@@ -113,9 +113,6 @@ function addMarkers() {
                     <button class="archive-btn" onclick="archiveForestArea(${area.id})">
                         <i class="fas fa-archive"></i> Archive
                     </button>
-                    <button class="delete-btn" onclick="deleteForestArea(${area.id})">
-                        <i class="fa-solid fa-trash"></i> Delete
-                    </button>
                 `;
       }
 
@@ -142,7 +139,7 @@ function addMarkers() {
     console.warn("No forest areas data available");
   }
 
-  // --- Process reports ---
+  //  Process reports
   if (reports && reports.length > 0) {
     reports.forEach((report) => {
       const isArchived = report.archived == 1;
@@ -227,7 +224,7 @@ function addMarkers() {
 
 // Update statistics
 function updateStats() {
-  // Active forests: not archived 
+  // Active forests: not archived
   const activeForests = forestAreas
     ? forestAreas.filter((f) => f.archived != 1).length
     : 0;
