@@ -12,8 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Check if user is logged in and is admin
 
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    echo json_encode(['error' => 'Unathorized access.']);
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
+    echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
 

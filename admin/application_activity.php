@@ -5,7 +5,7 @@ require_once __DIR__ . '/../log_activity.php';
 require_once __DIR__ . '/../notifications_helper.php';
 require_once __DIR__ . '/../error_logger.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     header('Location: ../index.php');
     exit;
 }
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                             // Send notification
                             $notifTitle = "Application Approved";
                             $notifMessage = "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>! Please check the event date.";
-                            $link = "activities.php?open_activity={$app['activity_id']}"; 
+                            $link = "activities.php?open_activity={$app['activity_id']}";
                             createNotification($app['user_id'], 'application', $notifTitle, $notifMessage, $link);
                         } catch (Exception $e) {
                             $conn->rollback();
@@ -278,11 +278,13 @@ $query = "
     SELECT 
         va.*, 
         u.fname, u.lname, u.email as user_email, 
+        b.name as current_barangay,  -- <-- add this
         a.title as activity_title,
         GROUP_CONCAT(ap.file_path SEPARATOR '|') as file_paths,
         GROUP_CONCAT(ap.original_name SEPARATOR '|') as file_names
     FROM volunteer_applications va
     JOIN users_tbl u ON va.user_id = u.id
+    LEFT JOIN barangays b ON u.barangay_id = b.id  -- <-- add this join
     JOIN activities a ON va.activity_id = a.id
     LEFT JOIN application_photos ap ON ap.application_id = va.id
     WHERE $archivedCondition
@@ -405,7 +407,7 @@ require_once __DIR__ . '/../header.php';
                             <td><?= htmlspecialchars($app['activity_title']) ?></td>
                             <td><?= date('M d, Y', strtotime($app['date_of_birth'])) ?></td>
                             <td><?= htmlspecialchars($app['mobile_number']) ?></td>
-                            <td><?= htmlspecialchars($app['barangay']) ?></td>
+                            <td><?= htmlspecialchars($app['current_barangay'] ?? $app['barangay']) ?></td>
                             <td>
                                 <?php
                                 if (!empty($app['file_paths'])) {
@@ -477,7 +479,7 @@ require_once __DIR__ . '/../header.php';
 
 <script src="application_activity.js"></script>
 
-<!-- <script>
+<script>
     // Show toast from URL parameter
     const toastMsg = <?php echo json_encode($toastMessage); ?>;
     const toastType = <?php echo json_encode($toastType); ?>;
@@ -495,6 +497,6 @@ require_once __DIR__ . '/../header.php';
             }
         }, 500);
     }
-</script> -->
+</script>
 
 <?php require_once __DIR__ . '/../footer.php'; ?>

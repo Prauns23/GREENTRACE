@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
@@ -63,4 +63,3 @@ if ($stmt->execute()) {
 }
 $stmt->close();
 $conn->close();
-?>

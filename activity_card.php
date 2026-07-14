@@ -8,7 +8,7 @@ if (!isset($activity)) {
 ?>
 <div class="activity-card <?= $activity['date'] < $today ? 'past-activity' : '' ?>" data-activity-id="<?= $activity['id'] ?>" onclick="<?= $activity['date'] >= $today ? 'showActivityDetails(' . $activity['id'] . ')' : '' ?>">
     <div class="activity-prev">
-        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+        <?php if (!empty($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'], true)): ?>
             <div class="activity-menu-trigger" onclick="event.stopPropagation(); toggleActivityMenu(this)">
                 <i class="fa-solid fa-ellipsis-vertical"></i>
                 <div class="activity-menu-dropdown" style="display: none;">

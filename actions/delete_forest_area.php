@@ -8,11 +8,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
-
 $id = (int)($_POST['id'] ?? 0);
 if (!$id) {
     echo json_encode(['error' => 'Invalid ID']);

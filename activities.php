@@ -117,7 +117,7 @@ include 'header.php';
                     <?php include 'activity_card.php'; ?>
                 <?php endforeach; ?>
                 <!-- ADD ACTIVITY (Admin Only) – only shown when activities exist -->
-                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                <?php if (!empty($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'], true)): ?>
                     <div class="activity-card add-activity-card" onclick="showAddActivityModal()" role="button" aria-label="Add activity">
                         <div class="add-activity-inner">
                             <i class="fa-solid fa-plus add-activity-icon"></i>

@@ -13,8 +13,13 @@ $user_id = $_SESSION['user_id'];
 // Sync MySQL timezone with PHP to prevent timestamp mismatch
 $conn->query("SET time_zone = '" . date('P') . "'");
 
-// Fetch user details
-$userStmt = $conn->prepare("SELECT fname, lname, email, phone_no, role, created_at FROM users_tbl WHERE id = ?");
+// Fetch user details (including barangay)
+$userStmt = $conn->prepare("
+    SELECT u.fname, u.lname, u.email, u.phone_no, u.role, u.created_at, b.name as barangay_name
+    FROM users_tbl u
+    LEFT JOIN barangays b ON u.barangay_id = b.id
+    WHERE u.id = ?
+");
 $userStmt->bind_param("i", $user_id);
 $userStmt->execute();
 $userData = $userStmt->get_result()->fetch_assoc();
@@ -25,10 +30,16 @@ $user = [
     'email'      => $userData['email']     ?? $_SESSION['email']      ?? '',
     'phone'      => $userData['phone_no']  ?? 'Not provided',
     'role'       => $userData['role']      ?? $_SESSION['role']       ?? 'user',
+    'barangay'   => $userData['barangay_name'] ?? 'Not set',
     'joined'     => date('F j, Y', strtotime($userData['created_at'] ?? 'now'))
 ];
 
-// Fetch activity log — UNIX_TIMESTAMP() returns a timezone-safe integer
+// Helper: format role name
+function formatRole($role) {
+    return $role === 'super_admin' ? 'Super Admin' : ucfirst($role);
+}
+
+// Fetch activity log
 $logStmt = $conn->prepare("
     SELECT id, type, title, status, description, created_at,
            UNIX_TIMESTAMP(created_at) AS created_unix
@@ -40,8 +51,6 @@ $logStmt->bind_param("i", $user_id);
 $logStmt->execute();
 $activities = $logStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Helper: server-side relative time for initial render
-// Accepts a Unix timestamp integer
 function time_ago(int $unix): string
 {
     $diff = time() - $unix;
@@ -101,8 +110,12 @@ include 'header.php';
                 <p><?php echo htmlspecialchars($user['phone']); ?></p>
             </div>
             <div class="info-item">
+                <label>Barangay</label>
+                <p><?php echo htmlspecialchars($user['barangay']); ?></p>
+            </div>
+            <div class="info-item">
                 <label>User Role</label>
-                <p><?php echo ucfirst($user['role']); ?></p>
+                <p><?php echo htmlspecialchars(formatRole($user['role'])); ?></p>
             </div>
         </div>
     </div>

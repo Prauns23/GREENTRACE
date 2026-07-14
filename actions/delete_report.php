@@ -10,11 +10,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Admin only
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    echo json_encode(['error' => 'Unauthorized access']);
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
+    echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
-
 $report_id = isset($_POST['report_id']) ? (int)$_POST['report_id'] : 0;
 if (!$report_id) {
     echo json_encode(['error' => 'Invalid report ID']);

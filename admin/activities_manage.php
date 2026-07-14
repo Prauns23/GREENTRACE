@@ -2,8 +2,8 @@
 require_once __DIR__ . '/../init_session.php';
 require_once __DIR__ . '/../config.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../index.php');
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
+    echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
 

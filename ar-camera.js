@@ -142,7 +142,7 @@ function onResize() {
   camera.updateProjectionMatrix();
 }
 
-// HUMAN FIGURE (1.63m = average Filipino height)
+// HUMAN FIGURE (1.63m height)
 function createHumanFigure(height = 1.63) {
   const group = new THREE.Group();
 

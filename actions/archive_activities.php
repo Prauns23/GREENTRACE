@@ -2,7 +2,10 @@
 require_once '../init_session.php';
 require_once '../config.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') exit(json_encode(['error' => 'Unauthorized']));
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
 $input = json_decode(file_get_contents('php://input'), true);
 $ids = isset($input['ids']) ? $input['ids'] : (isset($_POST['ids']) ? json_decode($_POST['ids'], true) : []);
 if (empty($ids) || !is_array($ids)) exit(json_encode(['error' => 'Invalid IDs']));

@@ -9,10 +9,10 @@ if (!isset($_SESSION['first_name'])) {
     exit();
 }
 
-// Admin only 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+// Admin only
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     header('Location: index.php');
-    exit();
+    exit;
 }
 
 include 'header.php';

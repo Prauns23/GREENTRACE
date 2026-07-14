@@ -180,7 +180,7 @@ if (isset($_SESSION['user_id'])) {
                 </li>
             </ul>
         </nav>
-        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+        <?php if (isset($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'])): ?>
             <nav class="sidebar-admin">
                 <ul>
                     <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'admin/application_activity.php' || basename($_SERVER['PHP_SELF']) == 'application_activity.php' ? 'active' : ''; ?>">

@@ -2,7 +2,7 @@
 require_once '../init_session.php';
 require_once '../config.php';
 require_once __DIR__ . '/../log_activity.php';
-require_once __DIR__ . '/../notifications_helper.php'; // Add this line
+require_once __DIR__ . '/../notifications_helper.php';
 
 header('Content-Type: application/json');
 
@@ -12,8 +12,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $headers = getallheaders();
-
-
 $csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
 if (!verifyCSRFToken($csrf_token)) {
     echo json_encode(['error' => 'Invalid CSRF token']);
@@ -24,7 +22,6 @@ $user_id = $_SESSION['user_id'];
 $activity_id = (int)($_POST['activity_id'] ?? 0);
 $date_of_birth = trim($_POST['date_of_birth'] ?? '');
 $gender = trim($_POST['gender'] ?? '');
-$barangay = trim($_POST['barangay'] ?? '');
 $understand = isset($_POST['understand']);
 $agree = isset($_POST['agree']);
 
@@ -40,13 +37,22 @@ if ($age < 18 || $age > 65) {
     exit;
 }
 
-if (!$activity_id || !$date_of_birth || !$barangay || !$understand || !$agree) {
+// Validate required fields (barangay is fetched from DB, not from POST)
+if (!$activity_id || !$date_of_birth || !$understand || !$agree) {
     echo json_encode(['error' => 'All required fields must be filled']);
     exit;
 }
 
-// Fetch user data
-$userStmt = $conn->prepare("SELECT CONCAT(fname, ' ', lname) as full_name, phone_no as mobile_number, email FROM users_tbl WHERE id = ?");
+// Fetch user data (including barangay)
+$userStmt = $conn->prepare("
+    SELECT CONCAT(fname, ' ', lname) as full_name, 
+           phone_no as mobile_number, 
+           email,
+           b.name as barangay_name
+    FROM users_tbl u
+    LEFT JOIN barangays b ON u.barangay_id = b.id
+    WHERE u.id = ?
+");
 $userStmt->bind_param("i", $user_id);
 $userStmt->execute();
 $userData = $userStmt->get_result()->fetch_assoc();
@@ -57,6 +63,7 @@ if (!$userData) {
 $full_name = $userData['full_name'];
 $mobile_number = $userData['mobile_number'];
 $email = $userData['email'];
+$barangay = $userData['barangay_name'] ?? ''; // from profile
 
 // Check for existing application
 $checkStmt = $conn->prepare("
@@ -153,18 +160,17 @@ $actTitleStmt->close();
 // Log activity
 logActivity($user_id, 'application', $application_id, $actTitle, 'pending', "Your application for <strong>$actTitle</strong> is pending. It will be reviewed soon.");
 
-// SEND NOTIFICATION (JOIN) 
+// Send notification to user
 $notifTitle = "Application Submitted";
 $notifMessage = "Your application for <strong>$actTitle</strong> has been submitted and is pending admin review.";
 $link = "activities.php?open_activity={$activity_id}";
 createNotification($user_id, 'application', $notifTitle, $notifMessage, $link);
 
-// Notify all admins about the new application 
+// Notify all admins
 $adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role = 'admin' AND archived = 0");
 $adminStmt->execute();
 $admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $adminStmt->close();
-
 
 $adminNotifTitle = "New volunteer Application";
 $adminNotifMessage = "A new application for <strong>$actTitle</strong> has been submitted by <strong>$full_name</strong>.";
@@ -175,3 +181,5 @@ foreach ($admins as $admin) {
 }
 
 echo json_encode(['success' => true]);
+
+?>

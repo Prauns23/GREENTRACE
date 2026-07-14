@@ -113,10 +113,17 @@ body.login-active {
   height: 550px;
 }
 
+#floatingSignUpContainer .floating-iframe {
+  height: 1100px;
+  max-height: 90vh;
+  margin-top: 20px;
+}
+
 #floatingLoginContainer .floating-iframe,
 #floatingSignInContainer .floating-iframe {
   width: 1400px;
   height: 695px;
+  margin-top: 20px;
 }
 
 #floatingSpeciesContainer .floating-iframe {
@@ -155,8 +162,10 @@ body.login-active {
 
 #floatingVolunteerContainer .floating-iframe {
   width: 720px;
-  height: 800px;
+  height: 900px;
+  max-height: 90vh;
   border-radius: 20px;
+  margin-top: 54px;
   background: transparent;
 }
 

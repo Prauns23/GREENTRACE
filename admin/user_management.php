@@ -2,10 +2,12 @@
 require_once __DIR__ . '/../init_session.php';
 require_once __DIR__ . '/../config.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     header('Location: ../index.php');
     exit;
 }
+
+
 
 // Handle BULK actions first (archive/restore multiple users)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
@@ -14,6 +16,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
     $currentSort = $_GET['sort'] ?? 'name_asc';
     $message = '';
     $type = 'success';
+
+    // Check if any selected user is super_admin (and current user is not super_admin)
+    if ($_SESSION['role'] !== 'super_admin') {
+        $checkStmt = $conn->prepare("SELECT role FROM users_tbl WHERE id = ?");
+        foreach ($selectedIds as $id) {
+            $checkStmt->bind_param("i", $id);
+            $checkStmt->execute();
+            $result = $checkStmt->get_result()->fetch_assoc();
+            if ($result && $result['role'] === 'super_admin') {
+                $message = 'Cannot archive/restore a super admin.';
+                $type = 'error';
+                header("Location: user_management.php?sort=" . urlencode($currentSort) . "&toast=" . urlencode($message) . "&type=" . $type);
+                exit;
+            }
+        }
+    }
 
     if (!empty($selectedIds) && is_array($selectedIds)) {
         if ($bulkAction === 'archive') {
@@ -63,8 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Single role update
     if ($action === 'update_role') {
+        // Only super_admin can change roles
+        if ($_SESSION['role'] !== 'super_admin') {
+            echo json_encode(['error' => 'Only authorized users can change roles!']);
+            exit;
+        }
         $newRole = $_POST['role'] ?? '';
-        if (!in_array($newRole, ['admin', 'user'])) {
+        if (!in_array($newRole, ['admin', 'user', 'super_admin'])) {
             echo json_encode(['error' => 'Invalid role']);
             exit;
         }
@@ -72,6 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['error' => 'You cannot change your own role']);
             exit;
         }
+        // Only super_admin can assign super_admin
+        if ($newRole === 'super_admin' && $_SESSION['role'] !== 'super_admin') {
+            echo json_encode(['error' => 'Only super admins can assign super admin role.']);
+            exit;
+        }
+
         $stmt = $conn->prepare("UPDATE users_tbl SET role = ? WHERE id = ?");
         $stmt->bind_param("si", $newRole, $userId);
         if ($stmt->execute()) {
@@ -84,6 +113,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Single archive
     if ($action === 'archive_user') {
+        // Check if user is super_admin and current user is not super_admin
+        $checkStmt = $conn->prepare("SELECT role FROM users_tbl WHERE id = ?");
+        $checkStmt->bind_param("i", $userId);
+        $checkStmt->execute();
+        $targetUser = $checkStmt->get_result()->fetch_assoc();
+        if ($targetUser && $targetUser['role'] === 'super_admin' && $_SESSION['role'] !== 'super_admin') {
+            echo json_encode(['error' => 'Cannot archive a super admin.']);
+            exit;
+        }
+
         if ($userId == $_SESSION['user_id']) {
             echo json_encode(['error' => 'You cannot archive your own account']);
             exit;
@@ -100,6 +139,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Single restore
     if ($action === 'restore_user') {
+
+        $checkStmt = $conn->prepare("SELECT role FROM users_tbl WHERE id = ?");
+        $checkStmt->bind_param("i", $userId);
+        $checkStmt->execute();
+        $targetUser = $checkStmt->get_result()->fetch_assoc();
+        if ($targetUser && $targetUser['role'] === 'super_admin' && $_SESSION['role'] !== 'super_admin') {
+            echo json_encode(['error' => 'Cannot archive a super admin.']);
+            exit;
+        }
+
         $stmt = $conn->prepare("UPDATE users_tbl SET archived = 0, archived_at = NULL WHERE id = ?");
         $stmt->bind_param("i", $userId);
         if ($stmt->execute()) {
@@ -239,14 +288,19 @@ if ($showArchived) {
     $whereClause = "u.archived = 0";
 }
 
+if ($_SESSION['role'] !== 'super_admin') {
+    $whereClause .= " AND u.role != 'super_admin'";
+}
+
 $search = trim($_GET['search'] ?? '');
 if (!empty($search)) {
     $whereClause .= " AND (u.fname LIKE ? OR u.lname LIKE ? OR u.email LIKE ?)";
     $searchParam = "%$search%";
 }
 
-$sql = "SELECT u.id, u.fname, u.lname, u.email, u.role, u.created_at, u.archived_at 
+$sql = "SELECT u.id, u.fname, u.lname, u.email, u.role, u.created_at, u.archived_at, b.name as barangay_name 
         FROM users_tbl u 
+        LEFT JOIN barangays b ON u.barangay_id = b.id
         WHERE $whereClause
         ORDER BY $orderBy";
 
@@ -258,7 +312,7 @@ $stmt->execute();
 $users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Stats (only for active users)
-$totalActive = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE archived = 0")->fetch_assoc()['cnt'];
+$totalActive = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE archived = 0 AND role != 'super_admin'")->fetch_assoc()['cnt'];
 $totalAdmins = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE role = 'admin' AND archived = 0")->fetch_assoc()['cnt'];
 $totalUsers = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE role = 'user' AND archived = 0")->fetch_assoc()['cnt'];
 
@@ -357,6 +411,7 @@ include __DIR__ . '/../header.php';
                         <th>Name</th>
                         <th>Email</th>
                         <th>Role</th>
+                        <th>Barangay</th>
                         <th><?= $showArchived ? 'Archived At' : 'Registered' ?></th>
                         <th>Actions</th>
                     </tr>
@@ -374,11 +429,17 @@ include __DIR__ . '/../header.php';
                                 <td><?= htmlspecialchars($user['fname'] . ' ' . $user['lname']) ?></td>
                                 <td><?= htmlspecialchars($user['email']) ?></td>
                                 <td>
-                                    <select class="role-select" data-user-id="<?= $user['id'] ?>">
-                                        <option value="user" <?= $user['role'] === 'user' ? 'selected' : '' ?>>User</option>
-                                        <option value="admin" <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
-                                    </select>
+                                    <?php if ($_SESSION['role'] === 'super_admin'): ?>
+                                        <select class="role-select" data-user-id="<?= $user['id'] ?>">
+                                            <option value="user" <?= $user['role'] === 'user' ? 'selected' : '' ?>>User</option>
+                                            <option value="admin" <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
+                                            <option value="super_admin" <?= $user['role'] === 'super_admin' ? 'selected' : '' ?>>Super Admin</option>
+                                        </select>
+                                    <?php else: ?>
+                                        <span><?= ucfirst($user['role']) ?></span>
+                                    <?php endif; ?>
                                 </td>
+                                <td><?= htmlspecialchars($user['barangay_name'] ?? '—') ?></td>
                                 <td>
                                     <?php if ($showArchived): ?>
                                         <?= date('M d, Y g:i A', strtotime($user['archived_at'])) ?>
@@ -441,6 +502,9 @@ include __DIR__ . '/../header.php';
                 <select name="role" id="edit_role">
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
+                    <?php if ($_SESSION['role'] === 'super_admin'): ?>
+                        <option value="super_admin">Super Admin</option>
+                    <?php endif; ?>
                 </select>
             </div>
             <div class="bottom-button">

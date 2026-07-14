@@ -7,15 +7,36 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$isAdmin = ($_SESSION['role'] ?? '') === 'admin';
+$isSuperAdmin = ($_SESSION['role'] ?? '') === 'super_admin';
+$isAdmin = in_array($_SESSION['role'] ?? '', ['admin', 'super_admin']);
 
-$stmt = $conn->prepare("SELECT fname, lname, email, phone_no, role FROM users_tbl WHERE id = ?");
+// Fetch user details including barangay
+$stmt = $conn->prepare("
+    SELECT u.fname, u.lname, u.email, u.phone_no, u.role, b.id as barangay_id, b.name as barangay_name
+    FROM users_tbl u
+    LEFT JOIN barangays b ON u.barangay_id = b.id
+    WHERE u.id = ?
+");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 
 if (!$user) {
     die('User not found');
+}
+
+// Fetch all barangays for dropdown (if editing is allowed)
+$barangays = [];
+if ($isAdmin) {
+    $barangayStmt = $conn->prepare("SELECT id, name FROM barangays ORDER BY name");
+    $barangayStmt->execute();
+    $barangays = $barangayStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $barangayStmt->close();
+}
+
+// Helper: format role for display
+function formatRole($role) {
+    return $role === 'super_admin' ? 'Super Admin' : ucfirst($role);
 }
 ?>
 <!DOCTYPE html>
@@ -53,43 +74,65 @@ if (!$user) {
                     </div>
                 </div>
 
-                <!-- Date of Birth (disabled) + Phone no. -->
+                <!-- Phone no. + Barangay -->
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>Date of Birth</label>
-                        <input type="text" value="MM-DD-YYYY" disabled>
-                    </div>
                     <div class="form-group">
                         <label>Phone no.</label>
                         <input type="tel" name="phone" value="<?php echo htmlspecialchars($user['phone_no'] ?? ''); ?>">
                     </div>
+                    <div class="form-group">
+                        <label>Barangay</label>
+                        <?php if ($isAdmin): ?>
+                            <div class="custom-select">
+                                <select name="barangay_id">
+                                    <option value="">Select Barangay</option>
+                                    <?php foreach ($barangays as $b): ?>
+                                        <option value="<?= $b['id'] ?>" <?= ($user['barangay_id'] == $b['id']) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($b['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        <?php else: ?>
+                            <input type="text" value="<?php echo htmlspecialchars($user['barangay_name'] ?? 'Not set'); ?>" disabled>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
-                <!-- Email Address + Role (admin only) -->
+                <!-- Email Address + Role -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>Email Address</label>
                         <input type="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
                     </div>
-                    <?php if ($isAdmin): ?>
+                    <?php if ($isSuperAdmin): ?>
+                        <!-- Only Super Admins can change roles -->
                         <div class="form-group">
                             <label>Role</label>
                             <div class="custom-select">
                                 <select name="role">
-                                    <option value="user" <?php echo $user['role'] === 'user' ? 'selected' : ''; ?>>Volunteer</option>
+                                    <option value="user" <?php echo $user['role'] === 'user' ? 'selected' : ''; ?>>User</option>
                                     <option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>Admin</option>
+                                    <option value="super_admin" <?php echo $user['role'] === 'super_admin' ? 'selected' : ''; ?>>Super Admin</option>
                                 </select>
                                 <i class="fas fa-chevron-down"></i>
                             </div>
                         </div>
-                    <?php else: ?>
+                    <?php elseif ($isAdmin): ?>
+                        <!-- Regular Admins see role as read-only (cannot change) -->
                         <div class="form-group">
                             <label>Role</label>
-                            <input type="text" value="<?php echo ucfirst($user['role']); ?>" disabled>
+                            <input type="text" value="<?php echo htmlspecialchars(formatRole($user['role'])); ?>" disabled>
+                        </div>
+                    <?php else: ?>
+                        <!-- Regular users see role as read-only -->
+                        <div class="form-group">
+                            <label>Role</label>
+                            <input type="text" value="<?php echo htmlspecialchars(formatRole($user['role'])); ?>" disabled>
                         </div>
                     <?php endif; ?>
                 </div>
-
 
             </form>
         </div>

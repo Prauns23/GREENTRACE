@@ -41,7 +41,7 @@ $current_status = $app['status'];
 // Check permissions
 if ($action === 'approve' || $action === 'reject') {
     // Admin only
-    if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
         echo json_encode(['error' => 'Unauthorized']);
         exit;
     }
@@ -132,9 +132,7 @@ try {
     // Prepare success message for redirect
     $message = ($action === 'cancel') ? 'Application cancelled successfully.' : "Application $new_status.";
     echo json_encode(['success' => true, 'message' => $message]);
-
 } catch (Exception $e) {
     $conn->rollback();
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>

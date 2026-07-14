@@ -78,7 +78,7 @@ $maxDate = (clone $today)->sub(new DateInterval('P18Y'))->format('Y-m-d');
                     </select>
                 </div>
 
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label>Barangay <span class="required">*</span></label>
                     <select name="barangay" required <?php echo $isDisabled ? 'disabled' : ''; ?>>
                         <option value="" disabled selected>Select your Barangay</option>
@@ -89,7 +89,7 @@ $maxDate = (clone $today)->sub(new DateInterval('P18Y'))->format('Y-m-d');
                         <option value="Mabayo">Mabayo</option>
                         <option value="Panibatuhan">Panibatuhan</option>
                     </select>
-                </div>
+                </div> -->
 
                 <div class="form-group">
                     <label>Upload Valid ID / Certificate <span class="required">*</span></label>

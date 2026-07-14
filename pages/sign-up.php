@@ -1,11 +1,19 @@
 <?php
 require_once '../init_session.php';
+require_once '../config.php';
+
 
 // Preserve submitted values from session on error (used only for initial load)
 $old_fname = $_SESSION['old_fname'] ?? '';
 $old_lname = $_SESSION['old_lname'] ?? '';
 $old_email = $_SESSION['old_email'] ?? '';
 $old_phone = $_SESSION['old_phone'] ?? '';
+
+// Fetch barangays
+$barangayStmt = $conn->prepare("SELECT id, name FROM barangays ORDER BY name");
+$barangayStmt->execute();
+$barangays = $barangayStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 unset($_SESSION['old_fname'], $_SESSION['old_lname'], $_SESSION['old_email'], $_SESSION['old_phone']);
 
 $errors = [
@@ -76,6 +84,17 @@ function isActiveForm($formName, $activeForm)
                             <span class="country-code">PHIL</span>
                             <input type="tel" name="phone_num" placeholder="09XX-XXX-YYYY" class="phone-field" maxlength="11" pattern="\d{11}" inputmode="numeric" value="<?= htmlspecialchars($old_phone) ?>">
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Barangay <span class="required">*</span></label>
+                        <select name="barangay_id" required>
+                            <option value="" disabled selected>Select your barangay</option>
+                            <?php foreach ($barangays as $b): ?>
+                                <option value="<?= $b['id'] ?>" <?= (isset($old_barangay) && $old_barangay == $b['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($b['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="terms">
                         By signing up, you have agreed to our <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>.
