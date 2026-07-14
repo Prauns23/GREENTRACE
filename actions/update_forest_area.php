@@ -27,19 +27,30 @@ if (!$id || empty($name) || empty($location_name)) {
     echo json_encode(['error' => 'Missing required fields']);
     exit;
 }
-
 if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
     echo json_encode(['error' => 'Invalid coordinates']);
     exit;
+}
+
+// Handle empty date
+if (empty($date_started)) {
+    $date_started = null;
+} else {
+    $d = DateTime::createFromFormat('Y-m-d', $date_started);
+    if (!$d || $d->format('Y-m-d') !== $date_started) {
+        echo json_encode(['error' => 'Invalid date format. Use YYYY-MM-DD.']);
+        exit;
+    }
 }
 
 $stmt = $conn->prepare("UPDATE forest_areas SET name = ?, location_name = ?, latitude = ?, longitude = ?, date_started = ?, status = ?, description = ? WHERE id = ?");
 $stmt->bind_param("ssddsssi", $name, $location_name, $latitude, $longitude, $date_started, $status, $description, $id);
 
 if ($stmt->execute()) {
-    echo json_encode(['success' => true]);
+    echo json_encode(['success' => true, 'message' => 'Forest area updated successfully.']);
 } else {
     echo json_encode(['error' => 'Database error: ' . $conn->error]);
 }
 $stmt->close();
 $conn->close();
+?>

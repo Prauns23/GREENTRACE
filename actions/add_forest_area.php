@@ -1,6 +1,6 @@
 <?php
 require_once '../init_session.php';
-require_once  '../config.php';
+require_once '../config.php';
 
 // Only accept POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -9,9 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-
-// Check if user is logged in and is admin
-
+// Check if user is logged in and is admin/super_admin
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
@@ -26,30 +24,37 @@ $date_started = trim($_POST['date_started'] ?? '');
 $status = trim($_POST['status'] ?? 'active');
 $description = trim($_POST['description'] ?? '');
 
-
-// Validate requried fields 
+// Validate required fields
 if (empty($name)) {
-    echo json_encode(['error' => 'Foret name is required.']);
+    echo json_encode(['error' => 'Forest name is required.']);
     exit;
 }
-
 if (empty($location_name)) {
     echo json_encode(['error' => 'Location name is required.']);
     exit;
 }
-
 if ($latitude === null || $longitude === null || $latitude === 0 || $longitude === 0) {
     echo json_encode(['error' => 'Valid coordinates are required. Please select a location on the map.']);
     exit;
 }
-
-// Validate coordinates range
 if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
     echo json_encode(['error' => 'Invalid coordinates range.']);
     exit;
 }
 
-// Insert into database 000
+// Handle empty date: set to NULL
+if (empty($date_started)) {
+    $date_started = null;
+} else {
+    // Validate date format (YYYY-MM-DD)
+    $d = DateTime::createFromFormat('Y-m-d', $date_started);
+    if (!$d || $d->format('Y-m-d') !== $date_started) {
+        echo json_encode(['error' => 'Invalid date format. Use YYYY-MM-DD.']);
+        exit;
+    }
+}
+
+// Insert into database (date_started can be NULL)
 $stmt = $conn->prepare("INSERT INTO forest_areas (name, location_name, latitude, longitude, date_started, status, description) VALUES (?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("ssddsss", $name, $location_name, $latitude, $longitude, $date_started, $status, $description);
 
@@ -65,3 +70,4 @@ if ($stmt->execute()) {
 
 $stmt->close();
 $conn->close();
+?>

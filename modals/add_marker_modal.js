@@ -113,7 +113,7 @@ function setupFormSubmit() {
           location_name: locationName,
           latitude: latitude,
           longitude: longitude,
-          date_established: dateEstablished,
+          date_started: dateEstablished,
           status: status,
           description: description,
         }),

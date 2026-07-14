@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                             $adminStmt->close();
 
                             $adminNotifTitle = "Application Approved";
-                            $adminNotifMessage = "Application for <strong>$actTitle</strong> by <strong>" . $app['user_id'] . "</strong> has been approved.Check the schedule often!";
+                            $adminNotifMessage = "Application for <strong>$actTitle</strong> has been approved by " . $_SESSION['first_name'] . " " . $_SESSION['last_name'];
                             $adminLink = "admin/application_activity.php";
 
                             foreach ($admins as $admin) {
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                         $adminStmt->close();
 
                         $adminNotifTitle = "Application Rejected";
-                        $adminNotifMessage = "Application for <strong>$actTitle</strong> by <strong>" . $app['user_id'] . "</strong> has been rejected. Please recheck your documents ";
+                        $adminNotifMessage = "Application for <strong>$actTitle</strong> has been rejected. Please recheck your documents ";
                         $adminLink = "admin/application_activity.php";
 
                         foreach ($admins as $admin) {
