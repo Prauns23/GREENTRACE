@@ -23,7 +23,6 @@ if (!$report_id || !in_array($new_status, ['pending', 'reviewed', 'resolved', 'd
     exit;
 }
 
-// Fetch the report's user_id and issue_type for logging
 $infoStmt = $conn->prepare("SELECT user_id, issue_type FROM reports WHERE id = ?");
 $infoStmt->bind_param("i", $report_id);
 $infoStmt->execute();
@@ -44,17 +43,26 @@ $stmt->bind_param("si", $new_status, $report_id);
 if ($stmt->execute()) {
     $recipientUserId = !empty($user_id) ? (int)$user_id : null;
 
-    // Log activity and send a notification only if the report is linked to a real user account.
     if ($recipientUserId !== null) {
         logActivity($recipientUserId, 'report', $report_id, $issue_type, $new_status, "Your report <strong>$issue_type</strong> has been <strong>$new_status</strong>.");
-
         $notifTitle = "Report Update";
         $notifMessage = "Your report \"<strong>$issue_type</strong>\" has been <strong>$new_status</strong>.";
         $link = "forestmap.php";
+        createNotification($recipientUserId, 'report', $notifTitle, $notifMessage, $link);
+    }
 
-        if (!createNotification($recipientUserId, 'report', $notifTitle, $notifMessage, $link)) {
-            error_log("Failed to create report notification for report_id=$report_id user_id=$recipientUserId");
-        }
+    //  Notify all admins 
+    $adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role IN ('admin', 'super_admin') AND archived = 0");
+    $adminStmt->execute();
+    $admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $adminStmt->close();
+
+    $adminNotifTitle = "Report Status Updated";
+    $adminNotifMessage = "Report \"<strong>$issue_type</strong>\" status changed to <strong>$new_status</strong> by " . $_SESSION['first_name'] . " " . $_SESSION['last_name'];
+    $adminLink = "forestmap.php";
+
+    foreach ($admins as $admin) {
+        createNotification($admin['id'], 'report', $adminNotifTitle, $adminNotifMessage, $adminLink);
     }
 
     echo json_encode(['success' => true]);
@@ -63,3 +71,4 @@ if ($stmt->execute()) {
 }
 $stmt->close();
 $conn->close();
+?>

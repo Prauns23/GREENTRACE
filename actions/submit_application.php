@@ -167,7 +167,8 @@ $link = "activities.php?open_activity={$activity_id}";
 createNotification($user_id, 'application', $notifTitle, $notifMessage, $link);
 
 // Notify all admins
-$adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role = 'admin' AND archived = 0");
+$adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role IN ('admin', 'super_admin') AND archived = 0");
+
 $adminStmt->execute();
 $admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $adminStmt->close();

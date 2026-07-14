@@ -54,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                     $conn->rollback();
                     $message = 'Error: ' . $e->getMessage();
                     $type = 'error';
-                    // Log the exception
                     logError($e->getMessage(), [
                         'file' => $e->getFile(),
                         'line' => $e->getLine(),
@@ -102,19 +101,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                             $conn->commit();
                             $message = "Application approved.";
 
-                            // Log activity
+                            //  Notify the user 
                             logActivity($app['user_id'], 'application', $app_id, $actTitle, 'approved', "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>.");
+                            $userNotifTitle = "Application Approved";
+                            $userNotifMessage = "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>! Check the schedule often!";
+                            $userLink = "activities.php?open_activity={$app['activity_id']}";
+                            createNotification($app['user_id'], 'application', $userNotifTitle, $userNotifMessage, $userLink);
 
-                            // Send notification
-                            $notifTitle = "Application Approved";
-                            $notifMessage = "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>! Please check the event date.";
-                            $link = "activities.php?open_activity={$app['activity_id']}";
-                            createNotification($app['user_id'], 'application', $notifTitle, $notifMessage, $link);
+                            //  Notify all admins 
+                            $adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role IN ('admin', 'super_admin') AND archived = 0");
+                            $adminStmt->execute();
+                            $admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                            $adminStmt->close();
+
+                            $adminNotifTitle = "Application Approved";
+                            $adminNotifMessage = "Application for <strong>$actTitle</strong> by <strong>" . $app['user_id'] . "</strong> has been approved.Check the schedule often!";
+                            $adminLink = "admin/application_activity.php";
+
+                            foreach ($admins as $admin) {
+                                createNotification($admin['id'], 'application', $adminNotifTitle, $adminNotifMessage, $adminLink);
+                            }
+
                         } catch (Exception $e) {
                             $conn->rollback();
                             $message = 'Error: ' . $e->getMessage();
                             $type = 'error';
-                            // Log the exception
                             logError($e->getMessage(), [
                                 'file' => $e->getFile(),
                                 'line' => $e->getLine(),
@@ -131,19 +142,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                         $conn->commit();
                         $message = "Application rejected.";
 
-                        // Log activity
+                        //  Notify the user 
                         logActivity($app['user_id'], 'application', $app_id, $actTitle, 'rejected', "Your application for <strong>$actTitle</strong> has been <strong>rejected</strong>.");
+                        $userNotifTitle = "Application Rejected";
+                        $userNotifMessage = "Your application for <strong>$actTitle</strong> was <strong>rejected</strong>. Please recheck your documents and resubmit.";
+                        $userLink = "activities.php?open_activity={$app['activity_id']}";
+                        createNotification($app['user_id'], 'application', $userNotifTitle, $userNotifMessage, $userLink);
 
-                        // Send notification
-                        $notifTitle = "Application Rejected";
-                        $notifMessage = "Your application for <strong>$actTitle</strong> was <strong>rejected</strong>. Please recheck your documents and resubmit.";
-                        $link = "activities.php?open_activity={$app['activity_id']}";
-                        createNotification($app['user_id'], 'application', $notifTitle, $notifMessage, $link);
+                        //  Notify all admins 
+                        $adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role IN ('admin', 'super_admin') AND archived = 0");
+                        $adminStmt->execute();
+                        $admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                        $adminStmt->close();
+
+                        $adminNotifTitle = "Application Rejected";
+                        $adminNotifMessage = "Application for <strong>$actTitle</strong> by <strong>" . $app['user_id'] . "</strong> has been rejected. Please recheck your documents ";
+                        $adminLink = "admin/application_activity.php";
+
+                        foreach ($admins as $admin) {
+                            createNotification($admin['id'], 'application', $adminNotifTitle, $adminNotifMessage, $adminLink);
+                        }
+
                     } catch (Exception $e) {
                         $conn->rollback();
                         $message = 'Error: ' . $e->getMessage();
                         $type = 'error';
-                        // Add this:
                         logError($e->getMessage(), [
                             'file' => $e->getFile(),
                             'line' => $e->getLine(),
@@ -224,7 +247,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && iss
             $conn->rollback();
             $message = 'Error: ' . $e->getMessage();
             $type = 'error';
-            // Add this:
             logError($e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
@@ -268,7 +290,7 @@ switch ($sort) {
         $orderBy = "va.submitted_at DESC";
 }
 
-//  FETCH STATISTICS 
+// FETCH STATISTICS 
 $totalActivities = $conn->query("SELECT COUNT(*) as count FROM activities")->fetch_assoc()['count'];
 $totalJoined = $conn->query("SELECT COUNT(*) as count FROM volunteer_applications WHERE status = 'approved' AND archived = 0")->fetch_assoc()['count'];
 
@@ -278,13 +300,13 @@ $query = "
     SELECT 
         va.*, 
         u.fname, u.lname, u.email as user_email, 
-        b.name as current_barangay,  -- <-- add this
+        b.name as current_barangay,
         a.title as activity_title,
         GROUP_CONCAT(ap.file_path SEPARATOR '|') as file_paths,
         GROUP_CONCAT(ap.original_name SEPARATOR '|') as file_names
     FROM volunteer_applications va
     JOIN users_tbl u ON va.user_id = u.id
-    LEFT JOIN barangays b ON u.barangay_id = b.id  -- <-- add this join
+    LEFT JOIN barangays b ON u.barangay_id = b.id
     JOIN activities a ON va.activity_id = a.id
     LEFT JOIN application_photos ap ON ap.application_id = va.id
     WHERE $archivedCondition
