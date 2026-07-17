@@ -48,9 +48,7 @@ while ($row = $reports_result->fetch_assoc()) {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="forestmap.css">
 
-<!-- Leaflet MarkerCluster CSS (must come after Leaflet CSS) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 
 <div class="forestmap-page">
     <!-- Header -->
