@@ -1,6 +1,7 @@
 <?php
 require_once 'init_session.php';
 require_once 'config.php';
+require_once 'pagination_helper.php';
 
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['open_signup_modal'] = true;
@@ -9,6 +10,11 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
+
+// Get page
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$limit = 10;
+$offset = ($page - 1) * $limit;
 
 // Sync MySQL timezone with PHP to prevent timestamp mismatch
 $conn->query("SET time_zone = '" . date('P') . "'");
@@ -20,6 +26,7 @@ $userStmt = $conn->prepare("
     LEFT JOIN barangays b ON u.barangay_id = b.id
     WHERE u.id = ?
 ");
+
 $userStmt->bind_param("i", $user_id);
 $userStmt->execute();
 $userData = $userStmt->get_result()->fetch_assoc();
@@ -39,6 +46,17 @@ function formatRole($role) {
     return $role === 'super_admin' ? 'Super Admin' : ucfirst($role);
 }
 
+// Activity log with pagination
+$countSql = "SELECT COUNT(*) as total FROM user_activity_log WHERE user_id = ?";
+$countStmt = $conn->prepare($countSql);
+$countStmt->bind_param("i", $user_id);
+$countStmt->execute();
+$total = $countStmt->get_result()->fetch_assoc()['total'];
+$countStmt->close();
+
+
+$totalPages = ceil($total / $limit);
+
 // Fetch activity log
 $logStmt = $conn->prepare("
     SELECT id, type, title, status, description, created_at,
@@ -46,10 +64,12 @@ $logStmt = $conn->prepare("
     FROM user_activity_log
     WHERE user_id = ?
     ORDER BY created_at DESC
+    LIMIT ?, ?
 ");
-$logStmt->bind_param("i", $user_id);
+$logStmt->bind_param("iii", $user_id, $offset, $limit);
 $logStmt->execute();
 $activities = $logStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$logStmt->close();
 
 function time_ago(int $unix): string
 {
@@ -145,6 +165,8 @@ include 'header.php';
                     </div>
                 <?php endforeach; ?>
             </div>
+            <!-- Pagination -->
+            <?php echo renderPagination($page, $totalPages, 'profile.php', []); ?>
         <?php endif; ?>
     </div>
 </div>

@@ -2,7 +2,7 @@
 require_once '../init_session.php';
 require_once '../config.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     die('Unauthorized');
 }
 

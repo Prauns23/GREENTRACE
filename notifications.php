@@ -1,6 +1,7 @@
 <?php
 require_once 'init_session.php';
 require_once 'config.php';
+require_once 'pagination_helper.php';
 
 $conn->query("SET time_zone = '" . date('P') . "'");
 
@@ -32,7 +33,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// ---- AJAX handlers ----
+//  AJAX handlers 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
 
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // ---- Bulk actions ----
+    //  Bulk actions 
     if (in_array($action, ['bulk_mark_read', 'bulk_archive', 'bulk_delete'])) {
         $ids = json_decode($_POST['ids'] ?? '[]', true);
         if (!is_array($ids) || empty($ids)) {
@@ -103,10 +104,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// ---- Main page ----
+//  Main page 
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$limit = 15;
+$offset = ($page - 1) * $limit;
+
+// Count total non-archived notifications
+$countSql = "SELECT COUNT(*) as total FROM notifications WHERE user_id = ? AND archived = 0";
+$countStmt = $conn->prepare($countSql);
+$countStmt->bind_param("i", $user_id);
+$countStmt->execute();
+$total = $countStmt->get_result()->fetch_assoc()['total'];
+$countStmt->close();
+
+$totalPages = ceil($total / $limit);
+
 // Fetch only non‑archived notifications
 $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND archived = 0 ORDER BY created_at DESC");
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param("iii", $user_id, $offset, $limit);
 $stmt->execute();
 $notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();

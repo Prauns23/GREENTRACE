@@ -1,6 +1,7 @@
 <?php
 require_once 'init_session.php';
 require_once 'config.php';
+require_once 'pagination_helper.php'; // <-- NEW
 
 if (!isset($_SESSION['first_name'])) {
     $_SESSION['open_signup_modal'] = true;
@@ -8,30 +9,61 @@ if (!isset($_SESSION['first_name'])) {
     exit();
 }
 
-// Get search and filter from URL
+// Get search, filter, and page from URL
 $search = trim($_GET['search'] ?? '');
 $filter = $_GET['filter'] ?? 'upcoming';
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$limit = 15;
+$offset = ($page - 1) * $limit;
 
-// Build query (only non‑archived activities)
-$sql = "SELECT * FROM activities WHERE archived = 0";
+// Build base WHERE clause (only non‑archived activities)
+$where = "archived = 0";
 $params = [];
 $types = "";
 
-if (!empty($search)) {
-    $sql .= " AND (title LIKE ? OR description LIKE ? OR location LIKE ?)";
-    $like = "%$search%";
-    $params = [$like, $like, $like];
-    $types = "sss";
+// Add date condition based on filter
+$today = date('Y-m-d');
+if ($filter === 'upcoming') {
+    $where .= " AND date >= ?";
+    $params[] = $today;
+    $types .= "s";
+} elseif ($filter === 'past') {
+    $where .= " AND date < ?";
+    $params[] = $today;
+    $types .= "s";
 }
 
-$sql .= " ORDER BY date ASC";
+// Add search condition
+if (!empty($search)) {
+    $where .= " AND (title LIKE ? OR description LIKE ? OR location LIKE ?)";
+    $like = "%$search%";
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $types .= "sss";
+}
 
+// Count total rows (for pagination)
+$countSql = "SELECT COUNT(*) as total FROM activities WHERE $where";
+$countStmt = $conn->prepare($countSql);
+if (!empty($params)) {
+    $countStmt->bind_param($types, ...$params);
+}
+$countStmt->execute();
+$total = $countStmt->get_result()->fetch_assoc()['total'];
+$countStmt->close();
+
+$totalPages = ceil($total / $limit);
+
+// Fetch activities for current page
+$sql = "SELECT * FROM activities WHERE $where ORDER BY date ASC LIMIT $offset, $limit";
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
 }
 $stmt->execute();
 $allActivities = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 
 // Fetch user's application statuses for each activity (if logged in)
 $userStatuses = [];
@@ -47,8 +79,7 @@ if (isset($_SESSION['user_id'])) {
     $statusStmt->close();
 }
 
-// Split into upcoming and past based on today's date
-$today = date('Y-m-d');
+// Add user status to activities and split (though all are already filtered by date)
 $upcoming = [];
 $past = [];
 foreach ($allActivities as $activity) {
@@ -60,14 +91,9 @@ foreach ($allActivities as $activity) {
     }
 }
 
-// Apply filter selection
-$showUpcoming = false;
-$showPast = false;
-if ($filter === 'upcoming') {
-    $showUpcoming = true;
-} elseif ($filter === 'past') {
-    $showPast = true;
-}
+// Which section to show?
+$showUpcoming = ($filter === 'upcoming');
+$showPast = ($filter === 'past');
 
 include 'header.php';
 ?>
@@ -80,7 +106,7 @@ include 'header.php';
         <span>Browse upcoming planting events, workshops, and restoration projects. Join an activity to make an impact</span>
     </div>
 
-    <!-- Search and Filter Bar  -->
+    <!-- Search and Filter Bar -->
     <div class="search-filter">
         <div class="search-bar">
             <i class="fas fa-search"></i>
@@ -99,8 +125,7 @@ include 'header.php';
             </div>
         </div>
     </div>
-    
-    <!-- Upcoming Activities Section -->
+
     <?php if ($showUpcoming): ?>
         <div class="section-header">
             <h2>Upcoming Activities</h2>
@@ -116,8 +141,8 @@ include 'header.php';
                 <?php foreach ($upcoming as $activity): ?>
                     <?php include 'activity_card.php'; ?>
                 <?php endforeach; ?>
-                <!-- ADD ACTIVITY (Admin Only) – only shown when activities exist -->
-                <?php if (!empty($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'], true)): ?>
+                <!-- Add Activity (Admin/Super Admin) -->
+                <?php if (!empty($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'])): ?>
                     <div class="activity-card add-activity-card" onclick="showAddActivityModal()" role="button" aria-label="Add activity">
                         <div class="add-activity-inner">
                             <i class="fa-solid fa-plus add-activity-icon"></i>
@@ -128,7 +153,7 @@ include 'header.php';
             <?php endif; ?>
         </div>
     <?php endif; ?>
-    <!-- Past Activities Section -->
+
     <?php if ($showPast): ?>
         <div class="section-header">
             <h2>Past Activities</h2>
@@ -147,25 +172,44 @@ include 'header.php';
             <?php endif; ?>
         </div>
     <?php endif; ?>
+
+    <!-- Pagination -->
+    <?php
+    $queryParams = ['filter' => $filter];
+    if (!empty($search)) {
+        $queryParams['search'] = $search;
+    }
+    echo renderPagination($page, $totalPages, 'activities.php', $queryParams);
+    ?>
 </div>
 
 <script>
     // Debounced search
     const searchInput = document.getElementById('searchInput');
-    const searchForm = document.getElementById('searchForm');
     let debounceTimer;
-    // Search with filter preservation
+    const filterSelect = document.getElementById('filterSelect');
+
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 const filter = filterSelect ? filterSelect.value : 'upcoming';
-                window.location.href = `activities.php?filter=${filter}&search=${encodeURIComponent(this.value)}`;
+                const search = encodeURIComponent(this.value);
+                // Reset page to 1 when searching
+                window.location.href = `activities.php?filter=${filter}&search=${search}&page=1`;
             }, 400);
         });
     }
 
-    // Toast handling 
+    // Filter dropdown change
+    if (filterSelect) {
+        filterSelect.addEventListener('change', function() {
+            const search = document.getElementById('searchInput')?.value || '';
+            window.location.href = `activities.php?filter=${this.value}&search=${encodeURIComponent(search)}&page=1`;
+        });
+    }
+
+    // Toast handling (unchanged)
     const urlParams = new URLSearchParams(window.location.search);
     const toastMsg = urlParams.get('toast');
     const toastType = urlParams.get('type') === 'error' ? 'error' : 'success';
@@ -181,7 +225,6 @@ include 'header.php';
         }, 500);
     }
 
-    // Auto Open Activity Modal for notifications page
     const openActivityParam = new URLSearchParams(window.location.search).get('open_activity');
     if (openActivityParam) {
         const cleanUrl = window.location.pathname;
@@ -193,7 +236,7 @@ include 'header.php';
         }, 300);
     }
 
-    // Menu functions 
+    // Activity menu functions (unchanged)
     function toggleActivityMenu(trigger) {
         event.stopPropagation();
         const dropdown = trigger.querySelector('.activity-menu-dropdown');
@@ -212,9 +255,7 @@ include 'header.php';
         if (!confirm('Archive this activity? It will no longer appear on the volunteer page.')) return;
         fetch('actions/archive_activity.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'id=' + activityId
             })
             .then(response => response.json())
@@ -239,15 +280,6 @@ include 'header.php';
         } else {
             alert('Edit modal not available');
         }
-    }
-
-    // Filter dropdown change
-    const filterSelect = document.getElementById('filterSelect');
-    if (filterSelect) {
-        filterSelect.addEventListener('change', function() {
-            const search = document.getElementById('searchInput')?.value || '';
-            window.location.href = `activities.php?filter=${this.value}&search=${encodeURIComponent(search)}`;
-        });
     }
 </script>
 

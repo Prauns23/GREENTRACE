@@ -3,7 +3,7 @@ require_once '../init_session.php';
 require_once '../config.php';
 
 // Only admin can access this modal directly
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     echo '<div style="padding: 20px; text-align: center;">Access denied. You must be an administrator.</div>';
     exit;
 }
