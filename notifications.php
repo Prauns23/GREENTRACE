@@ -6,7 +6,8 @@ require_once 'pagination_helper.php';
 $conn->query("SET time_zone = '" . date('P') . "'");
 
 // Helper: time ago
-function time_ago($unix) {
+function time_ago($unix)
+{
     $diff = time() - $unix;
     if ($diff < 60)      return 'Just now';
     if ($diff < 3600)    return floor($diff / 60) . ' minutes ago';
@@ -16,12 +17,17 @@ function time_ago($unix) {
     return date('M j, Y', $unix);
 }
 
-function getIconClass($type) {
+function getIconClass($type)
+{
     switch ($type) {
-        case 'application': return 'fa-file-alt';
-        case 'activity':    return 'fa-bell';
-        case 'report':      return 'fa-exclamation-triangle';
-        default:            return 'fa-bell';
+        case 'application':
+            return 'fa-file-alt';
+        case 'activity':
+            return 'fa-bell';
+        case 'report':
+            return 'fa-exclamation-triangle';
+        default:
+            return 'fa-bell';
     }
 }
 
@@ -120,7 +126,7 @@ $countStmt->close();
 $totalPages = ceil($total / $limit);
 
 // Fetch only non‑archived notifications
-$stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND archived = 0 ORDER BY created_at DESC");
+$stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND archived = 0 ORDER BY created_at DESC LIMIT ?, ?");
 $stmt->bind_param("iii", $user_id, $offset, $limit);
 $stmt->execute();
 $notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -225,6 +231,12 @@ include 'header.php';
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
+    <?php
+    $queryParams = [];
+    if (isset($_GET['filter'])) $queryParams['filter'] = $_GET['filter'];
+    if (isset($_GET['search'])) $queryParams['search'] = $_GET['search'];
+    echo renderPagination($page, $totalPages, 'notifications.php', $queryParams);
+    ?>
 </div>
 
 <script>
@@ -311,23 +323,23 @@ include 'header.php';
         const link = el.dataset.link;
 
         fetch(window.location.href, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-Token': getCSRFToken()
-            },
-            body: 'action=mark_read&notification_id=' + id
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                el.classList.remove('unread');
-                el.classList.add('read');
-                const dot = el.querySelector('.unread-dot');
-                if (dot) dot.remove();
-                window.updateBadgeCount();
-            }
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': getCSRFToken()
+                },
+                body: 'action=mark_read&notification_id=' + id
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    el.classList.remove('unread');
+                    el.classList.add('read');
+                    const dot = el.querySelector('.unread-dot');
+                    if (dot) dot.remove();
+                    window.updateBadgeCount();
+                }
+            });
 
         if (link && link !== '#') {
             setTimeout(() => window.location.href = link, 200);
@@ -345,45 +357,45 @@ include 'header.php';
 
         const token = getCSRFToken();
         fetch(window.location.href, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-Token': token
-            },
-            body: 'action=' + action + '&ids=' + JSON.stringify(ids)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Update UI
-                ids.forEach(id => {
-                    const item = document.querySelector(`.notification-item[data-id="${id}"]`);
-                    if (item) {
-                        if (action === 'bulk_mark_read') {
-                            item.classList.remove('unread');
-                            item.classList.add('read');
-                            const dot = item.querySelector('.unread-dot');
-                            if (dot) dot.remove();
-                        } else {
-                            // archive or delete – remove from DOM
-                            item.style.display = 'none';
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': token
+                },
+                body: 'action=' + action + '&ids=' + JSON.stringify(ids)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI
+                    ids.forEach(id => {
+                        const item = document.querySelector(`.notification-item[data-id="${id}"]`);
+                        if (item) {
+                            if (action === 'bulk_mark_read') {
+                                item.classList.remove('unread');
+                                item.classList.add('read');
+                                const dot = item.querySelector('.unread-dot');
+                                if (dot) dot.remove();
+                            } else {
+                                // archive or delete – remove from DOM
+                                item.style.display = 'none';
+                            }
                         }
+                    });
+                    document.getElementById('bulkDropdown').style.display = 'none';
+                    if (typeof window.updateBadgeCount === 'function') {
+                        window.updateBadgeCount();
                     }
-                });
-                document.getElementById('bulkDropdown').style.display = 'none';
-                if (typeof window.updateBadgeCount === 'function') {
-                    window.updateBadgeCount();
+                    updateSelectAllButtonLabel();
+                    updateGroupVisibility();
+                } else {
+                    alert(data.error || 'Action failed.');
                 }
-                updateSelectAllButtonLabel();
-                updateGroupVisibility();
-            } else {
-                alert(data.error || 'Action failed.');
-            }
-        })
-        .catch(err => {
-            alert('An error occurred.');
-            console.error(err);
-        });
+            })
+            .catch(err => {
+                alert('An error occurred.');
+                console.error(err);
+            });
     }
 
     function bulkMarkRead(event) {
@@ -412,26 +424,26 @@ include 'header.php';
     document.getElementById('markAllBtn')?.addEventListener('click', function() {
         if (!confirm('Mark all notifications as read?')) return;
         fetch(window.location.href, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-Token': getCSRFToken()
-            },
-            body: 'action=mark_all_read'
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                document.querySelectorAll('.notification-item.unread').forEach(el => {
-                    el.classList.remove('unread');
-                    el.classList.add('read');
-                    const dot = el.querySelector('.unread-dot');
-                    if (dot) dot.remove();
-                });
-                window.updateBadgeCount();
-                document.querySelector('.notifications-header p strong').textContent = '0';
-            }
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-Token': getCSRFToken()
+                },
+                body: 'action=mark_all_read'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelectorAll('.notification-item.unread').forEach(el => {
+                        el.classList.remove('unread');
+                        el.classList.add('read');
+                        const dot = el.querySelector('.unread-dot');
+                        if (dot) dot.remove();
+                    });
+                    window.updateBadgeCount();
+                    document.querySelector('.notifications-header p strong').textContent = '0';
+                }
+            });
     });
 
     // Init

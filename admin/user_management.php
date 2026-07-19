@@ -1,15 +1,88 @@
 <?php
 require_once __DIR__ . '/../init_session.php';
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../pagination_helper.php';
 
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     header('Location: ../index.php');
     exit;
 }
 
+// Get page, sort, and search
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$limit = 15;
+$offset = ($page - 1) * $limit;
 
+// Sorting and filter
+$sort = $_GET['sort'] ?? 'name_asc';
+$showArchived = ($sort === 'archived');
+$search = trim($_GET['search'] ?? '');
 
-// Handle BULK actions first (archive/restore multiple users)
+// Build WHERE clause
+$where = "1=1";
+if ($showArchived) {
+    $where .= " AND u.archived = 1";
+} else {
+    $where .= " AND u.archived = 0";
+}
+// Exclude super_admin from non-super admins
+if ($_SESSION['role'] !== 'super_admin') {
+    $where .= " AND u.role != 'super_admin'";
+}
+if (!empty($search)) {
+    $where .= " AND (u.fname LIKE ? OR u.lname LIKE ? OR u.email LIKE ?)";
+    $searchParam = "%$search%";
+}
+
+// Order by
+switch ($sort) {
+    case 'name_desc':   $orderBy = "u.fname DESC, u.lname DESC"; break;
+    case 'email_asc':   $orderBy = "u.email ASC"; break;
+    case 'email_desc':  $orderBy = "u.email DESC"; break;
+    case 'role_asc':    $orderBy = "u.role ASC"; break;
+    case 'role_desc':   $orderBy = "u.role DESC"; break;
+    case 'date_asc':    $orderBy = "u.created_at ASC"; break;
+    case 'date_desc':   $orderBy = "u.created_at DESC"; break;
+    case 'archived':    $orderBy = "u.archived_at DESC"; break;
+    default:            $orderBy = "u.fname ASC, u.lname ASC";
+}
+
+// Count total (for pagination)
+$countSql = "SELECT COUNT(*) as total FROM users_tbl u WHERE $where";
+$countStmt = $conn->prepare($countSql);
+if (!empty($search)) {
+    $countStmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
+}
+$countStmt->execute();
+$total = $countStmt->get_result()->fetch_assoc()['total'];
+$countStmt->close();
+$totalPages = ceil($total / $limit);
+
+// Main query with pagination
+$sql = "SELECT u.id, u.fname, u.lname, u.email, u.role, u.created_at, u.archived_at, b.name as barangay_name
+        FROM users_tbl u
+        LEFT JOIN barangays b ON u.barangay_id = b.id
+        WHERE $where
+        ORDER BY $orderBy
+        LIMIT $offset, $limit";
+$stmt = $conn->prepare($sql);
+if (!empty($search)) {
+    $stmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
+}
+$stmt->execute();
+$users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Stats (only for active users, excluding super_admin for non-super admins)
+$statsWhere = "archived = 0";
+if ($_SESSION['role'] !== 'super_admin') {
+    $statsWhere .= " AND role != 'super_admin'";
+}
+$totalActive = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE $statsWhere")->fetch_assoc()['cnt'];
+$totalAdmins = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE role = 'admin' AND archived = 0")->fetch_assoc()['cnt'];
+$totalUsers = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE role = 'user' AND archived = 0")->fetch_assoc()['cnt'];
+
+//  BULK ACTIONS (archive / restore) 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
     $bulkAction = $_POST['bulk_action'];
     $selectedIds = json_decode($_POST['selected_ids'], true);
@@ -35,7 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
 
     if (!empty($selectedIds) && is_array($selectedIds)) {
         if ($bulkAction === 'archive') {
-            // Prevent archiving own account
             if (in_array($_SESSION['user_id'], $selectedIds)) {
                 $message = 'You cannot archive your own account.';
                 $type = 'error';
@@ -73,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
     exit;
 }
 
-// Handle AJAX actions (single role update, archive, restore, edit)
+// AJAX ACTIONS (single role update, archive, restore, edit) 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action = $_POST['action'] ?? '';
@@ -83,11 +155,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update_role') {
         // Only super_admin can change roles
         if ($_SESSION['role'] !== 'super_admin') {
-            echo json_encode(['error' => 'Only authorized users can change roles!']);
+            echo json_encode(['error' => 'Only super admins can change roles.']);
             exit;
         }
         $newRole = $_POST['role'] ?? '';
-        if (!in_array($newRole, ['admin', 'user', 'super_admin'])) {
+        if (!in_array($newRole, ['admin', 'user'])) {
             echo json_encode(['error' => 'Invalid role']);
             exit;
         }
@@ -95,12 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['error' => 'You cannot change your own role']);
             exit;
         }
-        // Only super_admin can assign super_admin
-        if ($newRole === 'super_admin' && $_SESSION['role'] !== 'super_admin') {
-            echo json_encode(['error' => 'Only super admins can assign super admin role.']);
-            exit;
-        }
-
         $stmt = $conn->prepare("UPDATE users_tbl SET role = ? WHERE id = ?");
         $stmt->bind_param("si", $newRole, $userId);
         if ($stmt->execute()) {
@@ -122,7 +188,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['error' => 'Cannot archive a super admin.']);
             exit;
         }
-
         if ($userId == $_SESSION['user_id']) {
             echo json_encode(['error' => 'You cannot archive your own account']);
             exit;
@@ -139,16 +204,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Single restore
     if ($action === 'restore_user') {
-
         $checkStmt = $conn->prepare("SELECT role FROM users_tbl WHERE id = ?");
         $checkStmt->bind_param("i", $userId);
         $checkStmt->execute();
         $targetUser = $checkStmt->get_result()->fetch_assoc();
         if ($targetUser && $targetUser['role'] === 'super_admin' && $_SESSION['role'] !== 'super_admin') {
-            echo json_encode(['error' => 'Cannot archive a super admin.']);
+            echo json_encode(['error' => 'Cannot restore a super admin.']);
             exit;
         }
-
         $stmt = $conn->prepare("UPDATE users_tbl SET archived = 0, archived_at = NULL WHERE id = ?");
         $stmt->bind_param("i", $userId);
         if ($stmt->execute()) {
@@ -161,7 +224,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Edit user (full update)
     if ($action === 'update_user') {
-        $userId = (int)($_POST['user_id'] ?? 0);
         $fname = trim($_POST['fname'] ?? '');
         $lname = trim($_POST['lname'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -196,125 +258,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Handle BULK actions (archive / restore)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
-    $bulkAction = $_POST['bulk_action'];
-    $selectedIds = json_decode($_POST['selected_ids'], true);
-    $currentSort = $_GET['sort'] ?? 'name_asc';
-    $message = '';
-    $type = 'success';
-
-    if (!empty($selectedIds) && is_array($selectedIds)) {
-        if ($bulkAction === 'archive') {
-            // Prevent archiving own account
-            if (in_array($_SESSION['user_id'], $selectedIds)) {
-                $message = 'You cannot archive your own account.';
-                $type = 'error';
-            } else {
-                $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
-                $stmt = $conn->prepare("UPDATE users_tbl SET archived = 1, archived_at = NOW() WHERE id IN ($placeholders)");
-                $stmt->bind_param(str_repeat('i', count($selectedIds)), ...$selectedIds);
-                if ($stmt->execute()) {
-                    $message = count($selectedIds) . ' user(s) archived.';
-                } else {
-                    $message = 'Database error.';
-                    $type = 'error';
-                }
-            }
-        } elseif ($bulkAction === 'restore') {
-            $placeholders = implode(',', array_fill(0, count($selectedIds), '?'));
-            $stmt = $conn->prepare("UPDATE users_tbl SET archived = 0, archived_at = NULL WHERE id IN ($placeholders)");
-            $stmt->bind_param(str_repeat('i', count($selectedIds)), ...$selectedIds);
-            if ($stmt->execute()) {
-                $message = count($selectedIds) . ' user(s) restored.';
-            } else {
-                $message = 'Database error.';
-                $type = 'error';
-            }
-        } else {
-            $message = 'Invalid bulk action.';
-            $type = 'error';
-        }
-    } else {
-        $message = 'No users selected.';
-        $type = 'error';
-    }
-
-    header("Location: user_management.php?sort=" . urlencode($currentSort) . "&toast=" . urlencode($message) . "&type=" . $type);
-    exit;
-}
-
-// Get toast from URL
+// --- GET TOAST FROM URL ---
 $toastMessage = isset($_GET['toast']) ? $_GET['toast'] : '';
 $toastType = isset($_GET['type']) && $_GET['type'] === 'error' ? 'error' : 'success';
-
-// Sorting and filter (show archived or active)
-$sort = $_GET['sort'] ?? 'name_asc';
-$showArchived = ($sort === 'archived'); // special sort value to show archived users
-
-switch ($sort) {
-    case 'name_desc':
-        $orderBy = "u.fname DESC, u.lname DESC";
-        break;
-    case 'email_asc':
-        $orderBy = "u.email ASC";
-        break;
-    case 'email_desc':
-        $orderBy = "u.email DESC";
-        break;
-    case 'role_asc':
-        $orderBy = "u.role ASC";
-        break;
-    case 'role_desc':
-        $orderBy = "u.role DESC";
-        break;
-    case 'date_asc':
-        $orderBy = "u.created_at ASC";
-        break;
-    case 'date_desc':
-        $orderBy = "u.created_at DESC";
-        break;
-    case 'archived':
-        $orderBy = "u.archived_at DESC";
-        break;
-    default:
-        $orderBy = "u.fname ASC, u.lname ASC";
-}
-
-// Build WHERE clause based on showArchived
-if ($showArchived) {
-    $whereClause = "u.archived = 1";
-} else {
-    $whereClause = "u.archived = 0";
-}
-
-if ($_SESSION['role'] !== 'super_admin') {
-    $whereClause .= " AND u.role != 'super_admin'";
-}
-
-$search = trim($_GET['search'] ?? '');
-if (!empty($search)) {
-    $whereClause .= " AND (u.fname LIKE ? OR u.lname LIKE ? OR u.email LIKE ?)";
-    $searchParam = "%$search%";
-}
-
-$sql = "SELECT u.id, u.fname, u.lname, u.email, u.role, u.created_at, u.archived_at, b.name as barangay_name 
-        FROM users_tbl u 
-        LEFT JOIN barangays b ON u.barangay_id = b.id
-        WHERE $whereClause
-        ORDER BY $orderBy";
-
-$stmt = $conn->prepare($sql);
-if (!empty($search)) {
-    $stmt->bind_param("sss", $searchParam, $searchParam, $searchParam);
-}
-$stmt->execute();
-$users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// Stats (only for active users)
-$totalActive = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE archived = 0 AND role != 'super_admin'")->fetch_assoc()['cnt'];
-$totalAdmins = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE role = 'admin' AND archived = 0")->fetch_assoc()['cnt'];
-$totalUsers = $conn->query("SELECT COUNT(*) as cnt FROM users_tbl WHERE role = 'user' AND archived = 0")->fetch_assoc()['cnt'];
 
 include __DIR__ . '/../header.php';
 ?>
@@ -352,7 +298,6 @@ include __DIR__ . '/../header.php';
                     <i class="fas fa-chevron-down"></i>
                 </div>
             </div>
-            <!-- Bulk Action Button -->
             <form method="POST" id="bulkActionForm" class="bulk-action-form">
                 <input type="hidden" name="bulk_action" id="bulkActionType" value="">
                 <input type="hidden" name="selected_ids" id="selectedIdsInput" value="">
@@ -419,7 +364,7 @@ include __DIR__ . '/../header.php';
                 <tbody>
                     <?php if (empty($users)): ?>
                         <tr>
-                            <td colspan="7" style="text-align: center;">No users found.<?= !empty($search) ? ' Try a different search.' : '' ?></td>
+                            <td colspan="8" style="text-align: center;">No users found.<?= !empty($search) ? ' Try a different search.' : '' ?></td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($users as $user): ?>
@@ -433,7 +378,6 @@ include __DIR__ . '/../header.php';
                                         <select class="role-select" data-user-id="<?= $user['id'] ?>">
                                             <option value="user" <?= $user['role'] === 'user' ? 'selected' : '' ?>>User</option>
                                             <option value="admin" <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
-                                            <option value="super_admin" <?= $user['role'] === 'super_admin' ? 'selected' : '' ?>>Super Admin</option>
                                         </select>
                                     <?php else: ?>
                                         <span><?= ucfirst($user['role']) ?></span>
@@ -448,7 +392,6 @@ include __DIR__ . '/../header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td class="action-buttons">
-                                    <!-- <button class="action-btn view-btn" title="View Details" data-user-id="<?= $user['id'] ?>"><i class="fas fa-eye"></i></button> -->
                                     <button class="action-btn edit-btn" title="Edit User" data-user-id="<?= $user['id'] ?>"><i class="fas fa-pen"></i></button>
                                     <?php if ($showArchived): ?>
                                         <button class="action-btn restore-single-btn" title="Restore User" data-user-id="<?= $user['id'] ?>"><i class="fas fa-undo-alt"></i></button>
@@ -463,9 +406,18 @@ include __DIR__ . '/../header.php';
             </table>
         </form>
     </div>
+
+    <!-- PAGINATION -->
+    <?php
+    $queryParams = ['sort' => $sort];
+    if (!empty($search)) {
+        $queryParams['search'] = $search;
+    }
+    echo renderPagination($page, $totalPages, 'user_management.php', $queryParams);
+    ?>
 </div>
 
-<!-- User Detail Modal -->
+<!-- User Detail Modal-->
 <div id="userDetailModal" class="modal-overlay">
     <div class="modal-content user-detail-modal">
         <span class="modal-close">&times;</span>

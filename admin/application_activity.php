@@ -4,13 +4,14 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../log_activity.php';
 require_once __DIR__ . '/../notifications_helper.php';
 require_once __DIR__ . '/../error_logger.php';
+require_once __DIR__ . '/../pagination_helper.php';
 
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     header('Location: ../index.php');
     exit;
 }
 
-// SINGLE ACTION (approve / reject / restore) 
+// ---- SINGLE ACTION (approve / reject / restore) ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_POST['action']) && !isset($_POST['bulk_action'])) {
     $app_id = (int)$_POST['application_id'];
     $action = $_POST['action'];
@@ -18,12 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
     $message = '';
     $type = 'success';
 
-    $stmt = $conn->prepare("SELECT user_id, activity_id, status, archived FROM volunteer_applications WHERE id = ?");
-    $stmt->bind_param("i", $app_id);
-    $stmt->execute();
-    $app = $stmt->get_result()->fetch_assoc();
-
-    // CSRF validation for single actions
+    // CSRF validation
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $message = 'Invalid CSRF Token. Please refresh and try again.';
         $type = 'error';
@@ -31,11 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
         exit;
     }
 
+    $stmt = $conn->prepare("SELECT user_id, activity_id, status, archived FROM volunteer_applications WHERE id = ?");
+    $stmt->bind_param("i", $app_id);
+    $stmt->execute();
+    $app = $stmt->get_result()->fetch_assoc();
+
     if (!$app) {
         $message = 'Application not found.';
         $type = 'error';
     } else {
-        // RESTORE 
+        // RESTORE
         if ($action === 'restore') {
             if ($app['archived'] == 1) {
                 $conn->begin_transaction();
@@ -54,11 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                     $conn->rollback();
                     $message = 'Error: ' . $e->getMessage();
                     $type = 'error';
-                    logError($e->getMessage(), [
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
+                    logError($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
                 }
             } else {
                 $message = 'Application is not archived.';
@@ -66,10 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
             }
         }
 
-        // APPROVE or REJECT 
+        // APPROVE or REJECT
         elseif ($action === 'approve' || $action === 'reject') {
             if (($app['archived'] != 1) && $app['status'] === 'pending') {
-                // Fetch activity title once (needed for logging and notification)
                 $actTitleStmt = $conn->prepare("SELECT title FROM activities WHERE id = ?");
                 $actTitleStmt->bind_param("i", $app['activity_id']);
                 $actTitleStmt->execute();
@@ -101,36 +97,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                             $conn->commit();
                             $message = "Application approved.";
 
-                            //  Notify the user 
+                            // Notify the user
                             logActivity($app['user_id'], 'application', $app_id, $actTitle, 'approved', "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>.");
                             $userNotifTitle = "Application Approved";
                             $userNotifMessage = "Your application for <strong>$actTitle</strong> has been <strong>approved</strong>! Check the schedule often!";
                             $userLink = "activities.php?open_activity={$app['activity_id']}";
                             createNotification($app['user_id'], 'application', $userNotifTitle, $userNotifMessage, $userLink);
 
-                            //  Notify all admins 
+                            // Notify all admins
                             $adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role IN ('admin', 'super_admin') AND archived = 0");
                             $adminStmt->execute();
                             $admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             $adminStmt->close();
 
                             $adminNotifTitle = "Application Approved";
-                            $adminNotifMessage = "Application for <strong>$actTitle</strong> has been approved by " . $_SESSION['first_name'] . " " . $_SESSION['last_name'];
+                            $adminNotifMessage = "Application for <strong>$actTitle</strong> has been approved by <strong>" . $_SESSION['first_name'] . " " . $_SESSION['last_name'] . "</strong>";
                             $adminLink = "admin/application_activity.php";
-
                             foreach ($admins as $admin) {
                                 createNotification($admin['id'], 'application', $adminNotifTitle, $adminNotifMessage, $adminLink);
                             }
-
                         } catch (Exception $e) {
                             $conn->rollback();
                             $message = 'Error: ' . $e->getMessage();
                             $type = 'error';
-                            logError($e->getMessage(), [
-                                'file' => $e->getFile(),
-                                'line' => $e->getLine(),
-                                'trace' => $e->getTraceAsString()
-                            ]);
+                            logError($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
                         }
                     }
                 } else { // REJECT
@@ -142,36 +132,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
                         $conn->commit();
                         $message = "Application rejected.";
 
-                        //  Notify the user 
+                        // Notify the user
                         logActivity($app['user_id'], 'application', $app_id, $actTitle, 'rejected', "Your application for <strong>$actTitle</strong> has been <strong>rejected</strong>.");
                         $userNotifTitle = "Application Rejected";
                         $userNotifMessage = "Your application for <strong>$actTitle</strong> was <strong>rejected</strong>. Please recheck your documents and resubmit.";
                         $userLink = "activities.php?open_activity={$app['activity_id']}";
                         createNotification($app['user_id'], 'application', $userNotifTitle, $userNotifMessage, $userLink);
 
-                        //  Notify all admins 
+                        // Notify all admins
                         $adminStmt = $conn->prepare("SELECT id FROM users_tbl WHERE role IN ('admin', 'super_admin') AND archived = 0");
                         $adminStmt->execute();
                         $admins = $adminStmt->get_result()->fetch_all(MYSQLI_ASSOC);
                         $adminStmt->close();
 
                         $adminNotifTitle = "Application Rejected";
-                        $adminNotifMessage = "Application for <strong>$actTitle</strong> has been rejected. Please recheck your documents ";
+                        $adminNotifMessage = "Application for <strong>$actTitle</strong> has been rejected by <strong>" . $_SESSION['first_name'] . " " . $_SESSION['last_name'] . "</strong>";
                         $adminLink = "admin/application_activity.php";
-
                         foreach ($admins as $admin) {
                             createNotification($admin['id'], 'application', $adminNotifTitle, $adminNotifMessage, $adminLink);
                         }
-
                     } catch (Exception $e) {
                         $conn->rollback();
                         $message = 'Error: ' . $e->getMessage();
                         $type = 'error';
-                        logError($e->getMessage(), [
-                            'file' => $e->getFile(),
-                            'line' => $e->getLine(),
-                            'trace' => $e->getTraceAsString()
-                        ]);
+                        logError($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
                     }
                 }
             } else {
@@ -188,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['application_id'], $_P
     exit;
 }
 
-// --- BULK ACTIONS (archive / restore) ---
+// ---- BULK ACTIONS (archive / restore) ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && isset($_POST['selected_ids'])) {
     $bulk_action = $_POST['bulk_action'];
     $selected_ids = json_decode($_POST['selected_ids'], true);
@@ -196,7 +180,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && iss
     $message = '';
     $type = 'success';
 
-    // CSRF validation for bulk actions
     if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
         $message = 'Invalid CSRF token. Please refresh and try again.';
         $type = 'error';
@@ -247,11 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && iss
             $conn->rollback();
             $message = 'Error: ' . $e->getMessage();
             $type = 'error';
-            logError($e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            logError($e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
         }
     } else {
         $message = 'No applications selected.';
@@ -262,44 +241,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && iss
     exit;
 }
 
-// --- GET TOAST FROM URL (if any) ---
+//  GET TOAST FROM URL 
 $toastMessage = isset($_GET['toast']) ? $_GET['toast'] : '';
 $toastType = isset($_GET['type']) && $_GET['type'] === 'error' ? 'error' : 'success';
 
-// --- SORTING LOGIC ---
+//  SORTING & PAGINATION 
 $sort = $_GET['sort'] ?? 'latest';
 $showArchived = ($sort === 'archived');
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$limit = 15;
+$offset = ($page - 1) * $limit;
+
+$archivedCondition = $showArchived ? "va.archived = 1" : "va.archived = 0";
+$countSql = "SELECT COUNT(*) as total FROM volunteer_applications va JOIN users_tbl u ON va.user_id = u.id WHERE $archivedCondition";
+$countStmt = $conn->prepare($countSql);
+$countStmt->execute();
+$total = $countStmt->get_result()->fetch_assoc()['total'];
+$countStmt->close();
+$totalPages = ceil($total / $limit);
 
 switch ($sort) {
-    case 'earliest':
-        $orderBy = "va.submitted_at ASC";
-        break;
-    case 'status':
-        $orderBy = "FIELD(va.status, 'pending', 'approved', 'rejected', 'cancelled')";
-        break;
-    case 'activity':
-        $orderBy = "a.title ASC";
-        break;
-    case 'user':
-        $orderBy = "u.fname ASC, u.lname ASC";
-        break;
-    case 'archived':
-        $orderBy = "va.archived_at DESC, va.submitted_at DESC";
-        break;
-    default:
-        $orderBy = "va.submitted_at DESC";
+    case 'earliest':  $orderBy = "va.submitted_at ASC"; break;
+    case 'status':    $orderBy = "FIELD(va.status, 'pending', 'approved', 'rejected', 'cancelled')"; break;
+    case 'activity':  $orderBy = "a.title ASC"; break;
+    case 'user':      $orderBy = "u.fname ASC, u.lname ASC"; break;
+    case 'archived':  $orderBy = "va.archived_at DESC, va.submitted_at DESC"; break;
+    default:          $orderBy = "va.submitted_at DESC";
 }
 
-// FETCH STATISTICS 
-$totalActivities = $conn->query("SELECT COUNT(*) as count FROM activities")->fetch_assoc()['count'];
-$totalJoined = $conn->query("SELECT COUNT(*) as count FROM volunteer_applications WHERE status = 'approved' AND archived = 0")->fetch_assoc()['count'];
-
-// FETCH APPLICATIONS 
-$archivedCondition = $showArchived ? "va.archived = 1" : "va.archived = 0";
 $query = "
-    SELECT 
-        va.*, 
-        u.fname, u.lname, u.email as user_email, 
+    SELECT
+        va.*,
+        u.fname, u.lname, u.email as user_email,
         b.name as current_barangay,
         a.title as activity_title,
         GROUP_CONCAT(ap.file_path SEPARATOR '|') as file_paths,
@@ -312,9 +285,12 @@ $query = "
     WHERE $archivedCondition
     GROUP BY va.id
     ORDER BY $orderBy
+    LIMIT $offset, $limit
 ";
-$result = $conn->query($query);
-$applications = $result->fetch_all(MYSQLI_ASSOC);
+$applications = $conn->query($query)->fetch_all(MYSQLI_ASSOC);
+
+$totalActivities = $conn->query("SELECT COUNT(*) as count FROM activities")->fetch_assoc()['count'];
+$totalJoined = $conn->query("SELECT COUNT(*) as count FROM volunteer_applications WHERE status = 'approved' AND archived = 0")->fetch_assoc()['count'];
 
 require_once __DIR__ . '/../header.php';
 ?>
@@ -368,7 +344,7 @@ require_once __DIR__ . '/../header.php';
         </div>
     </div>
 
-    <!-- Stat Cards (optional – you may keep or remove) -->
+    <!-- Stat Cards -->
     <div class="card-app-grid">
         <div class="app-card">
             <div class="card-header">
@@ -408,31 +384,24 @@ require_once __DIR__ . '/../header.php';
             </thead>
             <tbody>
                 <?php if (empty($applications)): ?>
-                    <tr>
-                        <td colspan="11" style="text-align: center;">No applications found.<?= $showArchived ? ' (archived)' : '' ?></td>
-                    </tr>
+                    <tr><td colspan="11" style="text-align: center;">No applications found.<?= $showArchived ? ' (archived)' : '' ?></td></tr>
                 <?php else: ?>
                     <?php foreach ($applications as $app): ?>
                         <?php
                         $rowClass = '';
-                        if ($app['archived']) {
-                            $rowClass = 'archived-row';
-                        } elseif ($app['status'] === 'rejected' || $app['status'] === 'cancelled') {
-                            $rowClass = 'status-negative-row';
-                        }
+                        if ($app['archived']) $rowClass = 'archived-row';
+                        elseif ($app['status'] === 'rejected' || $app['status'] === 'cancelled') $rowClass = 'status-negative-row';
                         ?>
                         <tr class="<?= $rowClass ?>">
                             <td><input type="checkbox" class="rowCheckbox" value="<?= $app['id'] ?>"></td>
-                            <td>
-                                <strong><?= htmlspecialchars($app['fname'] . ' ' . $app['lname']) ?></strong>
-                            </td>
+                            <td><strong><?= htmlspecialchars($app['fname'] . ' ' . $app['lname']) ?></strong></td>
                             <td><?= htmlspecialchars($app['activity_title']) ?></td>
                             <td><?= date('M d, Y', strtotime($app['date_of_birth'])) ?></td>
                             <td><?= htmlspecialchars($app['mobile_number']) ?></td>
                             <td><?= htmlspecialchars($app['current_barangay'] ?? $app['barangay']) ?></td>
                             <td>
-                                <?php
-                                if (!empty($app['file_paths'])) {
+                                <?php if (!empty($app['file_paths'])): ?>
+                                    <?php
                                     $paths = explode('|', $app['file_paths']);
                                     $names = explode('|', $app['file_names']);
                                     echo '<div class="docs-gallery">';
@@ -448,10 +417,8 @@ require_once __DIR__ . '/../header.php';
                                         }
                                     }
                                     echo '</div>';
-                                } else {
-                                    echo '—';
-                                }
-                                ?>
+                                else: echo '—';
+                                endif; ?>
                             </td>
                             <td>
                                 <?php if ($app['archived']): ?>
@@ -481,9 +448,7 @@ require_once __DIR__ . '/../header.php';
                                             </button>
                                         </form>
                                     </div>
-                                <?php else: ?>
-                                    —
-                                <?php endif; ?>
+                                <?php else: ?>—<?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -491,6 +456,12 @@ require_once __DIR__ . '/../header.php';
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination -->
+    <?php
+    $queryParams = ['sort' => $sort];
+    echo renderPagination($page, $totalPages, 'application_activity.php', $queryParams);
+    ?>
 </div>
 
 <!-- Image Modal -->
@@ -502,15 +473,11 @@ require_once __DIR__ . '/../header.php';
 <script src="application_activity.js"></script>
 
 <script>
-    // Show toast from URL parameter
     const toastMsg = <?php echo json_encode($toastMessage); ?>;
     const toastType = <?php echo json_encode($toastType); ?>;
-
     if (toastMsg) {
-        // Clean URL (remove toast parameters) without refreshing
         const cleanUrl = window.location.pathname + window.location.search.replace(/[&?]toast=[^&]*/g, '').replace(/[&?]type=[^&]*/g, '').replace(/[?&]$/, '');
         window.history.replaceState({}, document.title, cleanUrl);
-
         setTimeout(() => {
             if (typeof showToast === 'function') {
                 showToast(toastMsg, 5000, toastType);
