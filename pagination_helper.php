@@ -11,7 +11,8 @@
  * @param int $page Current page number
  * @return array ['data' => rows, 'total' => total_count, 'totalPages' => number_of_pages]
  */
-function getPaginatedData($conn, $sql, $params = [], $types = '', $limit = 15, $page = 1) {
+function getPaginatedData($conn, $sql, $params = [], $types = '', $limit = 15, $page = 1)
+{
     // Ensure page is at least 1
     $page = max(1, (int)$page);
     $offset = ($page - 1) * $limit;
@@ -62,23 +63,20 @@ function getPaginatedData($conn, $sql, $params = [], $types = '', $limit = 15, $
  * @param int $maxLinks Maximum number of page links to show (default 5)
  * @return string HTML for pagination bar
  */
-function renderPagination($currentPage, $totalPages, $baseUrl, $queryParams = [], $maxLinks = 5) {
-    if ($totalPages <= 1) {
-        return '';
-    }
+function renderPagination($currentPage, $totalPages, $baseUrl, $queryParams = [], $maxLinks = 5)
+{
+    if ($totalPages <= 1) return '';
 
-    // Build query string
     $queryString = http_build_query(array_merge($queryParams, ['page' => 'PAGE_PLACEHOLDER']));
     $linkTemplate = $baseUrl . '?' . str_replace('PAGE_PLACEHOLDER', '%d', $queryString);
 
-    $html = '<div class="pagination">';
-    $html .= '<ul>';
+    $html = '<div class="pagination"><ul>';
 
     // Previous button
     if ($currentPage > 1) {
-        $html .= sprintf('<li><a href="%s">&laquo; Previous</a></li>', sprintf($linkTemplate, $currentPage - 1));
+        $html .= sprintf('<li><a href="%s"><span class="material-symbols-rounded">arrow_back_ios</span></a></li>', sprintf($linkTemplate, $currentPage - 1));
     } else {
-        $html .= '<li class="disabled"><span>&laquo; Previous</span></li>';
+        $html .= '<li class="disabled"><span class="material-symbols-rounded">arrow_back_ios</span></li>';
     }
 
     // Page numbers
@@ -90,9 +88,7 @@ function renderPagination($currentPage, $totalPages, $baseUrl, $queryParams = []
 
     if ($start > 1) {
         $html .= sprintf('<li><a href="%s">1</a></li>', sprintf($linkTemplate, 1));
-        if ($start > 2) {
-            $html .= '<li class="dots"><span>…</span></li>';
-        }
+        if ($start > 2) $html .= '<li class="dots"><span>…</span></li>';
     }
 
     for ($i = $start; $i <= $end; $i++) {
@@ -104,21 +100,17 @@ function renderPagination($currentPage, $totalPages, $baseUrl, $queryParams = []
     }
 
     if ($end < $totalPages) {
-        if ($end < $totalPages - 1) {
-            $html .= '<li class="dots"><span>…</span></li>';
-        }
+        if ($end < $totalPages - 1) $html .= '<li class="dots"><span>…</span></li>';
         $html .= sprintf('<li><a href="%s">%d</a></li>', sprintf($linkTemplate, $totalPages), $totalPages);
     }
 
     // Next button
     if ($currentPage < $totalPages) {
-        $html .= sprintf('<li><a href="%s">Next &raquo;</a></li>', sprintf($linkTemplate, $currentPage + 1));
+        $html .= sprintf('<li><a href="%s"><span class="material-symbols-rounded">arrow_forward_ios</span></a></li>', sprintf($linkTemplate, $currentPage + 1));
     } else {
-        $html .= '<li class="disabled"><span>Next &raquo;</span></li>';
+        $html .= '<li class="disabled"><span class="material-symbols-rounded">arrow_forward_ios</span></li>';
     }
 
-    $html .= '</ul>';
-    $html .= '</div>';
-
+    $html .= '</ul></div>';
     return $html;
 }

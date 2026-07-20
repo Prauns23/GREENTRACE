@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 //  Main page 
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$limit = 15;
+$limit = 10;
 $offset = ($page - 1) * $limit;
 
 // Count total non-archived notifications

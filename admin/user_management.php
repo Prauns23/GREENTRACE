@@ -10,7 +10,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_a
 
 // Get page, sort, and search
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$limit = 15;
+$limit = 5;
 $offset = ($page - 1) * $limit;
 
 // Sorting and filter
@@ -36,15 +36,32 @@ if (!empty($search)) {
 
 // Order by
 switch ($sort) {
-    case 'name_desc':   $orderBy = "u.fname DESC, u.lname DESC"; break;
-    case 'email_asc':   $orderBy = "u.email ASC"; break;
-    case 'email_desc':  $orderBy = "u.email DESC"; break;
-    case 'role_asc':    $orderBy = "u.role ASC"; break;
-    case 'role_desc':   $orderBy = "u.role DESC"; break;
-    case 'date_asc':    $orderBy = "u.created_at ASC"; break;
-    case 'date_desc':   $orderBy = "u.created_at DESC"; break;
-    case 'archived':    $orderBy = "u.archived_at DESC"; break;
-    default:            $orderBy = "u.fname ASC, u.lname ASC";
+    case 'name_desc':
+        $orderBy = "u.fname DESC, u.lname DESC";
+        break;
+    case 'email_asc':
+        $orderBy = "u.email ASC";
+        break;
+    case 'email_desc':
+        $orderBy = "u.email DESC";
+        break;
+    case 'role_asc':
+        $orderBy = "u.role ASC";
+        break;
+    case 'role_desc':
+        $orderBy = "u.role DESC";
+        break;
+    case 'date_asc':
+        $orderBy = "u.created_at ASC";
+        break;
+    case 'date_desc':
+        $orderBy = "u.created_at DESC";
+        break;
+    case 'archived':
+        $orderBy = "u.archived_at DESC";
+        break;
+    default:
+        $orderBy = "u.fname ASC, u.lname ASC";
 }
 
 // Count total (for pagination)
@@ -267,6 +284,7 @@ include __DIR__ . '/../header.php';
 
 <link rel="stylesheet" href="user_management.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="../pagination.css">
 
 <div class="user-container">
     <div class="user-header">
@@ -317,7 +335,7 @@ include __DIR__ . '/../header.php';
     <!-- Stats Cards -->
     <div class="card-app-grid">
         <div class="app-card">
-            <div class="card-header">
+            <div class="card-header" #active_users>
                 <h2>Total Active</h2>
             </div>
             <div class="card-content">
@@ -344,7 +362,6 @@ include __DIR__ . '/../header.php';
             </div>
         </div>
     </div>
-
     <!-- Users Table -->
     <div class="app-table">
         <form id="bulkSelectForm" style="margin:0;">
@@ -404,17 +421,17 @@ include __DIR__ . '/../header.php';
                     <?php endif; ?>
                 </tbody>
             </table>
+            <div class="pagination">
+                <?php
+                $queryParams = ['sort' => $sort];
+                if (!empty($search)) {
+                    $queryParams['search'] = $search;
+                }
+                echo renderPagination($page, $totalPages, 'user_management.php', $queryParams);
+                ?>
+            </div>
         </form>
     </div>
-
-    <!-- PAGINATION -->
-    <?php
-    $queryParams = ['sort' => $sort];
-    if (!empty($search)) {
-        $queryParams['search'] = $search;
-    }
-    echo renderPagination($page, $totalPages, 'user_management.php', $queryParams);
-    ?>
 </div>
 
 <!-- User Detail Modal-->

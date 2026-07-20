@@ -114,7 +114,7 @@ input[type="checkbox"] {
 .card-app-grid {
   display: flex;
   gap: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 50px;
   flex-wrap: wrap;
 }
 
@@ -141,6 +141,10 @@ input[type="checkbox"] {
   font-size: 2.2rem;
   font-weight: 700;
   padding-bottom: 12px;
+}
+
+.app-card #active_users {
+  background: #2e7d32;
 }
 
 .app-card .card-content p {

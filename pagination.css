@@ -1,57 +1,80 @@
 .pagination {
-    margin-top: 24px;
-    display: flex;
-    justify-content: center;
+  margin: 8px 12px;
+  display: flex;
+  justify-content: center;
+  font-family: "Inter", sans-serif;
 }
 
 .pagination ul {
-    display: flex;
-    list-style: none;
-    gap: 6px;
-    padding: 0;
-    margin: 0;
-    flex-wrap: wrap;
+  display: flex;
+  list-style: none;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  flex-wrap: wrap;
 }
 
 .pagination li {
-    display: inline-block;
+  display: flex;
+  align-items: center;
 }
 
 .pagination li a,
 .pagination li span {
-    display: inline-block;
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    background: white;
-    color: #1a202c;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    min-width: 40px;
-    text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d1d1;
+  background: white;
+  color: #414141;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.pagination li a .material-symbols-rounded {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0;
+  background: transparent;
+  border: none;
+    align-items: center;
+}
+
+.pagination li.disabled .material-symbols-rounded {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0;
+  background: transparent;
+  border: 1px solid #d1d1d1;
+  padding: 8px 12px;
+  align-items: center;
 }
 
 .pagination li a:hover {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-    color: #2e7d32;
+  background: #e8f5e9;
+  border-color: #2e7d32;
+  color: #2e7d32;
 }
 
 .pagination li.active span {
-    background: #2e7d32;
-    border-color: #2e7d32;
-    color: white;
+  background: #2e7d32;
+  border-color: #2e7d32;
+  color: white;
 }
 
 .pagination li.disabled span {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .pagination li.dots span {
-    border: none;
-    background: transparent;
-    color: #888;
-    padding: 8px 4px;
+  border: none;
+  background: transparent;
+  color: #888;
+  padding: 0 4px;
+  min-width: auto;
+  height: auto;
 }
