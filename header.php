@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once __DIR__ . '/init_session.php';
 require_once __DIR__ . '/config.php';
 $basePath = (strpos($_SERVER['PHP_SELF'], '/admin/') !== false || strpos($_SERVER['PHP_SELF'], '/pages/') !== false) ? '../' : '';
@@ -152,12 +152,17 @@ if (isset($_SESSION['user_id'])) {
                 </ul>
             </div>
             <div class="nav-right">
-                <div class="notification-bell-container">
-                    <span class="material-symbols-rounded bell-icon" id="fa-bell" onclick="window.location.href='<?php echo $basePath; ?>notifications.php'">
-                        notifications
-                        <span class="notification-dot" id="notificationDot" style="display: none;"></span>
-                    </span>
-                </div>
+                <?php if (isset($_SESSION['first_name'])): ?>
+                    <div class="chat-icon-container">
+                        <img src="<?php echo $basePath; ?>components/icons/chat-icon.svg" alt="" class="chat-icon" onclick="window.location.href='<?php echo $basePath; ?>message.php'">
+                    </div>
+                    <div class="notification-bell-container">
+                        <span class="material-symbols-rounded bell-icon" id="fa-bell" onclick="window.location.href='<?php echo $basePath; ?>notifications.php'">
+                            notifications
+                            <span class="notification-dot" id="notificationDot" style="display: none;"></span>
+                        </span>
+                    </div>
+                <?php endif; ?>
                 <img src="<?php echo $basePath; ?>components/icons/person.svg" alt="" class="profile"
                     onclick="<?php echo isset($_SESSION['first_name']) ? 'window.location.href=\'' . $basePath . 'profile.php\'' : 'showLogin()'; ?>">
             </div>

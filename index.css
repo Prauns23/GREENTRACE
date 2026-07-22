@@ -246,9 +246,9 @@ body.overlay-active .footer {
 
 .bell-icon {
   font-size: 24px;
-  color: #3f3f3f;
+  color: #383838;
   margin-top: 4.2px;
-  font-weight: 600;
+  font-weight: 400;
   position: relative;
   display: inline-block;
   cursor: pointer;
@@ -281,6 +281,23 @@ body.overlay-active .footer {
   height: 12px;
   background: #2e7d32;
   border-radius: 50%;
+}
+
+.chat-icon-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.chat-icon {
+  height: 22px;
+  width: 22px;
+  filter: invert(100%) brightness(28%);
+  margin-top: 4.2px;
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
 }
 
 .nav-right .profile {
