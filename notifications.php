@@ -367,6 +367,11 @@ include 'header.php';
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
+                    if (['bulk_mark_read', 'bulk_archive', 'bulk_delete'].includes(action)) {
+                        window.location.reload();
+                        return;
+                    }
+
                     // Update UI
                     ids.forEach(id => {
                         const item = document.querySelector(`.notification-item[data-id="${id}"]`);

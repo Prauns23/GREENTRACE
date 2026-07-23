@@ -67,7 +67,7 @@ include 'header.php';
             </div>
 
             <!-- Channels Section -->
-            <div class="sidebar-section">
+            <div class="sidebar-section channel">
                 <div class="section-header">Channels</div>
                 <div class="channel-card">
                     <ul class="channel-list">
@@ -90,7 +90,7 @@ include 'header.php';
             </div>
 
             <!-- Direct Messages Section -->
-            <div class="sidebar-section">
+            <div class="sidebar-section directMessages">
                 <div class="section-header">Direct Messages</div>
                 <ul class="dm-list">
                     <?php foreach ($directMessages as $dm): ?>
@@ -120,8 +120,9 @@ include 'header.php';
             <!-- Placeholder when no conversation is selected -->
             <div id="chatPlaceholder" class="chat-placeholder">
                 <div class="placeholder-content">
+                    <img src="components\icons\empty-chat-img.svg" alt="">
                     <h3>Start your conversation!</h3>
-                    <p>Leaving a digital footprint! This chat is recorded to help us track our progress.</p>
+                    <p>Click the <strong><i>New Message</i></strong> and search for someone you may know! Or just click the <strong><i>Channels</i></strong>!</p>
                 </div>
             </div>
 
