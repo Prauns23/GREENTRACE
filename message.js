@@ -137,13 +137,26 @@ function loadConversation(type, id) {
     document.getElementById('chatPlaceholder').style.display = 'none';
     document.getElementById('chatWindow').style.display = 'flex';
 
+    const chatRoleBadge = document.getElementById('chatRoleBadge');
+    const chatAddress = document.getElementById('chatAddress');
+
     // Update chat title
     let title = '';
     if (type === 'channel') {
-        title = '#' + id;
+        title = id;
+
+        // Channels have no recipient/role info — hide the DM-only header pieces
+        chatRoleBadge.style.display = 'none';
+        chatAddress.textContent = '';
     } else {
         const dmItem = document.querySelector(`.dm-item[data-id="${id}"]`);
         title = dmItem ? dmItem.querySelector('.dm-name').textContent : 'Direct Message';
+        const address = dmItem ? dmItem.dataset.address : '';
+        const role = dmItem ? dmItem.dataset.role : '';
+
+        chatAddress.textContent = address;
+        chatRoleBadge.textContent = role;
+        chatRoleBadge.style.display = role ? 'inline-block' : 'none';
     }
     document.getElementById('chatTitle').textContent = title;
 

@@ -30,8 +30,8 @@ $channels = [
 
 // Dummy DMs (will be fetched from DB)
 $directMessages = [
-    ['id' => 1, 'name' => 'John Doe', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
-    ['id' => 2, 'name' => 'James Dean', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
+    ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@gmail.com', 'address' => 'Nagbalayong, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
+    ['id' => 2, 'name' => 'James Dean', 'email' => 'james.dean@gmail.com', 'address' => 'Poblacion, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
 ];
 
 include 'header.php';
@@ -94,7 +94,7 @@ include 'header.php';
                 <div class="section-header">Direct Messages</div>
                 <ul class="dm-list">
                     <?php foreach ($directMessages as $dm): ?>
-                        <li class="dm-item" data-type="dm" data-id="<?= $dm['id'] ?>">
+                        <li class="dm-item" data-type="dm" data-id="<?= $dm['id'] ?>" data-email="<?= htmlspecialchars($dm['email']) ?>" data-address="<?= htmlspecialchars($dm['address']) ?>" data-role="<?= htmlspecialchars($dm['role']) ?>">
                             <span class="dm-name"><?= htmlspecialchars($dm['name']) ?></span>
                             <span class="dm-time"><?= $dm['time'] ?></span>
                             <span class="dm-last-msg"><?= htmlspecialchars($dm['last_message']) ?></span>
@@ -130,18 +130,22 @@ include 'header.php';
             <div id="chatWindow" class="chat-window" style="display: none;">
                 <!-- Chat Header -->
                 <div class="chat-header">
-                    <div class="chat-header-left">
-                        <div class="chat-avatar">
-                            <i class="fa-solid fa-user"></i>
-                        </div>
-                        <div class="chat-user-info">
-                            <span id="chatTitle">#concerns</span>
-                            <span id="chatAddress" class="chat-address">Nagbalayong, Morong Bataan</span>
-                            <span id="chatRoleBadge" class="role-badge">Admin</span>
-                        </div>
+                    <div class="chat-header-top">
+                        <button class="chat-menu-btn" id="chatMenuBtn" title="More options">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
                     </div>
-                    <div class="chat-header-right">
-                        <!-- Optional Actions -->
+                    <div class="chat-header-main">
+                        <div class="chat-header-left">
+                            <div class="chat-avatar">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div class="chat-user-info">
+                                <span id="chatTitle">#concerns</span>
+                                <span id="chatAddress" class="chat-address">Nagbalayong, Morong Bataan</span>
+                            </div>
+                        </div>
+                        <span id="chatRoleBadge" class="role-badge" style="display: none;">Volunteer</span>
                     </div>
                 </div>
                 <div class="chat-messages" id="chatMessages">
