@@ -128,9 +128,21 @@ include 'header.php';
 
             <!-- Actual chat window (hidden until a conversation is selected) -->
             <div id="chatWindow" class="chat-window" style="display: none;">
+                <!-- Chat Header -->
                 <div class="chat-header">
-                    <span id="chatTitle">#concerns</span>
-                    <span id="chatMembers">Members: 12</span>
+                    <div class="chat-header-left">
+                        <div class="chat-avatar">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="chat-user-info">
+                            <span id="chatTitle">#concerns</span>
+                            <span id="chatAddress" class="chat-address">Nagbalayong, Morong Bataan</span>
+                            <span id="chatRoleBadge" class="role-badge">Admin</span>
+                        </div>
+                    </div>
+                    <div class="chat-header-right">
+                        <!-- Optional Actions -->
+                    </div>
                 </div>
                 <div class="chat-messages" id="chatMessages">
                     <!-- Messages will be dynamically loaded here -->
@@ -144,73 +156,6 @@ include 'header.php';
     </div>
 </div>
 
-<!-- New Message Modal -->
-<div id="newMessageModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('newMessageModal')">&times;</span>
-        <h3>New Message</h3>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>To:</label>
-                <div class="user-select">
-                    <!-- In production, this would be a searchable dropdown -->
-                    <input type="text" placeholder="Search users...">
-                    <ul class="user-list">
-                        <li><input type="checkbox"> Chrisostomo Ibarra ✅</li>
-                        <li><input type="checkbox"> George Washington ✅</li>
-                        <li><input type="checkbox"> Binaritan Admin ☐</li>
-                        <li><input type="checkbox"> Nagbalayong Admin ☐</li>
-                        <li><input type="checkbox"> James Kjelberg ☐</li>
-                        <li><input type="checkbox"> Bernabe Admin ☐</li>
-                        <li><input type="checkbox"> Ashley Peregrino ☐</li>
-                        <li><input type="checkbox"> Yuumi Serano ☐</li>
-                        <li><input type="checkbox"> Mabayo Admin ☐</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="button-group">
-                <button class="btn-cancel" onclick="closeModal('newMessageModal')">Cancel</button>
-                <button class="btn-submit" onclick="closeModal('newMessageModal')">Add</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Create Channel Modal -->
-<div id="createChannelModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('createChannelModal')">&times;</span>
-        <h3>Create a channel</h3>
-        <div class="modal-body">
-            <div class="form-group">
-                <label>Channel Name</label>
-                <input type="text" placeholder="# concerns">
-            </div>
-            <div class="form-group">
-                <label>Channel Type</label>
-                <select>
-                    <option>Messaging</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <textarea placeholder="Write your channel description here"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Visibility</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="visibility" checked> Public – Anyone in #concerns</label>
-                    <label><input type="radio" name="visibility"> Private – Only specific users</label>
-                </div>
-            </div>
-            <div class="button-group">
-                <button class="btn-cancel" onclick="closeModal('createChannelModal')">Cancel</button>
-                <button class="btn-submit" onclick="closeModal('createChannelModal')">Create</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="messages.js"></script>
+<script src="message.js"></script>
 
 <?php include 'footer.php'; ?>

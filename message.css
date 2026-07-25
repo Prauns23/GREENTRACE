@@ -134,6 +134,13 @@ body {
   border: 1px solid #e2e8f0;
 }
 
+.sidebar-section.channel,
+.sidebar-section.directMessages {
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
 .sidebar-search-container h3 {
   padding: 16px 0;
 }
@@ -143,10 +150,23 @@ body {
   margin-top: 0;
 }
 
+.sidebar-section::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-section::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.sidebar-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .sidebar-actions .btn-new-channel {
   background: #cbf0cd;
   border-color: #2e7d32;
-  color: #333;
+  color: #2e7d32;
   transition: all 0.3s ease;
 }
 
@@ -335,12 +355,15 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: 544px;
+  height: 100%;
 }
 .message-item {
   display: flex;
   gap: 12px;
   align-items: flex-start;
 }
+
 .message-avatar {
   width: 32px;
   height: 32px;
@@ -352,36 +375,44 @@ body {
   font-size: 0.8rem;
   color: #4a5568;
 }
+
 .message-content {
   background: #f7fafc;
   padding: 8px 14px;
   border-radius: 12px;
   max-width: 70%;
 }
+
 .message-content .message-sender {
   font-weight: 600;
   font-size: 0.85rem;
 }
+
 .message-content .message-text {
   margin-top: 4px;
 }
+
 .message-content .message-time {
   font-size: 0.7rem;
   color: #a0aec0;
   margin-top: 4px;
 }
+
 .message-item.self {
   flex-direction: row-reverse;
 }
+
 .message-item.self .message-content {
   background: #e8f5e9;
 }
+
 .chat-input {
   display: flex;
   gap: 8px;
-  padding: 12px 20px;
-  border-top: 1px solid #edf2f7;
+  padding: 18px 20px;
+  /* border-top: 1px solid #edf2f7; */
 }
+
 .chat-input input {
   flex: 1;
   padding: 10px 14px;
@@ -390,6 +421,7 @@ body {
   outline: none;
   font-size: 0.9rem;
 }
+
 .chat-input button {
   background: #2e7d32;
   border: none;
@@ -400,6 +432,7 @@ body {
   cursor: pointer;
   transition: 0.2s;
 }
+
 .chat-input button:hover {
   background: #1b5e20;
 }
@@ -415,6 +448,7 @@ body {
   align-items: center;
   z-index: 10000;
 }
+
 .modal-content {
   background: white;
   border-radius: 16px;
@@ -425,6 +459,7 @@ body {
   overflow-y: auto;
   position: relative;
 }
+
 .modal-close {
   position: absolute;
   top: 12px;
@@ -433,22 +468,27 @@ body {
   cursor: pointer;
   color: #a0aec0;
 }
+
 .modal-close:hover {
   color: #1a202c;
 }
+
 .modal-content h3 {
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 16px;
 }
+
 .modal-body .form-group {
   margin-bottom: 16px;
 }
+
 .modal-body .form-group label {
   display: block;
   font-weight: 500;
   margin-bottom: 4px;
 }
+
 .modal-body .form-group input,
 .modal-body .form-group select,
 .modal-body .form-group textarea {
@@ -458,10 +498,12 @@ body {
   border-radius: 8px;
   font-size: 0.9rem;
 }
+
 .modal-body .form-group textarea {
   height: 80px;
   resize: vertical;
 }
+
 .user-select ul {
   list-style: none;
   max-height: 200px;
@@ -470,26 +512,31 @@ body {
   border-radius: 8px;
   padding: 4px;
 }
+
 .user-select li {
   padding: 6px 8px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .user-select li input[type="checkbox"] {
   width: 16px;
   height: 16px;
 }
+
 .radio-group label {
   display: block;
   font-weight: 400;
 }
+
 .button-group {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
   margin-top: 16px;
 }
+
 .button-group .btn-cancel {
   padding: 8px 16px;
   border: 1px solid #e2e8f0;
@@ -497,6 +544,7 @@ body {
   background: white;
   cursor: pointer;
 }
+
 .button-group .btn-submit {
   padding: 8px 16px;
   border: none;
@@ -505,6 +553,7 @@ body {
   color: white;
   cursor: pointer;
 }
+
 .button-group .btn-submit:hover {
   background: #1b5e20;
 }
