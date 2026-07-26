@@ -189,6 +189,13 @@ body.login-active {
   border-radius: 24px;
 }
 
+#floatingMessageModal .floating-iframe {
+  width: 580px;
+  height: 100%;
+  max-height: 90vh;
+  border-radius: 24px;
+}
+
 .overlay.active {
   display: block; /* Show when active */
 }

@@ -335,25 +335,40 @@ function showEditProfileModal() {
 }
 
 function updateBadgeCount() {
-  
-    fetch('get_unread_count.php') 
-        .then(response => response.json())
-        .then(data => {
-            const dot = document.getElementById('notificationDot');
-            if (dot) {
-                if (data.unread > 0) {
-                    dot.style.display = 'block';
-                } else {
-                    dot.style.display = 'none';
-                }
-            }
-        })
-        .catch(err => console.error('Error fetching unread count:', err));
+  fetch("get_unread_count.php")
+    .then((response) => response.json())
+    .then((data) => {
+      const dot = document.getElementById("notificationDot");
+      if (dot) {
+        if (data.unread > 0) {
+          dot.style.display = "block";
+        } else {
+          dot.style.display = "none";
+        }
+      }
+    })
+    .catch((err) => console.error("Error fetching unread count:", err));
+}
+
+function showAddMessageModal() {
+  closeAllFloating();
+  const container = document.getElementById("floatingAddMessageContainer");
+  const iframe = document.getElementById("addMessageFrame");
+  if (iframe) {
+    iframe.src = (window.basePath || "") + "modals/add_message.php";
+  }
+  if (container) {
+    container.classList.add("active");
+    if (overlay) overlay.classList.add("active");
+    document.body.classList.add("login-active");
+    activeContainer = container;
+  }
 }
 
 // Call it on page load
-document.addEventListener('DOMContentLoaded', updateBadgeCount);
+document.addEventListener("DOMContentLoaded", updateBadgeCount);
 
+window.showAddMessageModal = showAddMessageModal;
 window.showEditProfileModal = showEditProfileModal;
 window.showAddActivityModal = showAddActivityModal;
 window.showEditActivityModal = showEditActivityModal;

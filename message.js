@@ -1,6 +1,6 @@
-// ============================
-// 1. Modal handling
-// ============================
+
+// Modal handling
+
 function openModal(modalId) {
     document.getElementById(modalId).style.display = 'flex';
 }
@@ -13,9 +13,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ============================
-// 2. Chat state
-// ============================
+//  Chat state
 let currentConversation = null; // { type: 'channel'|'dm', id: string|number }
 let currentPage = 0; // number of loaded chunks from the end
 const MESSAGES_PER_PAGE = 6;
@@ -23,9 +21,7 @@ let isLoading = false;
 let hasMoreMessages = true;
 let allMessages = [];
 
-// ============================
-// 3. Dummy data (oldest first)
-// ============================
+// Dummy data 
 const dummyMessages = {
     '#concerns': [
         { sender: 'John Doe', text: 'Hey fellow greenist! How are you?', time: '9:02 AM' },
@@ -59,9 +55,8 @@ const dummyMessages = {
     ],
 };
 
-// ============================
-// 4. Render functions
-// ============================
+// Render functions
+
 function renderMessages(messages) {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
@@ -137,36 +132,48 @@ function loadConversation(type, id) {
     document.getElementById('chatPlaceholder').style.display = 'none';
     document.getElementById('chatWindow').style.display = 'flex';
 
-    const chatRoleBadge = document.getElementById('chatRoleBadge');
+    const chatTitle = document.getElementById('chatTitle');
     const chatAddress = document.getElementById('chatAddress');
+    const chatRoleBadge = document.getElementById('chatRoleBadge');
+    const chatAvatarIcon = document.getElementById('chatAvatarIcon');
 
-    // Update chat title
-    let title = '';
     if (type === 'channel') {
-        title = id;
-
-        // Channels have no recipient/role info — hide the DM-only header pieces
+        // Remove leading '#' if present
+        const displayName = id.startsWith('#') ? id.substring(1) : id;
+        chatTitle.textContent = displayName;
+        chatAddress.textContent = 'Public';
         chatRoleBadge.style.display = 'none';
-        chatAddress.textContent = '';
+        chatAvatarIcon.textContent = 'group';
     } else {
+        // DM: show user name, barangay, role badge, person icon
         const dmItem = document.querySelector(`.dm-item[data-id="${id}"]`);
-        title = dmItem ? dmItem.querySelector('.dm-name').textContent : 'Direct Message';
-        const address = dmItem ? dmItem.dataset.address : '';
-        const role = dmItem ? dmItem.dataset.role : '';
-
-        chatAddress.textContent = address;
-        chatRoleBadge.textContent = role;
-        chatRoleBadge.style.display = role ? 'inline-block' : 'none';
+        if (dmItem) {
+            const name = dmItem.querySelector('.dm-name').textContent;
+            const address = dmItem.dataset.address || '';
+            const role = dmItem.dataset.role || '';
+            chatTitle.textContent = name;
+            chatAddress.textContent = address;
+            if (role) {
+                chatRoleBadge.textContent = role;
+                chatRoleBadge.style.display = 'inline-block';
+            } else {
+                chatRoleBadge.style.display = 'none';
+            }
+        } else {
+            chatTitle.textContent = 'Direct Message';
+            chatAddress.textContent = '';
+            chatRoleBadge.style.display = 'none';
+        }
+        chatAvatarIcon.textContent = 'person';
     }
-    document.getElementById('chatTitle').textContent = title;
 
-    // Load first batch (newest messages)
+    // Load first batch of messages
     loadMoreMessages();
 }
 
-// ============================
-// 5. Event listeners
-// ============================
+
+// Event listeners
+
 document.addEventListener('DOMContentLoaded', function() {
     // Channel clicks
     document.querySelectorAll('.channel-item').forEach(item => {

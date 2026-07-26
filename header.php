@@ -138,6 +138,11 @@ if (isset($_SESSION['user_id'])) {
         <iframe src="<?php echo $basePath; ?>modals/edit_profile.php" class="floating-iframe" id="editProfileFrame"></iframe>
     </div>
 
+    <!-- Add Message Modal -->
+    <div class="floating-container" id="floatingAddMessageContainer">
+        <iframe src="<?php echo $basePath; ?>modals/add_message.php" class="floating-iframe" id="addMessageFrame"></iframe>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">

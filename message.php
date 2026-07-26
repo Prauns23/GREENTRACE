@@ -59,7 +59,7 @@ include 'header.php';
                         <i class="fa-solid fa-plus"></i>
                         Add Channels
                     </button>
-                    <button class="btn-new-message" onclick="openModal('newMessageModal')">
+                    <button class="btn-new-message" onclick="showAddMessageModal()">
                         <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon">
                         New Message
                     </button>
@@ -138,7 +138,10 @@ include 'header.php';
                     <div class="chat-header-main">
                         <div class="chat-header-left">
                             <div class="chat-avatar">
-                                <i class="fa-solid fa-user"></i>
+                                <!-- <i class="fa-solid fa-user"></i> -->
+                                <span class="material-symbols-rounded" id="chatAvatarIcon">
+                                    person
+                                </span>
                             </div>
                             <div class="chat-user-info">
                                 <span id="chatTitle">#concerns</span>

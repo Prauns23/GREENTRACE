@@ -388,6 +388,10 @@ body {
   font-size: 0.9rem;
 }
 
+.chat-avatar .material-symbols-rounded {
+  font-size: 24px;
+}
+
 .chat-header #chatTitle {
   font-weight: 600;
   font-size: 1.1rem;
@@ -414,6 +418,8 @@ body {
 
 .chat-address {
   color: #718096;
+  font-size: 0.8rem;
+  padding-top: 4px;
 }
 
 .role-badge {
