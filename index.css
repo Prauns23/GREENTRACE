@@ -192,8 +192,15 @@ body.login-active {
 #floatingMessageModal .floating-iframe {
   width: 580px;
   height: 100%;
-  max-height: 90vh;
+  max-height: 720px;
   border-radius: 24px;
+}
+
+#floatingCreateChannelContainer .floating-iframe {
+  width: 580px;
+  height: 860px;
+  border-radius: 24px;
+  background: transparent;
 }
 
 .overlay.active {

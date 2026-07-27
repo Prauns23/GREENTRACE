@@ -25,7 +25,7 @@ body {
   background: #e0e0e032;
 }
 
-.sidebar-header {
+.chat-sidebar-header {
   display: inline-block;
   flex-direction: column;
   border: none;
@@ -165,13 +165,14 @@ body {
 
 .sidebar-actions .btn-new-channel {
   background: #cbf0cd;
-  border-color: #2e7d32;
   color: #2e7d32;
-  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  transition: border 0.2s ease-in-out;
 }
 
 .sidebar-actions .btn-new-channel:hover {
-  transform: scale(1.02);
+  /* transform: scale(1.02); */
+  border-color: #2e7d32;
 }
 
 .sidebar-actions .btn-new-message {
@@ -380,11 +381,11 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #99DF84;
+  background: #99df84;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3F3F3F;
+  color: #3f3f3f;
   font-size: 0.9rem;
 }
 
@@ -423,7 +424,7 @@ body {
 }
 
 .role-badge {
-  background: #3F3F3F;
+  background: #3f3f3f;
   color: #ffff;
   padding: 10px 16px;
   border-radius: 25px;

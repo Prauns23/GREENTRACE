@@ -39,7 +39,7 @@ include 'header.php';
 <link rel="stylesheet" href="message.css">
 
 <div class="chat-page">
-    <div class="sidebar-header">
+    <div class="chat-sidebar-header">
         <h2>Messages</h2>
         <p>Collaborate and communicate with the users across the platform!</p>
     </div>
@@ -55,7 +55,7 @@ include 'header.php';
                 </div>
                 <!-- sidebar actions -->
                 <div class="sidebar-actions">
-                    <button class="btn-new-channel" onclick="openModal('createChannelModal')">
+                    <button class="btn-new-channel" onclick="showCreateChannelModal()">
                         <i class="fa-solid fa-plus"></i>
                         Add Channels
                     </button>

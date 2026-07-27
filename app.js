@@ -350,6 +350,8 @@ function updateBadgeCount() {
     .catch((err) => console.error("Error fetching unread count:", err));
 }
 
+// Add Message Modal
+
 function showAddMessageModal() {
   closeAllFloating();
   const container = document.getElementById("floatingAddMessageContainer");
@@ -365,9 +367,26 @@ function showAddMessageModal() {
   }
 }
 
+// Create Channel Modal
+function showCreateChannelModal() {
+  closeAllFloating();
+  const container = document.getElementById("floatingCreateChannelContainer");
+  const iframe = document.getElementById("createChannelFrame");
+  if (iframe) {
+    iframe.src = (window.basePath || "") + "modals/create_channel.php";
+  }
+  if (container) {
+    container.classList.add("active");
+    if (overlay) overlay.classList.add("active");
+    document.body.classList.add("login-active");
+    activeContainer = container;
+  }
+}
+
 // Call it on page load
 document.addEventListener("DOMContentLoaded", updateBadgeCount);
 
+window.showCreateChannelModal = showCreateChannelModal;
 window.showAddMessageModal = showAddMessageModal;
 window.showEditProfileModal = showEditProfileModal;
 window.showAddActivityModal = showAddActivityModal;
