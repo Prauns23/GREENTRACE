@@ -1,12 +1,9 @@
 <?php
+// Only session check – no processing
 require_once '../init_session.php';
-require_once '../config.php';
-
-// Only logged-in users can access
 if (!isset($_SESSION['user_id'])) {
     die('Unauthorized');
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,12 +22,12 @@ if (!isset($_SESSION['user_id'])) {
         <div class="modal-header">
             <h2>Create a channel</h2>
         </div>
-
+    
         <div class="modal-body">
             <!-- Channel Name -->
             <div class="form-group">
                 <label for="channelName">Channel Name</label>
-                <input type="text" id="channelName" class="channel-name-input" placeholder="# concerns">
+                <input type="text" id="channelName" class="channel-name-input" placeholder="Channel name (e.g., general)">
             </div>
 
             <!-- Channel Type -->
@@ -39,7 +36,7 @@ if (!isset($_SESSION['user_id'])) {
                 <select id="channelType" class="channel-type-select">
                     <option value="activities">Activities</option>
                     <option value="reporting">Reporting</option>
-                    <option value="others">Others</option>        
+                    <option value="others">Others</option>
                 </select>
             </div>
 
@@ -54,7 +51,7 @@ if (!isset($_SESSION['user_id'])) {
                 <p>Channels are the places where you chat about different topics. Pick a name that’s easy to find and get what it’s about!</p>
             </div>
 
-            <!-- Visibility (radio cards) -->
+            <!-- Visibility -->
             <div class="visibility-section">
                 <span class="visibility-label">Visibility</span>
                 <div class="visibility-options">
@@ -82,19 +79,7 @@ if (!isset($_SESSION['user_id'])) {
         </div>
     </div>
 
-    <script>
-        // Simple placeholder for create action (will be connected later)
-        document.getElementById('createChannelBtn').addEventListener('click', function() {
-            const name = document.getElementById('channelName').value.trim();
-            if (!name) {
-                alert('Please enter a channel name.');
-                return;
-            }
-            // For now, just close the modal
-            parent.hideFloating();
-            // In the future, we'll send an AJAX request to create the channel
-        });
-    </script>
+    <script src="create_channel.js"></script>
 </body>
 
 </html>

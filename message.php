@@ -20,12 +20,28 @@ $userStmt->execute();
 $userBarangay = $userStmt->get_result()->fetch_assoc()['barangay_name'] ?? 'Unknown Barangay';
 $userStmt->close();
 
-// For now, we'll use dummy data for channels and direct messages.
-// In production, these will come from the database.
-$channels = [
-    ['name' => 'concerns', 'description' => 'Discuss environmental issues'],
-    ['name' => 'activities', 'description' => 'Volunteer activities coordination'],
-    ['name' => 'reports', 'description' => 'Report submissions and updates'],
+// Fetch real channels from database
+$channels = [];
+$channelStmt = $conn->prepare("
+    SELECT c.id, c.name, c.slug, c.description, 
+           (SELECT content FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+           (SELECT created_at FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_time
+    FROM chat_conversations c
+    JOIN chat_conversation_members cm ON c.id = cm.conversation_id
+    WHERE c.type = 'channel' 
+      AND c.archived = 0 
+      AND cm.user_id = ? 
+      AND cm.left_at IS NULL
+    ORDER BY c.name ASC
+");
+$channelStmt->bind_param("i", $user_id);
+$channelStmt->execute();
+$channels = $channelStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// For now, keep dummy DMs – we'll replace later with real DMs
+$directMessages = [
+    ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@gmail.com', 'address' => 'Nagbalayong, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
+    ['id' => 2, 'name' => 'James Dean', 'email' => 'james.dean@gmail.com', 'address' => 'Poblacion, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
 ];
 
 // Dummy DMs (will be fetched from DB)
@@ -72,18 +88,11 @@ include 'header.php';
                 <div class="channel-card">
                     <ul class="channel-list">
                         <?php foreach ($channels as $channel): ?>
-                            <div class="channels-icon">
-                                <!-- <span class="material-symbols-rounded">
-                                    diversity_1
-                                </span> -->
-                            </div>
-                            <div class="channel-card-content">
-                                <li class="channel-item" data-type="channel" data-id="#<?= strtolower($channel['name']) ?>">
-                                    <span class="channel-name">#<?= htmlspecialchars($channel['name']) ?></span>
-                                    <span class="channel-time">9:00 AM</span>
-                                    <span class="channel-last-msg"><?= htmlspecialchars($channel['description']) ?></span>
-                                </li>
-                            </div>
+                            <li class="channel-item" data-type="channel" data-id="#<?= htmlspecialchars($channel['slug']) ?>">
+                                <span class="channel-name"># <?= htmlspecialchars($channel['name']) ?></span>
+                                <span class="channel-time"><?= $channel['last_message_time'] ? date('g:i A', strtotime($channel['last_message_time'])) : '' ?></span>
+                                <span class="channel-last-msg"><?= htmlspecialchars($channel['last_message'] ?? 'No messages yet') ?></span>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
