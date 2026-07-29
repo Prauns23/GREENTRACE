@@ -131,6 +131,16 @@ body {
   margin-right: 10px;
 }
 
+.barangay-divider {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #718096;
+  padding: 12px 12px 6px 12px;
+  margin: 12px 0;
+}
+
 .dot-user {
   background: #48bb78; /* green */
 }

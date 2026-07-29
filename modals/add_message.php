@@ -7,24 +7,26 @@ if (!isset($_SESSION['user_id'])) {
     die('Unauthorized');
 }
 
-// Fetch users (excluding the current user)
-$userId = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT id, fname, lname, email, role, barangay_id FROM users_tbl WHERE id != ? AND archived = 0 ORDER BY fname ASC");
-$stmt->bind_param("i", $userId);
-$stmt->execute();
-$users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+$current_user_id = $_SESSION['user_id'];
 
-// Fetch barangay names for each user (we'll do it in a loop or join, but we'll join in the query)
-// Better: join barangays directly
-$stmt = $conn->prepare("
-    SELECT u.id, u.fname, u.lname, u.email, u.role, b.name as barangay_name
+// Fetch current user's barangay_id
+$barangayStmt = $conn->prepare("SELECT barangay_id FROM users_tbl WHERE id = ?");
+$barangayStmt->bind_param("i", $current_user_id);
+$barangayStmt->execute();
+$current_barangay_id = $barangayStmt->get_result()->fetch_assoc()['barangay_id'] ?? null;
+$barangayStmt->close();
+
+// Fetch all users except current, sorted by same barangay first
+$query = "
+    SELECT u.id, u.fname, u.lname, u.email, u.role, b.name as barangay_name,
+           (u.barangay_id = ?) AS same_barangay
     FROM users_tbl u
     LEFT JOIN barangays b ON u.barangay_id = b.id
     WHERE u.id != ? AND u.archived = 0
-    ORDER BY u.fname ASC
-");
-$stmt->bind_param("i", $userId);
+    ORDER BY same_barangay DESC, u.fname ASC
+";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("ii", $current_barangay_id, $current_user_id);
 $stmt->execute();
 $users = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
@@ -58,20 +60,29 @@ $stmt->close();
 
         <!-- Users list -->
         <div class="users-container" id="usersContainer">
-            <?php foreach ($users as $user): ?>
-                <?php
+            <?php 
+            $sameBarangayShown = false;
+            foreach ($users as $user): 
                 $dotClass = ($user['role'] === 'admin' || $user['role'] === 'super_admin') ? 'dot-admin' : 'dot-user';
                 $displayName = htmlspecialchars($user['fname'] . ' ' . $user['lname']);
                 $barangay = htmlspecialchars($user['barangay_name'] ?? 'No barangay');
-                ?>
-                <div class="user-item" data-user-id="<?= $user['id'] ?>">
+                $isSame = (bool)$user['same_barangay'];
+                // Add a divider before the first user from a different barangay
+                if ($isSame && !$sameBarangayShown) {
+                    $sameBarangayShown = true;
+                    echo '<div class="barangay-divider">From your barangay</div>';
+                } elseif (!$isSame && $sameBarangayShown && !isset($differentShown)) {
+                    $differentShown = true;
+                    echo '<div class="barangay-divider">Other users</div>';
+                }
+            ?>
+                <div class="user-item" data-user-id="<?= $user['id'] ?>" data-same="<?= $isSame ? '1' : '0' ?>">
                     <div class="user-info">
                         <div class="user-dot <?= $dotClass ?>"></div>
                         <div class="user-info2">
                             <span class="user-name"><?= $displayName ?></span>
                             <span class="user-barangay"><?= $barangay ?></span>
                         </div>
-
                     </div>
                     <input type="checkbox" class="user-checkbox" data-user-id="<?= $user['id'] ?>">
                 </div>

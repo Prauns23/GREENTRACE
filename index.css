@@ -196,11 +196,38 @@ body.login-active {
   border-radius: 24px;
 }
 
+#floatingCreateChannelContainer {
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(1px);
+}
+
 #floatingCreateChannelContainer .floating-iframe {
-  width: 580px;
-  height: 860px;
-  border-radius: 24px;
-  background: transparent;
+  margin-top: 70px;
+  width: 580px !important;
+  height: 820px !important;
+  max-height: 100vh !important;
+  border-radius: 12px !important;
+  background: white;
+  margin-right: 32px;
+  transition: transform 0.3s ease;
+}
+
+
+#floatingCreateChannelContainer.active .floating-iframe {
+  animation: slideInRight 0.3s ease forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .overlay.active {
