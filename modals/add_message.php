@@ -16,6 +16,24 @@ $barangayStmt->execute();
 $current_barangay_id = $barangayStmt->get_result()->fetch_assoc()['barangay_id'] ?? null;
 $barangayStmt->close();
 
+// Fetch users that already have a direct conversation with the current user
+$existingDmStmt = $conn->prepare("
+    SELECT DISTINCT cm2.user_id
+    FROM chat_conversation_members cm1
+    JOIN chat_conversation_members cm2 ON cm1.conversation_id = cm2.conversation_id
+    JOIN chat_conversations c ON c.id = cm1.conversation_id
+    WHERE c.type = 'direct'
+      AND c.archived = 0
+      AND cm1.user_id = ?
+      AND cm2.user_id != ?
+      AND cm1.left_at IS NULL
+      AND cm2.left_at IS NULL
+");
+$existingDmStmt->bind_param("ii", $current_user_id, $current_user_id);
+$existingDmStmt->execute();
+$existingDmUserIds = array_map('intval', array_column($existingDmStmt->get_result()->fetch_all(MYSQLI_ASSOC), 'user_id'));
+$existingDmStmt->close();
+
 // Fetch all users except current, sorted by same barangay first
 $query = "
     SELECT u.id, u.fname, u.lname, u.email, u.role, b.name as barangay_name,
@@ -67,6 +85,9 @@ $stmt->close();
                 $displayName = htmlspecialchars($user['fname'] . ' ' . $user['lname']);
                 $barangay = htmlspecialchars($user['barangay_name'] ?? 'No barangay');
                 $isSame = (bool)$user['same_barangay'];
+                $alreadyConnected = in_array((int)$user['id'], $existingDmUserIds, true);
+                $inactiveClass = $alreadyConnected ? 'user-item-disabled' : '';
+                $disabledAttr = $alreadyConnected ? 'disabled' : '';
                 // Barangay divider
                 if ($isSame && !$sameBarangayShown) {
                     $sameBarangayShown = true;
@@ -76,15 +97,18 @@ $stmt->close();
                     echo '<div class="barangay-divider">Other users</div>';
                 }
             ?>
-                <div class="user-item" data-user-id="<?= $user['id'] ?>" data-same="<?= $isSame ? '1' : '0' ?>">
+                <div class="user-item <?= $inactiveClass ?>" data-user-id="<?= $user['id'] ?>" data-same="<?= $isSame ? '1' : '0' ?>" data-already-connected="<?= $alreadyConnected ? '1' : '0' ?>">
                     <div class="user-info">
                         <div class="user-dot <?= $dotClass ?>"></div>
                         <div class="user-info2">
                             <span class="user-name"><?= $displayName ?></span>
                             <span class="user-barangay"><?= $barangay ?></span>
+                            <?php if ($alreadyConnected): ?>
+                                <!-- <span class="user-status">Already added</span> -->
+                            <?php endif; ?>
                         </div>
                     </div>
-                    <input type="checkbox" class="user-checkbox" data-user-id="<?= $user['id'] ?>">
+                    <input type="checkbox" class="user-checkbox" data-user-id="<?= $user['id'] ?>" <?= $disabledAttr ?>>
                 </div>
             <?php endforeach; ?>
         </div>

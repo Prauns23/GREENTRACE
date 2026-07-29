@@ -207,7 +207,33 @@ body {
 .dm-list {
   list-style: none;
   margin-top: 0;
-  padding: 0;
+  padding: 0 12px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c0c0c0 transparent;
+}
+
+.channel-list::-webkit-scrollbar,
+.dm-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.channel-list::-webkit-scrollbar-thumb,
+.dm-list::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+}
+
+.channel-list::-webkit-scrollbar-track,
+.dm-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dm-list {
+  max-height: 110px;
+}
+
+.channel-list {
+  max-height: 164px;
 }
 
 .channel-item,

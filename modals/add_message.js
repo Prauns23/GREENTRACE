@@ -13,11 +13,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Prevent clicks on already-connected users
+    document.querySelectorAll('.user-item').forEach(item => {
+        item.addEventListener('click', function (e) {
+            if (this.dataset.alreadyConnected === '1') {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    });
+
+    // Make the disabled row visually consistent for the whole item
+    document.querySelectorAll('.user-item-disabled').forEach(item => {
+        item.addEventListener('mousedown', function (e) {
+            if (this.dataset.alreadyConnected === '1') {
+                e.preventDefault();
+            }
+        });
+    });
+
     // Add button
     document.getElementById('addRecipientsBtn').addEventListener('click', function() {
         const checked = document.querySelectorAll('.user-checkbox:checked');
         if (checked.length === 0) {
-            alert('Please select at least one user.');
+            alert('Please select at least one available user.');
             return;
         }
 

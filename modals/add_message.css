@@ -108,6 +108,25 @@ body {
   background: #f7fafc;
 }
 
+.user-item-disabled {
+  opacity: 0.6;
+  background: #f8fafc;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.user-item-disabled:hover {
+  background: #f1f5f9;
+}
+
+.user-item-disabled .user-info,
+.user-item-disabled .user-info2,
+.user-item-disabled .user-name,
+.user-item-disabled .user-barangay,
+.user-item-disabled .user-status {
+  cursor: not-allowed;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -167,6 +186,16 @@ body {
   height: 18px;
   accent-color: #2e7d32;
   cursor: pointer;
+}
+
+.user-item-disabled .user-checkbox {
+  cursor: not-allowed;
+}
+
+.user-status {
+  font-size: 0.78rem;
+  color: #718096;
+  margin-top: 4px;
 }
 
 .modal-actions {
