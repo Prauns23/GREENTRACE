@@ -4,12 +4,12 @@ require_once '../config.php';
 
 header('Content-Type: application/json');
 
-// Must be logged in – FIXED
+// Must be logged in
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['error' => 'Not logged in']);
     exit;
 }
-$user_id = $_SESSION['user_id']; // ← ADD THIS LINE
+$user_id = $_SESSION['user_id'];
 
 // Get and sanitize input
 $name = trim($_POST['name'] ?? '');
@@ -60,8 +60,29 @@ try {
     $memberStmt = $conn->prepare("INSERT INTO chat_conversation_members (conversation_id, user_id, member_role) VALUES (?, ?, 'owner')");
     $memberStmt->bind_param("ii", $conversation_id, $user_id);
     if (!$memberStmt->execute()) {
-        throw new Exception('Failed to add member: ' . $memberStmt->error);
+        throw new Exception('Failed to add owner: ' . $memberStmt->error);
     }
+
+    // Visibility public, add all active users as members
+    if ($visibility === 'public') {
+        // Fetch all active users except the creator
+        $usersStmt = $conn->prepare("SELECT id FROM users_tbl WHERE id != ? AND archived = 0");
+        $usersStmt->bind_param("i", $user_id);
+        $usersStmt->execute();
+        $users = $usersStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $usersStmt->close();
+
+        if (!empty($users)) {
+            // Prepare batch insert members 
+            $batchInsert = $conn->prepare("INSERT INTO chat_conversation_members(conversation_id, user_id, member_role) VALUES (?, ?,'member')");
+            foreach ($users as $u) {
+                $batchInsert->bind_param("ii", $conversation_id, $u['id']);
+                $batchInsert->execute();
+            }
+            $batchInsert->close();
+        }
+    }
+
     $conn->commit();
     echo json_encode([
         'success' => true,
@@ -69,7 +90,8 @@ try {
         'channel' => [
             'id' => $conversation_id,
             'name' => $name,
-            'slug' => $slug
+            'slug' => $slug,
+            'visibility' => $visibility
         ]
     ]);
 } catch (Exception $e) {

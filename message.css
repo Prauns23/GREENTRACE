@@ -430,6 +430,22 @@ body {
   border-radius: 25px;
   font-size: 0.8rem;
   font-weight: 500;
+  display: inline-block;
+}
+
+.badge-volunteer {
+  background: #cbf0cd;
+  color: #2e7d32;
+}
+
+.badge-admin {
+  background: #3f3f3f;
+  color: #ffffff;
+}
+
+.badge-super-admin {
+  background: #2e7d32;
+  color: #ffffff;
 }
 
 .chat-header #chatMembers {

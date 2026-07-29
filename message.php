@@ -39,16 +39,48 @@ $channelStmt->execute();
 $channels = $channelStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // For now, keep dummy DMs – we'll replace later with real DMs
-$directMessages = [
-    ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@gmail.com', 'address' => 'Nagbalayong, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
-    ['id' => 2, 'name' => 'James Dean', 'email' => 'james.dean@gmail.com', 'address' => 'Poblacion, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
-];
+// $directMessages = [
+//     ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@gmail.com', 'address' => 'Nagbalayong, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
+//     ['id' => 2, 'name' => 'James Dean', 'email' => 'james.dean@gmail.com', 'address' => 'Poblacion, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
+// ];
 
-// Dummy DMs (will be fetched from DB)
-$directMessages = [
-    ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@gmail.com', 'address' => 'Nagbalayong, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
-    ['id' => 2, 'name' => 'James Dean', 'email' => 'james.dean@gmail.com', 'address' => 'Poblacion, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
-];
+// $directMessages = [
+//     ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@gmail.com', 'address' => 'Nagbalayong, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
+//     ['id' => 2, 'name' => 'James Dean', 'email' => 'james.dean@gmail.com', 'address' => 'Poblacion, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
+// ];
+
+// Fetch direct message conversations
+$dmQuery = "
+    SELECT 
+        c.id,
+        u.id as user_id,
+        u.email,
+        CONCAT(u.fname, ' ', u.lname) as name,
+        b.name as address,
+        u.role,
+        (SELECT content FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+        (SELECT created_at FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_time
+    FROM chat_conversations c
+    JOIN chat_conversation_members cm ON c.id = cm.conversation_id
+    JOIN users_tbl u ON u.id = cm.user_id
+    LEFT JOIN barangays b ON u.barangay_id = b.id
+    WHERE c.type = 'direct' 
+      AND c.archived = 0
+      AND cm.user_id != ?
+      AND cm.left_at IS NULL
+      AND EXISTS (
+          SELECT 1 FROM chat_conversation_members cm2 
+          WHERE cm2.conversation_id = c.id 
+          AND cm2.user_id = ?
+          AND cm2.left_at IS NULL
+      )
+    ORDER BY last_message_time DESC
+";
+
+$dmStmt = $conn->prepare($dmQuery);
+$dmStmt->bind_param("ii", $user_id, $user_id);
+$dmStmt->execute();
+$directMessages = $dmStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 include 'header.php';
 ?>
@@ -103,12 +135,20 @@ include 'header.php';
                 <div class="section-header">Direct Messages</div>
                 <ul class="dm-list">
                     <?php foreach ($directMessages as $dm): ?>
-                        <li class="dm-item" data-type="dm" data-id="<?= $dm['id'] ?>" data-email="<?= htmlspecialchars($dm['email']) ?>" data-address="<?= htmlspecialchars($dm['address']) ?>" data-role="<?= htmlspecialchars($dm['role']) ?>">
-                            <span class="dm-name"><?= htmlspecialchars($dm['name']) ?></span>
-                            <span class="dm-time"><?= $dm['time'] ?></span>
-                            <span class="dm-last-msg"><?= htmlspecialchars($dm['last_message']) ?></span>
+                        <li class="dm-item" data-type="dm" data-id="<?= $dm['id'] ?>"
+                            data-email="<?= htmlspecialchars($dm['email'] ?? '') ?>"
+                            data-address="<?= htmlspecialchars($dm['address'] ?? '') ?>"
+                            data-role="<?= htmlspecialchars($dm['role'] ?? '') ?>">
+                            <span class="dm-name"><?= htmlspecialchars($dm['name'] ?? 'Unknown') ?></span>
+                            <span class="dm-time"><?= $dm['last_message_time'] ? date('g:i A', strtotime($dm['last_message_time'])) : '' ?></span>
+                            <span class="dm-last-msg"><?= htmlspecialchars($dm['last_message'] ?? 'No messages yet') ?></span>
                         </li>
                     <?php endforeach; ?>
+                    <?php if (empty($directMessages)): ?>
+                        <li class="dm-item" style="text-align: center; color: #a0aec0; padding: 12px;">
+                            No direct messages yet.
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
 

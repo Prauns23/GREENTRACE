@@ -67,10 +67,10 @@ $stmt->close();
                 $displayName = htmlspecialchars($user['fname'] . ' ' . $user['lname']);
                 $barangay = htmlspecialchars($user['barangay_name'] ?? 'No barangay');
                 $isSame = (bool)$user['same_barangay'];
-                // Add a divider before the first user from a different barangay
+                // Barangay divider
                 if ($isSame && !$sameBarangayShown) {
                     $sameBarangayShown = true;
-                    echo '<div class="barangay-divider">From your barangay</div>';
+                    echo '<div class="barangay-divider">People you may know</div>';
                 } elseif (!$isSame && $sameBarangayShown && !isset($differentShown)) {
                     $differentShown = true;
                     echo '<div class="barangay-divider">Other users</div>';
