@@ -2,6 +2,9 @@
 require_once '../init_session.php';
 require_once '../config.php';
 
+// Ensure MySQL returns correct timezone
+$conn->query("SET time_zone = '+08:00'");
+
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {

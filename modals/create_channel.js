@@ -38,15 +38,9 @@ document
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          if (typeof parent.showToast === "function") {
-            parent.showToast(data.message, 3000, "success");
-          } else {
-            alert(data.message);
-          }
-          if (typeof parent.hideFloating === "function") {
-            parent.hideFloating();
-          }
-          parent.location.reload();
+          const message = encodeURIComponent("Channel created successfully!");
+          parent.location.href =
+            "../message.php?toast=" + message + "&type=success";
         } else {
           alert(data.error || "Failed to create channel.");
           btn.disabled = false;

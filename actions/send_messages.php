@@ -2,7 +2,9 @@
 error_reporting(0);
 require_once '../config.php';
 require_once '../init_session.php';
-// require_once '../notifications_helper.php';
+
+// Set PHP timezone (if not already set in config)
+date_default_timezone_set('Asia/Manila');
 
 header('Content-Type: application/json');
 
@@ -30,8 +32,56 @@ if ($check->get_result()->num_rows === 0) {
 }
 $check->close();
 
-// Insert message
-$stmt = $conn->prepare("INSERT INTO chat_messages (conversation_id, sender_id, content, message_type) VALUES (?, ?, ?, 'text')");
+// ----- RATE LIMIT -----
+$limit = 10;
+$window = 60;
+
+$stmt = $conn->prepare("
+    SELECT COUNT(*) as cnt 
+    FROM chat_messages 
+    WHERE conversation_id = ? 
+      AND sender_id = ? 
+      AND created_at > DATE_SUB(NOW(), INTERVAL ? SECOND)
+");
+$stmt->bind_param("iii", $conversation_id, $user_id, $window);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
+$count = $result['cnt'] ?? 0;
+$stmt->close();
+
+if ($count >= $limit) {
+    $oldestStmt = $conn->prepare("
+        SELECT created_at 
+        FROM chat_messages 
+        WHERE conversation_id = ? 
+          AND sender_id = ? 
+        ORDER BY created_at ASC 
+        LIMIT 1 OFFSET ? 
+    ");
+    $offset = $limit - 1;
+    $oldestStmt->bind_param("iii", $conversation_id, $user_id, $offset);
+    $oldestStmt->execute();
+    $oldestRow = $oldestStmt->get_result()->fetch_assoc();
+    $oldestStmt->close();
+
+    if ($oldestRow) {
+        $oldestTime = strtotime($oldestRow['created_at']);
+        $retryAfter = max(1, $oldestTime + $window - time());
+    } else {
+        $retryAfter = $window;
+    }
+
+    echo json_encode([
+        'error' => 'You are sending messages too quickly. Please wait.',
+        'retry_after' => $retryAfter,
+        'code' => 'rate_limited'
+    ]);
+    exit;
+}
+// ----- END RATE LIMIT -----
+
+// Insert message — let MySQL handle the timestamp
+$stmt = $conn->prepare("INSERT INTO chat_messages (conversation_id, sender_id, content, message_type, created_at) VALUES (?, ?, ?, 'text', NOW())");
 $stmt->bind_param("iis", $conversation_id, $user_id, $content);
 if (!$stmt->execute()) {
     echo json_encode(['error' => 'Failed to send message']);
@@ -39,6 +89,14 @@ if (!$stmt->execute()) {
 }
 $message_id = $conn->insert_id;
 $stmt->close();
+
+// Get the inserted timestamp from MySQL (so we're consistent)
+$getTime = $conn->prepare("SELECT created_at FROM chat_messages WHERE id = ?");
+$getTime->bind_param("i", $message_id);
+$getTime->execute();
+$timeResult = $getTime->get_result()->fetch_assoc();
+$createdAt = $timeResult['created_at'];
+$getTime->close();
 
 // Update conversation updated_at
 $update = $conn->prepare("UPDATE chat_conversations SET updated_at = NOW() WHERE id = ?");
@@ -55,7 +113,6 @@ $userStmt->close();
 
 $sender_name = $user['fname'] . ' ' . $user['lname'];
 
-// Return success (NO extra output after this)
 echo json_encode([
     'success' => true,
     'message' => [
@@ -63,8 +120,7 @@ echo json_encode([
         'sender_id' => $user_id,
         'sender_name' => $sender_name,
         'content' => $content,
-        'created_at' => date('Y-m-d H:i:s'),
+        'created_at' => $createdAt, // Use the timestamp from MySQL
         'is_self' => true
     ]
 ]);
-// No closing PHP tag to avoid accidental whitespace

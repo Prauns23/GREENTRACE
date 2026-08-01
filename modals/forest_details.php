@@ -16,6 +16,8 @@ $stmt->bind_param("i", $id);
 $stmt->execute();
 $forest = $stmt->get_result()->fetch_assoc();
 
+
+
 if (!$forest) {
     die('Forest area not found');
 }

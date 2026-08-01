@@ -23,9 +23,40 @@ $userStmt->close();
 // Fetch real channels from database
 $channels = [];
 $channelStmt = $conn->prepare("
-    SELECT c.id, c.name, c.slug, c.description, 
-           (SELECT content FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
-           (SELECT created_at FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_time
+    SELECT 
+        c.id, 
+        c.name, 
+        c.slug, 
+        c.description,
+        (
+            SELECT content 
+            FROM chat_messages 
+            WHERE conversation_id = c.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ) as last_message,
+        (
+            SELECT created_at 
+            FROM chat_messages 
+            WHERE conversation_id = c.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ) as last_message_time,
+        (
+            SELECT CONCAT(u.fname, ' ', u.lname) 
+            FROM chat_messages m
+            LEFT JOIN users_tbl u ON m.sender_id = u.id
+            WHERE m.conversation_id = c.id 
+            ORDER BY m.created_at DESC 
+            LIMIT 1
+        ) as last_sender_name,
+        (
+            SELECT sender_id 
+            FROM chat_messages 
+            WHERE conversation_id = c.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ) as last_sender_id
     FROM chat_conversations c
     JOIN chat_conversation_members cm ON c.id = cm.conversation_id
     WHERE c.type = 'channel' 
@@ -119,11 +150,34 @@ include 'header.php';
                 <div class="section-header">Channels</div>
                 <div class="channel-card">
                     <ul class="channel-list">
-                        <?php foreach ($channels as $channel): ?>
+                        <?php foreach ($channels as $channel):
+                            $lastSender = $channel['last_sender_name'] ?? '';
+                            $lastMsg = $channel['last_message'] ?? 'No messages yet';
+
+                            // Format the last message with sender name
+                            if ($lastMsg && $lastSender) {
+                                $isSelf = ($channel['last_sender_id'] == $user_id);
+                                $senderDisplay = $isSelf ? 'You' : $lastSender;
+                                $lastMsgDisplay = $senderDisplay . ': ' . $lastMsg;
+                            } else {
+                                $lastMsgDisplay = 'No messages yet';
+                            }
+
+                            // 🔧 Fix: Use DateTime with correct timezone
+                            $lastTime = '';
+                            if ($channel['last_message_time']) {
+                                try {
+                                    $dt = new DateTime($channel['last_message_time'], new DateTimeZone('Asia/Manila'));
+                                    $lastTime = $dt->format('g:i A');
+                                } catch (Exception $e) {
+                                    $lastTime = date('g:i A', strtotime($channel['last_message_time']));
+                                }
+                            }
+                        ?>
                             <li class="channel-item" data-type="channel" data-id="<?= $channel['id'] ?>">
                                 <span class="channel-name"># <?= htmlspecialchars($channel['name']) ?></span>
-                                <span class="channel-time"><?= $channel['last_message_time'] ? date('g:i A', strtotime($channel['last_message_time'])) : '' ?></span>
-                                <span class="channel-last-msg"><?= htmlspecialchars($channel['last_message'] ?? 'No messages yet') ?></span>
+                                <span class="channel-time"><?= $lastTime ?></span>
+                                <span class="channel-last-msg"><?= htmlspecialchars($lastMsgDisplay) ?></span>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -134,13 +188,24 @@ include 'header.php';
             <div class="sidebar-section directMessages">
                 <div class="section-header">Direct Messages</div>
                 <ul class="dm-list">
-                    <?php foreach ($directMessages as $dm): ?>
+                    <?php foreach ($directMessages as $dm):
+                        // 🔧 Fix: Use DateTime with correct timezone
+                        $dmLastTime = '';
+                        if ($dm['last_message_time']) {
+                            try {
+                                $dt = new DateTime($dm['last_message_time'], new DateTimeZone('Asia/Manila'));
+                                $dmLastTime = $dt->format('g:i A');
+                            } catch (Exception $e) {
+                                $dmLastTime = date('g:i A', strtotime($dm['last_message_time']));
+                            }
+                        }
+                    ?>
                         <li class="dm-item" data-type="dm" data-id="<?= $dm['id'] ?>"
                             data-email="<?= htmlspecialchars($dm['email'] ?? '') ?>"
                             data-address="<?= htmlspecialchars($dm['address'] ?? '') ?>"
                             data-role="<?= htmlspecialchars($dm['role'] ?? '') ?>">
                             <span class="dm-name"><?= htmlspecialchars($dm['name'] ?? 'Unknown') ?></span>
-                            <span class="dm-time"><?= $dm['last_message_time'] ? date('g:i A', strtotime($dm['last_message_time'])) : '' ?></span>
+                            <span class="dm-time"><?= $dmLastTime ?></span>
                             <span class="dm-last-msg"><?= htmlspecialchars($dm['last_message'] ?? 'No messages yet') ?></span>
                         </li>
                     <?php endforeach; ?>
@@ -213,5 +278,9 @@ include 'header.php';
 </div>
 
 <script src="message.js"></script>
+<script>
+    // Pass current user ID to JavaScript for "You" detection
+    const currentUserId = <?= json_encode($user_id) ?>;
+</script>
 
 <?php include 'footer.php'; ?>

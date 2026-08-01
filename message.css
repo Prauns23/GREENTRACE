@@ -274,9 +274,11 @@ body {
   display: block;
   font-size: 0.8rem;
   color: #718096;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding: 5px 0;
 }
 
 .sidebar-user {
@@ -567,6 +569,21 @@ body {
 
 .chat-input button:hover {
   background: #1b5e20;
+}
+
+.chat-input button:disabled {
+  background: #a0a0a0 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  transform: none !important;
+  box-shadow: none !important;
+  font-family: "Inter", sans-serif;
+}
+
+.chat-input button:disabled:hover {
+  background: #a0a0a0 !important;
+  transform: none !important;
+  font-family: "Inter", sans-serif;
 }
 
 /* Modals */
