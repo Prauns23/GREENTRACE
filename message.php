@@ -120,7 +120,7 @@ include 'header.php';
                 <div class="channel-card">
                     <ul class="channel-list">
                         <?php foreach ($channels as $channel): ?>
-                            <li class="channel-item" data-type="channel" data-id="#<?= htmlspecialchars($channel['slug']) ?>">
+                            <li class="channel-item" data-type="channel" data-id="<?= $channel['id'] ?>">
                                 <span class="channel-name"># <?= htmlspecialchars($channel['name']) ?></span>
                                 <span class="channel-time"><?= $channel['last_message_time'] ? date('g:i A', strtotime($channel['last_message_time'])) : '' ?></span>
                                 <span class="channel-last-msg"><?= htmlspecialchars($channel['last_message'] ?? 'No messages yet') ?></span>
