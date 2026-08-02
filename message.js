@@ -40,13 +40,27 @@ function getSenderName(msg) {
   return msg.sender_name || "Unknown";
 }
 
+function renderEmptyState() {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="chat-empty-state">
+      <h3>Start a conversation</h3>
+      <p>Plant the first message here and let your ideas grow in a greener community.</p>
+    </div>
+  `;
+}
+
 function formatDisplayTime(timestamp) {
   if (!timestamp) return "";
 
   const raw = String(timestamp).trim();
   if (!raw) return "";
 
-  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/);
+  const match = raw.match(
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/,
+  );
   if (match) {
     const hourValue = parseInt(match[4], 10);
     const minuteValue = parseInt(match[5], 10);
@@ -73,19 +87,48 @@ function formatDisplayTime(timestamp) {
 //
 function renderMessages(messages) {
   const container = document.getElementById("chatMessages");
+  if (!container) return;
+
+  if (!messages || messages.length === 0) {
+    renderEmptyState();
+    return;
+  }
+
   container.innerHTML = "";
+
+  // Find the latest message sent by the current user
+  let latestSelfMessageId = null;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].is_self) {
+      latestSelfMessageId = messages[i].id;
+      break;
+    }
+  }
+
   messages.forEach((msg) => {
     const isSelf = msg.is_self ? "self" : "";
     const senderName = getSenderName(msg);
     const avatar = getInitials(senderName);
+
+    // Show read receipt only on the latest self message
+    let readReceipt = "";
+    if (msg.is_self && msg.id === latestSelfMessageId) {
+      readReceipt = msg.is_read
+        ? `<span class="read-receipt">Read</span>`
+        : `<span class="read-receipt">Sent</span>`;
+    }
+
     const div = document.createElement("div");
     div.className = `message-item ${isSelf}`;
     div.innerHTML = `
             <div class="message-avatar">${avatar}</div>
-            <div class="message-content">
-                <div class="message-sender">${senderName}</div>
-                <div class="message-text">${msg.content}</div>
-                <div class="message-time">${formatDisplayTime(msg.created_at)}</div>
+            <div class="message-wrapper">
+                <div class="message-content">
+                    <div class="message-sender">${senderName}</div>
+                    <div class="message-text">${msg.content}</div>
+                    <div class="message-time">${new Date(msg.created_at).toLocaleString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div>
+                </div>
+                ${readReceipt ? `<div class="message-footer">${readReceipt}</div>` : ""}
             </div>
         `;
     container.appendChild(div);
@@ -114,6 +157,7 @@ function fetchMessages(isInitial = false) {
         if (messages.length === 0) {
           hasMoreMessages = false;
           isLoading = false;
+          renderMessages([]);
           return;
         }
 
@@ -133,6 +177,9 @@ function fetchMessages(isInitial = false) {
         if (isInitial) {
           const container = document.getElementById("chatMessages");
           container.scrollTop = container.scrollHeight;
+
+          // Mark messages as read after loading
+          setTimeout(markMessageAsRead, 500);
         }
         isLoading = false;
       } else {
@@ -172,13 +219,14 @@ function loadConversation(type, id) {
   document.getElementById("chatWindow").style.display = "flex";
 
   // Clear messages
-  document.getElementById("chatMessages").innerHTML = "";
+  renderMessages([]);
 
   // Update header
   const chatTitle = document.getElementById("chatTitle");
   const chatAddress = document.getElementById("chatAddress");
   const chatRoleBadge = document.getElementById("chatRoleBadge");
   const chatAvatarIcon = document.getElementById("chatAvatarIcon");
+  const chatMenuBtn = document.getElementById("chatMenuBtn");
 
   if (type === "channel") {
     // Get channel name from the clicked item
@@ -186,10 +234,21 @@ function loadConversation(type, id) {
     const displayName = item
       ? item.querySelector(".channel-name").textContent
       : "Channel";
+    const description = item ? item.dataset.description || "Public" : "Public";
+    const category = item ? item.dataset.category || "" : "";
+
     chatTitle.textContent = displayName;
-    chatAddress.textContent = "Public";
-    chatRoleBadge.style.display = "none";
+    chatAddress.textContent = description;
     chatAvatarIcon.textContent = "group";
+
+    if (category) {
+      chatRoleBadge.textContent =
+        category.charAt(0).toUpperCase() + category.slice(1);
+      chatRoleBadge.className = "role-badge badge-category";
+      chatRoleBadge.style.display = "inline-block";
+    } else {
+      chatRoleBadge.style.display = "none";
+    }
   } else {
     // DM
     const item = document.querySelector(`.dm-item[data-id="${id}"]`);
@@ -231,6 +290,8 @@ function loadConversation(type, id) {
 
   // Load first batch
   fetchMessages(true);
+
+  startMessageRefresh();
 }
 
 //
@@ -280,8 +341,10 @@ function sendMessage() {
         container.scrollTop = container.scrollHeight;
         input.value = "";
         sendBtn.disabled = false;
+
+        // Refresh to update read statuses of other messages
+        setTimeout(refreshMessages, 1000);
       } else {
-        // Check for rate limiting
         // Check for rate limiting
         if (data.code === "rate_limited" && data.retry_after) {
           const waitSeconds = data.retry_after;
@@ -358,104 +421,222 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-// 
+//
 // 9. Live updates for sidebar
-// 
+//
 
 let sidebarPollingInterval = null;
 
 function startSidebarPolling() {
-    if (sidebarPollingInterval) {
-        clearInterval(sidebarPollingInterval);
-    }
-    // Poll every 5 seconds
-    sidebarPollingInterval = setInterval(fetchSidebarUpdates, 5000);
+  if (sidebarPollingInterval) {
+    clearInterval(sidebarPollingInterval);
+  }
+  // Poll every 5 seconds
+  sidebarPollingInterval = setInterval(fetchSidebarUpdates, 5000);
 }
 
 function stopSidebarPolling() {
-    if (sidebarPollingInterval) {
-        clearInterval(sidebarPollingInterval);
-        sidebarPollingInterval = null;
-    }
+  if (sidebarPollingInterval) {
+    clearInterval(sidebarPollingInterval);
+    sidebarPollingInterval = null;
+  }
 }
 
 function fetchSidebarUpdates() {
-    fetch('actions/get_sidebar_updates.php')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateChannelList(data.channels);
-                updateDMList(data.dms);
-            }
-        })
-        .catch(err => console.error('Error fetching sidebar updates:', err));
+  fetch("actions/get_sidebar_updates.php")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        updateChannelList(data.channels);
+        updateDMList(data.dms);
+      }
+    })
+    .catch((err) => console.error("Error fetching sidebar updates:", err));
 }
 
 function updateChannelList(channels) {
-    const channelItems = document.querySelectorAll('.channel-item');
-    channelItems.forEach(item => {
-        const id = item.dataset.id;
-        const channelData = channels.find(c => c.id == id);
-        if (channelData) {
-            // Update last message
-            const lastMsgSpan = item.querySelector('.channel-last-msg');
-            const timeSpan = item.querySelector('.channel-time');
-            
-            let displayMsg = 'No messages yet';
-            if (channelData.last_message && channelData.last_sender_name) {
-                const isSelf = (channelData.last_sender_id == currentUserId);
-                const senderDisplay = isSelf ? 'You' : channelData.last_sender_name;
-                displayMsg = senderDisplay + ': ' + channelData.last_message;
-            }
-            lastMsgSpan.textContent = displayMsg;
-            
-            // Update time
-            if (channelData.last_message_time) {
-                timeSpan.textContent = formatDisplayTime(channelData.last_message_time);
-            }
-        }
-    });
+  const channelItems = document.querySelectorAll(".channel-item");
+  channelItems.forEach((item) => {
+    const id = item.dataset.id;
+    const channelData = channels.find((c) => c.id == id);
+    if (channelData) {
+      // Update last message
+      const lastMsgSpan = item.querySelector(".channel-last-msg");
+      const timeSpan = item.querySelector(".channel-time");
+
+      let displayMsg = "No messages yet";
+      if (channelData.last_message && channelData.last_sender_name) {
+        const isSelf = channelData.last_sender_id == currentUserId;
+        const senderDisplay = isSelf ? "You" : channelData.last_sender_name;
+        displayMsg = senderDisplay + ": " + channelData.last_message;
+      }
+      lastMsgSpan.textContent = displayMsg;
+
+      // Update time
+      if (channelData.last_message_time) {
+        timeSpan.textContent = formatDisplayTime(channelData.last_message_time);
+      }
+    }
+  });
 }
 
 function updateDMList(dms) {
-    const dmItems = document.querySelectorAll('.dm-item');
-    dmItems.forEach(item => {
-        const id = item.dataset.id;
-        const dmData = dms.find(d => d.id == id);
-        if (dmData) {
-            // Update last message
-            const lastMsgSpan = item.querySelector('.dm-last-msg');
-            const timeSpan = item.querySelector('.dm-time');
-            
-            let displayMsg = 'No messages yet';
-            if (dmData.last_message && dmData.last_sender_name) {
-                const isSelf = (dmData.last_sender_id == currentUserId);
-                const senderDisplay = isSelf ? 'You' : dmData.last_sender_name;
-                displayMsg = senderDisplay + ': ' + dmData.last_message;
-            }
-            lastMsgSpan.textContent = displayMsg;
-            
-            // Update time
-            if (dmData.last_message_time) {
-                timeSpan.textContent = formatDisplayTime(dmData.last_message_time);
-            }
-        }
-    });
+  const dmItems = document.querySelectorAll(".dm-item");
+  dmItems.forEach((item) => {
+    const id = item.dataset.id;
+    const dmData = dms.find((d) => d.id == id);
+    if (dmData) {
+      // Update last message
+      const lastMsgSpan = item.querySelector(".dm-last-msg");
+      const timeSpan = item.querySelector(".dm-time");
+
+      let displayMsg = "No messages yet";
+      if (dmData.last_message && dmData.last_sender_name) {
+        const isSelf = dmData.last_sender_id == currentUserId;
+        const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
+        displayMsg = senderDisplay + ": " + dmData.last_message;
+      }
+      lastMsgSpan.textContent = displayMsg;
+
+      // Update time
+      if (dmData.last_message_time) {
+        timeSpan.textContent = formatDisplayTime(dmData.last_message_time);
+      }
+    }
+  });
 }
 
-// 
+//
 // 10. Start polling when page loads
-// 
+//
 
 // Add to the existing DOMContentLoaded listener
-document.addEventListener('DOMContentLoaded', function() {
-    // ... existing code ...
-    
-    // Start sidebar polling
-    startSidebarPolling();
+document.addEventListener("DOMContentLoaded", function () {
+  // ... existing code ...
+
+  // Start sidebar polling
+  startSidebarPolling();
 });
 
 // Stop polling when navigating away (optional)
-window.addEventListener('beforeunload', function() {
-    stopSidebarPolling();
+window.addEventListener("beforeunload", function () {
+  stopSidebarPolling();
+  stopMessageRefresh();
 });
+
+//
+// 11. Read Receipts
+//
+
+let lastReadMessageId = null;
+
+function markMessageAsRead() {
+  if (!currentConversation || !allMessages.length) return;
+
+  // Find all unread messages (not from current user)
+  const unreadMessages = allMessages.filter(
+    (msg) => !msg.is_self && !msg.is_read,
+  );
+
+  if (!unreadMessages.length) return;
+
+  // Get all unread message IDs
+  const unreadIds = unreadMessages.map((msg) => msg.id);
+
+  fetch("actions/mark_message_read.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: `message_ids=${JSON.stringify(unreadIds)}&conversation_id=${currentConversation.id}`,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // Update local state for all unread messages
+        unreadMessages.forEach((msg) => {
+          const found = allMessages.find((m) => m.id === msg.id);
+          if (found) found.is_read = true;
+        });
+        renderMessages(allMessages);
+      }
+    })
+    .catch((err) => console.error("Error marking messages as read:", err));
+}
+
+//
+// 12. Message refresh for read receipts
+//
+
+let messageRefreshInterval = null;
+
+function refreshMessages() {
+  if (!currentConversation) return;
+
+  const params = new URLSearchParams();
+  params.append("conversation_id", currentConversation.id);
+  params.append("limit", MESSAGES_PER_PAGE);
+
+  fetch("actions/get_messages.php?" + params.toString())
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success && data.messages.length > 0) {
+        const newMessages = data.messages;
+
+        // Merge and deduplicate messages
+        const mergedMessages = mergeMessages(allMessages, newMessages);
+        allMessages = mergedMessages;
+
+        // Update oldestTimestamp
+        if (newMessages.length > 0) {
+          oldestTimestamp = newMessages[0].created_at;
+        }
+
+        renderMessages(allMessages);
+      }
+    })
+    .catch((err) => console.error("Error refreshing messages:", err));
+}
+
+function mergeMessages(existing, newMessages) {
+  const existingIds = new Set(existing.map((m) => m.id));
+  const merged = [...existing];
+
+  // Add new messages that don't exist
+  for (const msg of newMessages) {
+    if (!existingIds.has(msg.id)) {
+      merged.push(msg);
+    } else {
+      // Update existing message (for read status changes)
+      const index = merged.findIndex((m) => m.id === msg.id);
+      if (index !== -1) {
+        merged[index] = msg;
+      }
+    }
+  }
+
+  // Sort by created_at ascending
+  merged.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  return merged;
+}
+
+function startMessageRefresh() {
+  if (messageRefreshInterval) {
+    clearInterval(messageRefreshInterval);
+  }
+  // Refresh messages every 10 seconds to update read receipts
+
+  messageRefreshInterval = setInterval(() => {
+    if (currentConversation && !isLoading) {
+      refreshMessages();
+    }
+  }, 10000);
+}
+
+function stopMessageRefresh() {
+  if (messageRefreshInterval) {
+    clearInterval(messageRefreshInterval);
+    messageRefreshInterval = null;
+  }
+}

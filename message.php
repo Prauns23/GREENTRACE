@@ -28,6 +28,7 @@ $channelStmt = $conn->prepare("
         c.name, 
         c.slug, 
         c.description,
+        c.category,
         (
             SELECT content 
             FROM chat_messages 
@@ -174,7 +175,11 @@ include 'header.php';
                                 }
                             }
                         ?>
-                            <li class="channel-item" data-type="channel" data-id="<?= $channel['id'] ?>">
+                            <li class="channel-item" 
+                                data-type="channel" 
+                                data-id="<?= $channel['id'] ?>" 
+                                data-description="<?=  htmlspecialchars($channel['description'] ?? 'Public') ?>"
+                                data-category="<?= htmlspecialchars($channel['category'] ?? 'general')?>">
                                 <span class="channel-name"># <?= htmlspecialchars($channel['name']) ?></span>
                                 <span class="channel-time"><?= $lastTime ?></span>
                                 <span class="channel-last-msg"><?= htmlspecialchars($lastMsgDisplay) ?></span>

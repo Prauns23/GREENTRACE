@@ -15,33 +15,44 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $conversation_id = (int)($_GET['conversation_id'] ?? 0);
 $limit = (int)($_GET['limit'] ?? 6);
-$before = $_GET['before'] ?? null; //Time Stamp (2026-06-29 10:00:00)
+$before = $_GET['before'] ?? null;
 
 if (!$conversation_id) {
     echo json_encode(['error' => 'Invalid conversation']);
     exit;
 }
 
-// Verify user is a member of this conversation
+// Verify user is a member
 $check = $conn->prepare("SELECT id FROM chat_conversation_members WHERE conversation_id = ? AND user_id = ? AND left_at IS NULL");
-$check->bind_param("ii",  $conversation_id, $user_id);
+$check->bind_param("ii", $conversation_id, $user_id);
 $check->execute();
 if ($check->get_result()->num_rows === 0) {
     echo json_encode(['error' => 'Access denied']);
     exit;
 }
-
 $check->close();
 
-// Build quert
-
-$sql = "SELECT m.*, u.fname, u.lname
-        FROM chat_messages m
-        LEFT JOIN users_tbl u ON m.sender_id = u.id
-        WHERE m.conversation_id = ? AND m.archived = 0
-        ";
-$params = [$conversation_id];
-$types = "i";
+// Build query with correct read status logic
+$sql = "SELECT 
+    m.*, 
+    u.fname, 
+    u.lname,
+    CASE 
+        WHEN m.sender_id = ? THEN
+            -- For messages I sent: check if any OTHER user has read it
+            (SELECT COUNT(*) > 0 FROM chat_message_reads 
+             WHERE message_id = m.id AND user_id != ?)
+        ELSE
+            -- For messages from others: check if I have read it
+            (SELECT COUNT(*) > 0 FROM chat_message_reads 
+             WHERE message_id = m.id AND user_id = ?)
+    END as is_read
+FROM chat_messages m
+LEFT JOIN users_tbl u ON m.sender_id = u.id
+WHERE m.conversation_id = ? AND m.archived = 0
+";
+$params = [$user_id, $user_id, $user_id, $conversation_id];
+$types = "iiii";
 
 if ($before) {
     $sql .= " AND m.created_at < ?";
@@ -57,6 +68,7 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
+
 $messages = [];
 while ($row = $result->fetch_assoc()) {
     $row['sender_name'] = $row['sender_id'] ? ($row['fname'] . ' ' . $row['lname']) : 'System';
@@ -69,4 +81,3 @@ $stmt->close();
 $messages = array_reverse($messages);
 
 echo json_encode(['success' => true, 'messages' => $messages]);
-?>
