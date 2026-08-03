@@ -345,7 +345,7 @@ body {
 }
 
 .placeholder-content h3 {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: #6a8d6a;
   font-weight: 600;
 }
@@ -354,7 +354,7 @@ body {
   margin-top: 8px;
   max-width: 400px;
   font-weight: 400;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .chat-window {
@@ -417,6 +417,51 @@ body {
   justify-content: center;
   color: #3f3f3f;
   font-size: 0.9rem;
+}
+
+.chat-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.chat-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #ffff;
+  border: 1px solid #e2e8f0;
+  min-width: 180px;
+  z-index: 100;
+  overflow: hidden;
+  padding: 4px 0;
+  border-radius: 12px;
+}
+
+.chat-menu-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 0.9rem;
+  font-family: "Inter", sans-serif;
+  color: #1a202c;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chat-menu-dropdown button:hover {
+  background: #f7fafc;
+}
+
+.chat-menu-dropdown button:not(:last-child) {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.chat-menu-dropdown button:active {
+  background: #edf2f7;
 }
 
 .chat-avatar .material-symbols-rounded {
@@ -524,9 +569,9 @@ body {
 }
 
 .chat-empty-state h3 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #2e7d32b7;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2e7d32;
   margin-bottom: 6px;
 }
 
@@ -535,8 +580,15 @@ body {
   line-height: 1.6;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #64748bb7;
+  color: #64748b;
 }
+
+.chat-empty-state img {
+  height: 200px;
+  width: 200px;
+  padding-right: 32px;
+}
+
 .message-item {
   display: flex;
   gap: 12px;
@@ -663,6 +715,41 @@ body {
   padding: 6px 0;
   border-radius: 10px;
   /* background: #e8f5e9; */
+}
+
+/* Date divider */
+.date-divider {
+  text-align: center;
+  color: #718096;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 16px 0 12px 0;
+  margin: 4px 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.date-divider::before,
+.date-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+  max-width: 120px;
+}
+
+.date-divider::after {
+  margin-left: 8px;
+}
+
+.date-divider span {
+  background: #f7fafc;
+  padding: 4px 16px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
 }
 
 /* For self messages, align footer to the right */

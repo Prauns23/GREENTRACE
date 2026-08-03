@@ -46,6 +46,7 @@ function renderEmptyState() {
 
   container.innerHTML = `
     <div class="chat-empty-state">
+      <img src="components/icons/in_reallife.png"></img>
       <h3>Start a conversation</h3>
       <p>Plant the first message here and let your ideas grow in a greener community.</p>
     </div>
@@ -105,10 +106,29 @@ function renderMessages(messages) {
     }
   }
 
-  messages.forEach((msg) => {
+  // Track current date to show dividers
+  let currentDate = null;
+
+  messages.forEach((msg, index) => {
     const isSelf = msg.is_self ? "self" : "";
     const senderName = getSenderName(msg);
     const avatar = getInitials(senderName);
+    const msgDate = new Date(msg.created_at);
+    const dateKey = msgDate.toDateString();
+
+    // Check if this is a new day (different from previous message)
+    const isNewDay = currentDate !== dateKey;
+
+    // If this is a new day, insert a date divider
+    if (isNewDay) {
+      const divider = document.createElement("div");
+      divider.className = "date-divider";
+      const label = document.createElement("span");
+      label.textContent = formatDateDivider(msg.created_at);
+      divider.appendChild(label);
+      container.appendChild(divider);
+      currentDate = dateKey;
+    }
 
     // Show read receipt only on the latest self message
     let readReceipt = "";
@@ -157,7 +177,12 @@ function fetchMessages(isInitial = false) {
         if (messages.length === 0) {
           hasMoreMessages = false;
           isLoading = false;
-          renderMessages([]);
+
+          if (isInitial || allMessages.length === 0) {
+            renderMessages([]);
+          } else {
+            renderMessages(allMessages);
+          }
           return;
         }
 
@@ -387,7 +412,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .querySelectorAll(".channel-item, .dm-item")
         .forEach((el) => el.classList.remove("active"));
       this.classList.add("active");
-      const id = this.dataset.id; // numeric ID from DB
+      const id = this.dataset.id;
       loadConversation("channel", id);
     });
   });
@@ -399,7 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .querySelectorAll(".channel-item, .dm-item")
         .forEach((el) => el.classList.remove("active"));
       this.classList.add("active");
-      const id = this.dataset.id; // numeric ID
+      const id = this.dataset.id;
       loadConversation("dm", id);
     });
   });
@@ -419,6 +444,34 @@ document.addEventListener("DOMContentLoaded", function () {
       loadMoreMessages();
     }
   });
+
+  // Start sidebar polling
+  startSidebarPolling();
+
+  // Chat menu toggle — event listener only (no inline onclick)
+  const chatMenuBtn = document.getElementById("chatMenuBtn");
+  if (chatMenuBtn) {
+    chatMenuBtn.addEventListener("click", toggleChatMenu);
+  }
+
+  // Dropdown action buttons
+  document
+    .querySelectorAll(".chat-menu-dropdown button[data-action]")
+    .forEach((btn) => {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const action = this.dataset.action;
+        // Close dropdown
+        document.getElementById("chatMenuDropdown").style.display = "none";
+
+        // Temporary: show a toast
+        if (typeof showToast === "function") {
+          showToast(`Action: ${action} (coming soon)`, 3000, "info");
+        } else {
+          alert(`Action: ${action}`);
+        }
+      });
+    });
 });
 
 //
@@ -638,5 +691,62 @@ function stopMessageRefresh() {
   if (messageRefreshInterval) {
     clearInterval(messageRefreshInterval);
     messageRefreshInterval = null;
+  }
+}
+
+//
+// 13. Chat dropdown menu
+//
+
+function toggleChatMenu(event) {
+  event.stopPropagation();
+  const dropdown = document.getElementById("chatMenuDropdown");
+  if (!dropdown) return;
+  // Toggle visibility
+  dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+}
+
+// Close dropdown when clicking outside
+document.addEventListener("click", function (e) {
+  const wrapper = document.querySelector(".chat-menu-wrapper");
+  const dropdown = document.getElementById("chatMenuDropdown");
+  if (!wrapper || !dropdown) return;
+  if (!wrapper.contains(e.target)) {
+    dropdown.style.display = "none";
+  }
+});
+
+// Close dropdwon on escape key
+
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    const dropdown = document.getElementById("chatMenuDropdown");
+    if (dropdown) dropdown.style.display = "none";
+  }
+});
+
+//
+// 14. Date Provider
+//
+
+function formatDateDivider(dateString) {
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Reset time for comparison
+  const todayStr = today.toDateString();
+  const yesterdayStr = yesterday.toDateString();
+  const dateStr = date.toDateString();
+
+  if (dateStr === todayStr) {
+    return "Today";
+  } else if (dateStr === yesterdayStr) {
+    return "Yesterday";
+  } else {
+    // Format as "Monday, July 13th"
+    const options = { weekday: "long", month: "long", day: "numeric" };
+    return date.toLocaleDateString("en-PH", options);
   }
 }

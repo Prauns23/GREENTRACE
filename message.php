@@ -175,11 +175,11 @@ include 'header.php';
                                 }
                             }
                         ?>
-                            <li class="channel-item" 
-                                data-type="channel" 
-                                data-id="<?= $channel['id'] ?>" 
-                                data-description="<?=  htmlspecialchars($channel['description'] ?? 'Public') ?>"
-                                data-category="<?= htmlspecialchars($channel['category'] ?? 'general')?>">
+                            <li class="channel-item"
+                                data-type="channel"
+                                data-id="<?= $channel['id'] ?>"
+                                data-description="<?= htmlspecialchars($channel['description'] ?? 'Public') ?>"
+                                data-category="<?= htmlspecialchars($channel['category'] ?? 'general') ?>">
                                 <span class="channel-name"># <?= htmlspecialchars($channel['name']) ?></span>
                                 <span class="channel-time"><?= $lastTime ?></span>
                                 <span class="channel-last-msg"><?= htmlspecialchars($lastMsgDisplay) ?></span>
@@ -250,9 +250,17 @@ include 'header.php';
                 <!-- Chat Header -->
                 <div class="chat-header">
                     <div class="chat-header-top">
-                        <button class="chat-menu-btn" id="chatMenuBtn" title="More options">
-                            <i class="fa-solid fa-ellipsis-vertical"></i>
-                        </button>
+                        <div class="chat-menu-wrapper">
+                            <button class="chat-menu-btn" id="chatMenuBtn" title="More options">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <div class="chat-menu-dropdown" id="chatMenuDropdown" style="display: none;">
+                                <button data-action="add-people">Add People</button>
+                                <button data-action="mute">Mute</button>
+                                <button data-action="archive">Archive</button>
+                                <button data-action="leave">Leave</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="chat-header-main">
                         <div class="chat-header-left">
