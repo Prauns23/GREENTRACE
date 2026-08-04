@@ -29,6 +29,7 @@ $channelStmt = $conn->prepare("
         c.slug, 
         c.description,
         c.category,
+        cm.is_archived,
         (
             SELECT content 
             FROM chat_messages 
@@ -64,22 +65,12 @@ $channelStmt = $conn->prepare("
       AND c.archived = 0 
       AND cm.user_id = ? 
       AND cm.left_at IS NULL
+      AND cm.is_archived = 0
     ORDER BY c.name ASC
 ");
 $channelStmt->bind_param("i", $user_id);
 $channelStmt->execute();
 $channels = $channelStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-// For now, keep dummy DMs – we'll replace later with real DMs
-// $directMessages = [
-//     ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@gmail.com', 'address' => 'Nagbalayong, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
-//     ['id' => 2, 'name' => 'James Dean', 'email' => 'james.dean@gmail.com', 'address' => 'Poblacion, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
-// ];
-
-// $directMessages = [
-//     ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@gmail.com', 'address' => 'Nagbalayong, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'I think we have to st...', 'time' => '9:02 AM'],
-//     ['id' => 2, 'name' => 'James Dean', 'email' => 'james.dean@gmail.com', 'address' => 'Poblacion, Morong Bataan', 'role' => 'Volunteer', 'last_message' => 'Hello I would like to reque...', 'time' => '10:08 PM'],
-// ];
 
 // Fetch direct message conversations
 $dmQuery = "
@@ -90,27 +81,31 @@ $dmQuery = "
         CONCAT(u.fname, ' ', u.lname) as name,
         b.name as address,
         u.role,
+        cm2.is_archived,
         (SELECT content FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
         (SELECT created_at FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_time
     FROM chat_conversations c
     JOIN chat_conversation_members cm ON c.id = cm.conversation_id
     JOIN users_tbl u ON u.id = cm.user_id
     LEFT JOIN barangays b ON u.barangay_id = b.id
+    JOIN chat_conversation_members cm2 ON c.id = cm2.conversation_id AND cm2.user_id = ?
     WHERE c.type = 'direct' 
       AND c.archived = 0
       AND cm.user_id != ?
       AND cm.left_at IS NULL
+      AND cm2.is_archived = 0
       AND EXISTS (
-          SELECT 1 FROM chat_conversation_members cm2 
-          WHERE cm2.conversation_id = c.id 
-          AND cm2.user_id = ?
-          AND cm2.left_at IS NULL
+          SELECT 1 FROM chat_conversation_members cm3
+          WHERE cm3.conversation_id = c.id 
+          AND cm3.user_id = ?
+          AND cm3.left_at IS NULL
+          AND cm3.is_archived = 0
       )
     ORDER BY last_message_time DESC
 ";
 
 $dmStmt = $conn->prepare($dmQuery);
-$dmStmt->bind_param("ii", $user_id, $user_id);
+$dmStmt->bind_param("iii", $user_id, $user_id, $user_id);
 $dmStmt->execute();
 $directMessages = $dmStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -135,14 +130,21 @@ include 'header.php';
                 </div>
                 <!-- sidebar actions -->
                 <div class="sidebar-actions">
-                    <button class="btn-new-channel" onclick="showCreateChannelModal()">
-                        <i class="fa-solid fa-plus"></i>
-                        Add Channels
-                    </button>
-                    <button class="btn-new-message" onclick="showAddMessageModal()">
-                        <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon">
-                        New Message
-                    </button>
+                    <?php if (isset($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'])): ?>
+                        <button class="btn-new-channel" onclick="showCreateChannelModal()">
+                            <i class="fa-solid fa-plus"></i>
+                            Add Channels
+                        </button>
+                        <button class="btn-new-message" onclick="showAddMessageModal()">
+                            <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon">
+                            New Message
+                        </button>
+                    <?php else: ?>
+                        <button class="btn-new-message full-width" onclick="showAddMessageModal()">
+                            <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon">
+                            New Message
+                        </button>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -164,7 +166,6 @@ include 'header.php';
                                 $lastMsgDisplay = 'No messages yet';
                             }
 
-                            // 🔧 Fix: Use DateTime with correct timezone
                             $lastTime = '';
                             if ($channel['last_message_time']) {
                                 try {
@@ -179,7 +180,8 @@ include 'header.php';
                                 data-type="channel"
                                 data-id="<?= $channel['id'] ?>"
                                 data-description="<?= htmlspecialchars($channel['description'] ?? 'Public') ?>"
-                                data-category="<?= htmlspecialchars($channel['category'] ?? 'general') ?>">
+                                data-category="<?= htmlspecialchars($channel['category'] ?? 'general') ?>"
+                                data-archived="<?= $channel['is_archived'] ?>">
                                 <span class="channel-name"># <?= htmlspecialchars($channel['name']) ?></span>
                                 <span class="channel-time"><?= $lastTime ?></span>
                                 <span class="channel-last-msg"><?= htmlspecialchars($lastMsgDisplay) ?></span>
@@ -208,7 +210,8 @@ include 'header.php';
                         <li class="dm-item" data-type="dm" data-id="<?= $dm['id'] ?>"
                             data-email="<?= htmlspecialchars($dm['email'] ?? '') ?>"
                             data-address="<?= htmlspecialchars($dm['address'] ?? '') ?>"
-                            data-role="<?= htmlspecialchars($dm['role'] ?? '') ?>">
+                            data-role="<?= htmlspecialchars($dm['role'] ?? '') ?>"
+                            data-archived="<?= $dm['is_archived'] ?>">
                             <span class="dm-name"><?= htmlspecialchars($dm['name'] ?? 'Unknown') ?></span>
                             <span class="dm-time"><?= $dmLastTime ?></span>
                             <span class="dm-last-msg"><?= htmlspecialchars($dm['last_message'] ?? 'No messages yet') ?></span>

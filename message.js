@@ -253,9 +253,11 @@ function loadConversation(type, id) {
   const chatAvatarIcon = document.getElementById("chatAvatarIcon");
   const chatMenuBtn = document.getElementById("chatMenuBtn");
 
+  // Get the clicked item to read data attributes
+  const selector = type === "channel" ? ".channel-item" : ".dm-item";
+  const item = document.querySelector(`${selector}[data-id="${id}"]`);
+
   if (type === "channel") {
-    // Get channel name from the clicked item
-    const item = document.querySelector(`.channel-item[data-id="${id}"]`);
     const displayName = item
       ? item.querySelector(".channel-name").textContent
       : "Channel";
@@ -274,15 +276,24 @@ function loadConversation(type, id) {
     } else {
       chatRoleBadge.style.display = "none";
     }
+
+    // Update archive button text based on current state
+    const archived = item ? item.dataset.archived === "1" : false;
+    const archiveBtn = document.querySelector(
+      '.chat-menu-dropdown button[data-action="archive"]',
+    );
+    if (archiveBtn) {
+      archiveBtn.textContent = archived ? "Unarchive" : "Archive";
+    }
   } else {
     // DM
-    const item = document.querySelector(`.dm-item[data-id="${id}"]`);
     if (item) {
       const name = item.querySelector(".dm-name").textContent;
       const address = item.dataset.address || "";
       const role = item.dataset.role || "";
       chatTitle.textContent = name;
       chatAddress.textContent = address;
+
       if (role) {
         let badgeText = "";
         let badgeClass = "";
@@ -304,6 +315,15 @@ function loadConversation(type, id) {
         chatRoleBadge.style.display = "inline-block";
       } else {
         chatRoleBadge.style.display = "none";
+      }
+
+      // Update archive button text based on current state
+      const archived = item.dataset.archived === "1";
+      const archiveBtn = document.querySelector(
+        '.chat-menu-dropdown button[data-action="archive"]',
+      );
+      if (archiveBtn) {
+        archiveBtn.textContent = archived ? "Unarchive" : "Archive";
       }
     } else {
       chatTitle.textContent = "Direct Message";
@@ -461,14 +481,29 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.addEventListener("click", function (e) {
         e.stopPropagation();
         const action = this.dataset.action;
-        // Close dropdown
-        document.getElementById("chatMenuDropdown").style.display = "none";
+        const dropdown = document.getElementById("chatMenuDropdown");
+        dropdown.style.display = "none";
 
-        // Temporary: show a toast
-        if (typeof showToast === "function") {
-          showToast(`Action: ${action} (coming soon)`, 3000, "info");
-        } else {
-          alert(`Action: ${action}`);
+        if (!currentConversation) {
+          showToast("No conversation selected", 3000, "error");
+          return;
+        }
+
+        switch (action) {
+          case "mute":
+            toggleMute();
+            break;
+          case "leave":
+            leaveChannel();
+            break;
+          case "archive":
+            toggleArchive();
+            break;
+          case "add-people":
+            showToast("Add people coming soon", 3000, "info");
+            break;
+          default:
+            showToast(`Action: ${action} (coming soon)`, 3000, "info");
         }
       });
     });
@@ -749,4 +784,82 @@ function formatDateDivider(dateString) {
     const options = { weekday: "long", month: "long", day: "numeric" };
     return date.toLocaleDateString("en-PH", options);
   }
+}
+
+//
+// .15 Action buttons for dropdown
+//
+
+function toggleMute() {
+  if (!currentConversation) return;
+  const formData = new URLSearchParams();
+  formData.append("conversation_id", currentConversation.id);
+  fetch("actions/toggle_mute.php", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        showToast(data.message, 3000, "success");
+        // Optionally update the button text
+        const muteBtn = document.querySelector(
+          '.chat-menu-dropdown button[data-action="mute"]',
+        );
+        if (muteBtn) {
+          muteBtn.textContent = data.muted ? "Unmute" : "Mute";
+        }
+      } else {
+        showToast(data.error || "Error", 3000, "error");
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
+function leaveChannel() {
+  if (!confirm("Are you sure you want to leave this channel?")) return;
+  const formData = new URLSearchParams();
+  formData.append("conversation_id", currentConversation.id);
+  fetch("actions/leave_channel.php", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        showToast(data.message, 3000, "success");
+        // Reload sidebar or hide the conversation
+        // For now, reload the page to reflect changes
+        location.reload();
+      } else {
+        showToast(data.error || "Error", 3000, "error");
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
+function toggleArchive() {
+  const formData = new URLSearchParams();
+  formData.append("conversation_id", currentConversation.id);
+  fetch("actions/toggle_archive.php", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        showToast(data.message, 3000, "success");
+        const archiveBtn = document.querySelector(
+          '.chat-menu-dropdown button[data-action="archive"]',
+        );
+        if (archiveBtn) {
+          archiveBtn.textContent = data.archived ? "Unarchive" : "Archive";
+        }
+        // Reload to refresh sidebar
+        location.reload();
+      } else {
+        showToast(data.error || "Error", 3000, "error");
+      }
+    })
+    .catch((err) => console.error(err));
 }

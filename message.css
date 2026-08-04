@@ -186,6 +186,14 @@ body {
   transform: scale(1.02);
 }
 
+.sidebar-actions .btn-new-message.full-width {
+  flex: 1;
+}
+
+.sidebar-actions .btn-new-message.full-width {
+  justify-content: center;
+}
+
 .btn-new-channel i {
   padding-right: 4px;
   font-size: 1rem;
