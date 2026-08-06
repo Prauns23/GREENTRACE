@@ -29,16 +29,16 @@ if (!$member) {
     exit;
 }
 
-$newMute = $member['is_muted'] ? 0 : 1;
+$newMuted = $member['is_muted'] ? 0 : 1;
 
 $update = $conn->prepare("UPDATE chat_conversation_members SET is_muted = ? WHERE conversation_id = ? AND user_id = ?");
-$update->bind_param("iii", $newMute, $conversation_id, $user_id);
+$update->bind_param("iii", $newMuted, $conversation_id, $user_id);
 $update->execute();
 
 echo json_encode([
     'success' => true,
-    'muted' => (bool)$newMute,
-    'message' => $newMute ? 'Channel muted' : 'Channel unmuted'
+    'muted' => (bool)$newMuted,
+    'message' => $newMuted ? 'Conversation muted' : 'Conversation unmuted'
 ]);
 $update->close();
 $conn->close();

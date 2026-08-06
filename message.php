@@ -30,6 +30,18 @@ $channelStmt = $conn->prepare("
         c.description,
         c.category,
         cm.is_archived,
+        cm.is_muted,
+        (
+            SELECT COUNT(*) 
+            FROM chat_messages m 
+            WHERE m.conversation_id = c.id 
+              AND m.sender_id != ? 
+              AND NOT EXISTS (
+                  SELECT 1 FROM chat_message_reads r 
+                  WHERE r.message_id = m.id 
+                    AND r.user_id = ?
+              )
+        ) as unread_count,
         (
             SELECT content 
             FROM chat_messages 
@@ -68,10 +80,12 @@ $channelStmt = $conn->prepare("
       AND cm.is_archived = 0
     ORDER BY c.name ASC
 ");
-$channelStmt->bind_param("i", $user_id);
+
+$channelStmt->bind_param("iii", $user_id, $user_id, $user_id);
 $channelStmt->execute();
 $channels = $channelStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+// Fetch direct message conversations
 // Fetch direct message conversations
 $dmQuery = "
     SELECT 
@@ -82,8 +96,36 @@ $dmQuery = "
         b.name as address,
         u.role,
         cm2.is_archived,
-        (SELECT content FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
-        (SELECT created_at FROM chat_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_time
+        cm2.is_muted,
+        (
+            SELECT content 
+            FROM chat_messages 
+            WHERE conversation_id = c.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ) as last_message,
+        (
+            SELECT created_at 
+            FROM chat_messages 
+            WHERE conversation_id = c.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ) as last_message_time,
+        (
+            SELECT CONCAT(u_sender.fname, ' ', u_sender.lname)
+            FROM chat_messages m
+            LEFT JOIN users_tbl u_sender ON m.sender_id = u_sender.id
+            WHERE m.conversation_id = c.id 
+            ORDER BY m.created_at DESC 
+            LIMIT 1
+        ) as last_sender_name,
+        (
+            SELECT sender_id 
+            FROM chat_messages 
+            WHERE conversation_id = c.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ) as last_sender_id
     FROM chat_conversations c
     JOIN chat_conversation_members cm ON c.id = cm.conversation_id
     JOIN users_tbl u ON u.id = cm.user_id
@@ -156,8 +198,9 @@ include 'header.php';
                         <?php foreach ($channels as $channel):
                             $lastSender = $channel['last_sender_name'] ?? '';
                             $lastMsg = $channel['last_message'] ?? 'No messages yet';
+                            $unreadCount = (int)$channel['unread_count'];
+                            $isMuted = (bool)$channel['is_muted'];
 
-                            // Format the last message with sender name
                             if ($lastMsg && $lastSender) {
                                 $isSelf = ($channel['last_sender_id'] == $user_id);
                                 $senderDisplay = $isSelf ? 'You' : $lastSender;
@@ -176,15 +219,29 @@ include 'header.php';
                                 }
                             }
                         ?>
-                            <li class="channel-item"
+                            <li class="channel-item <?= $isMuted ? 'muted' : '' ?> <?= $unreadCount > 0 ? 'unread' : '' ?>"
                                 data-type="channel"
                                 data-id="<?= $channel['id'] ?>"
                                 data-description="<?= htmlspecialchars($channel['description'] ?? 'Public') ?>"
                                 data-category="<?= htmlspecialchars($channel['category'] ?? 'general') ?>"
-                                data-archived="<?= $channel['is_archived'] ?>">
-                                <span class="channel-name"># <?= htmlspecialchars($channel['name']) ?></span>
-                                <span class="channel-time"><?= $lastTime ?></span>
-                                <span class="channel-last-msg"><?= htmlspecialchars($lastMsgDisplay) ?></span>
+                                data-archived="<?= $channel['is_archived'] ?>"
+                                data-muted="<?= $isMuted ? '1' : '0' ?>"
+                                data-unread="<?= $unreadCount ?>">
+                                <div class="left-channel-item">
+                                    <div class="leftItem2">
+                                        <span class="channel-name"># <?= htmlspecialchars($channel['name']) ?></span>
+                                        <span class="channel-time"><?= $lastTime ?></span>
+                                    </div>
+                                    <span class="channel-last-msg"><?= htmlspecialchars($lastMsgDisplay) ?></span>
+                                </div>
+                                <div class="right-channel-item">
+                                    <?php if ($isMuted): ?>
+                                        <i class="fa-regular fa-bell-slash muted-icon"></i>
+                                    <?php endif; ?>
+                                    <?php if ($unreadCount > 0): ?>
+                                        <span class="unread-dot"></span>
+                                    <?php endif; ?>
+                                </div>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -192,11 +249,23 @@ include 'header.php';
             </div>
 
             <!-- Direct Messages Section -->
+            <!-- Direct Messages Section -->
             <div class="sidebar-section directMessages">
                 <div class="section-header">Direct Messages</div>
                 <ul class="dm-list">
                     <?php foreach ($directMessages as $dm):
-                        // 🔧 Fix: Use DateTime with correct timezone
+                        $lastSender = $dm['last_sender_name'] ?? '';
+                        $lastMsg = $dm['last_message'] ?? 'No messages yet';
+                        $isMuted = (bool)$dm['is_muted'];
+
+                        if ($lastMsg && $lastSender) {
+                            $isSelf = ($dm['last_sender_id'] == $user_id);
+                            $senderDisplay = $isSelf ? 'You' : $lastSender;
+                            $lastMsgDisplay = $senderDisplay . ': ' . $lastMsg;
+                        } else {
+                            $lastMsgDisplay = 'No messages yet';
+                        }
+
                         $dmLastTime = '';
                         if ($dm['last_message_time']) {
                             try {
@@ -207,14 +276,27 @@ include 'header.php';
                             }
                         }
                     ?>
-                        <li class="dm-item" data-type="dm" data-id="<?= $dm['id'] ?>"
+                        <li class="dm-item <?= $isMuted ? 'muted' : '' ?>"
+                            data-type="dm"
+                            data-id="<?= $dm['id'] ?>"
                             data-email="<?= htmlspecialchars($dm['email'] ?? '') ?>"
                             data-address="<?= htmlspecialchars($dm['address'] ?? '') ?>"
                             data-role="<?= htmlspecialchars($dm['role'] ?? '') ?>"
-                            data-archived="<?= $dm['is_archived'] ?>">
-                            <span class="dm-name"><?= htmlspecialchars($dm['name'] ?? 'Unknown') ?></span>
-                            <span class="dm-time"><?= $dmLastTime ?></span>
-                            <span class="dm-last-msg"><?= htmlspecialchars($dm['last_message'] ?? 'No messages yet') ?></span>
+                            data-archived="<?= $dm['is_archived'] ?>"
+                            data-muted="<?= $isMuted ? '1' : '0' ?>">
+                            <div class="left-channel-item">
+                                <div class="leftItem2">
+                                    <span class="dm-name"><?= htmlspecialchars($dm['name'] ?? 'Unknown') ?></span>
+                                    <span class="dm-time"><?= $dmLastTime ?></span>
+                                </div>
+                                <span class="dm-last-msg"><?= htmlspecialchars($lastMsgDisplay) ?></span>
+                            </div>
+                            <div class="right-channel-item">
+                                <?php if ($isMuted): ?>
+                                    <i class="fa-regular fa-bell-slash muted-icon"></i>
+                                <?php endif; ?>
+                                <!-- We can add unread dot later -->
+                            </div>
                         </li>
                     <?php endforeach; ?>
                     <?php if (empty($directMessages)): ?>

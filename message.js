@@ -543,55 +543,120 @@ function fetchSidebarUpdates() {
 }
 
 function updateChannelList(channels) {
-  const channelItems = document.querySelectorAll(".channel-item");
-  channelItems.forEach((item) => {
-    const id = item.dataset.id;
-    const channelData = channels.find((c) => c.id == id);
-    if (channelData) {
-      // Update last message
-      const lastMsgSpan = item.querySelector(".channel-last-msg");
-      const timeSpan = item.querySelector(".channel-time");
-
-      let displayMsg = "No messages yet";
-      if (channelData.last_message && channelData.last_sender_name) {
-        const isSelf = channelData.last_sender_id == currentUserId;
-        const senderDisplay = isSelf ? "You" : channelData.last_sender_name;
-        displayMsg = senderDisplay + ": " + channelData.last_message;
-      }
-      lastMsgSpan.textContent = displayMsg;
-
-      // Update time
-      if (channelData.last_message_time) {
-        timeSpan.textContent = formatDisplayTime(channelData.last_message_time);
-      }
-    }
-  });
+    const channelItems = document.querySelectorAll(".channel-item");
+    channelItems.forEach((item) => {
+        const id = item.dataset.id;
+        const channelData = channels.find((c) => c.id == id);
+        if (channelData) {
+            // Update last message
+            const lastMsgSpan = item.querySelector(".channel-last-msg");
+            const timeSpan = item.querySelector(".channel-time");
+            
+            let displayMsg = "No messages yet";
+            if (channelData.last_message && channelData.last_sender_name) {
+                const isSelf = channelData.last_sender_id == currentUserId;
+                const senderDisplay = isSelf ? "You" : channelData.last_sender_name;
+                displayMsg = senderDisplay + ": " + channelData.last_message;
+            }
+            lastMsgSpan.textContent = displayMsg;
+            
+            // Update time
+            if (channelData.last_message_time) {
+                timeSpan.textContent = formatDisplayTime(channelData.last_message_time);
+            }
+            
+            // Update unread dot and border
+            const unreadCount = parseInt(channelData.unread_count) || 0;
+            item.dataset.unread = unreadCount;
+            item.classList.toggle('unread', unreadCount > 0);
+            
+            // Update the right section
+            const rightSection = item.querySelector('.right-channel-item');
+            if (rightSection) {
+                // Remove existing unread dot
+                const existingDot = rightSection.querySelector('.unread-dot');
+                if (existingDot) existingDot.remove();
+                
+                // Add new dot if unread > 0
+                if (unreadCount > 0) {
+                    const dot = document.createElement('span');
+                    dot.className = 'unread-dot';
+                    // Insert before the mute icon (if exists) or at the end
+                    const muteIcon = rightSection.querySelector('.muted-icon');
+                    if (muteIcon) {
+                        rightSection.insertBefore(dot, muteIcon);
+                    } else {
+                        rightSection.appendChild(dot);
+                    }
+                }
+            }
+            
+            // Update mute icon (if muted state changed)
+            const muted = parseInt(channelData.is_muted) === 1;
+            item.dataset.muted = muted ? '1' : '0';
+            item.classList.toggle('muted', muted);
+            
+            // Update mute icon in right section
+            const existingMuteIcon = rightSection.querySelector('.muted-icon');
+            if (muted && !existingMuteIcon) {
+                const icon = document.createElement('i');
+                icon.className = 'fa-regular fa-bell-slash muted-icon';
+                // Insert before the unread dot (if exists) or at the end
+                const dot = rightSection.querySelector('.unread-dot');
+                if (dot) {
+                    rightSection.insertBefore(icon, dot);
+                } else {
+                    rightSection.prepend(icon);
+                }
+            } else if (!muted && existingMuteIcon) {
+                existingMuteIcon.remove();
+            }
+        }
+    });
 }
 
 function updateDMList(dms) {
-  const dmItems = document.querySelectorAll(".dm-item");
-  dmItems.forEach((item) => {
-    const id = item.dataset.id;
-    const dmData = dms.find((d) => d.id == id);
-    if (dmData) {
-      // Update last message
-      const lastMsgSpan = item.querySelector(".dm-last-msg");
-      const timeSpan = item.querySelector(".dm-time");
+    const dmItems = document.querySelectorAll(".dm-item");
+    dmItems.forEach((item) => {
+        const id = item.dataset.id;
+        const dmData = dms.find((d) => d.id == id);
+        if (dmData) {
+            // Update last message with sender name
+            const lastMsgSpan = item.querySelector(".dm-last-msg");
+            const timeSpan = item.querySelector(".dm-time");
 
-      let displayMsg = "No messages yet";
-      if (dmData.last_message && dmData.last_sender_name) {
-        const isSelf = dmData.last_sender_id == currentUserId;
-        const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
-        displayMsg = senderDisplay + ": " + dmData.last_message;
-      }
-      lastMsgSpan.textContent = displayMsg;
+            let displayMsg = "No messages yet";
+            if (dmData.last_message && dmData.last_sender_name) {
+                const isSelf = dmData.last_sender_id == currentUserId;
+                const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
+                displayMsg = senderDisplay + ": " + dmData.last_message;
+            }
+            lastMsgSpan.textContent = displayMsg;
 
-      // Update time
-      if (dmData.last_message_time) {
-        timeSpan.textContent = formatDisplayTime(dmData.last_message_time);
-      }
-    }
-  });
+            // Update time
+            if (dmData.last_message_time) {
+                timeSpan.textContent = formatDisplayTime(dmData.last_message_time);
+            }
+
+            // Update mute state
+            const muted = parseInt(dmData.is_muted) === 1;
+            item.dataset.muted = muted ? '1' : '0';
+            item.classList.toggle('muted', muted);
+
+            const rightSection = item.querySelector('.right-channel-item');
+            if (rightSection) {
+                // Handle mute icon
+                const existingIcon = rightSection.querySelector('.muted-icon');
+                if (muted && !existingIcon) {
+                    const icon = document.createElement('i');
+                    icon.className = 'fa-regular fa-bell-slash muted-icon';
+                    rightSection.prepend(icon);
+                } else if (!muted && existingIcon) {
+                    existingIcon.remove();
+                }
+            }
+        }
+    });
 }
 
 //
@@ -791,29 +856,53 @@ function formatDateDivider(dateString) {
 //
 
 function toggleMute() {
-  if (!currentConversation) return;
-  const formData = new URLSearchParams();
-  formData.append("conversation_id", currentConversation.id);
-  fetch("actions/toggle_mute.php", {
-    method: "POST",
-    body: formData,
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.success) {
-        showToast(data.message, 3000, "success");
-        // Optionally update the button text
-        const muteBtn = document.querySelector(
-          '.chat-menu-dropdown button[data-action="mute"]',
-        );
-        if (muteBtn) {
-          muteBtn.textContent = data.muted ? "Unmute" : "Mute";
-        }
-      } else {
-        showToast(data.error || "Error", 3000, "error");
-      }
+    if (!currentConversation) return;
+    const formData = new URLSearchParams();
+    formData.append("conversation_id", currentConversation.id);
+    fetch("actions/toggle_mute.php", {
+        method: "POST",
+        body: formData,
     })
-    .catch((err) => console.error(err));
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                showToast(data.message, 3000, "success");
+
+                // Update button text in dropdown
+                const muteBtn = document.querySelector('.chat-menu-dropdown button[data-action="mute"]');
+                if (muteBtn) {
+                    muteBtn.textContent = data.muted ? "Unmute" : "Mute";
+                }
+
+                // Update both channel and DM items in sidebar
+                const selector = currentConversation.type === 'channel' ? '.channel-item' : '.dm-item';
+                const item = document.querySelector(`${selector}[data-id="${currentConversation.id}"]`);
+                if (item) {
+                    item.classList.toggle('muted', data.muted);
+                    item.dataset.muted = data.muted ? '1' : '0';
+
+                    const rightSection = item.querySelector('.right-channel-item');
+                    if (rightSection) {
+                        const existingIcon = rightSection.querySelector('.muted-icon');
+                        if (data.muted && !existingIcon) {
+                            const icon = document.createElement('i');
+                            icon.className = 'fa-regular fa-bell-slash muted-icon';
+                            const dot = rightSection.querySelector('.unread-dot');
+                            if (dot) {
+                                rightSection.insertBefore(icon, dot);
+                            } else {
+                                rightSection.prepend(icon);
+                            }
+                        } else if (!data.muted && existingIcon) {
+                            existingIcon.remove();
+                        }
+                    }
+                }
+            } else {
+                showToast(data.error || "Error", 3000, "error");
+            }
+        })
+        .catch((err) => console.error(err));
 }
 
 function leaveChannel() {

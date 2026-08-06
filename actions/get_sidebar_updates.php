@@ -14,12 +14,23 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-
 // Fetch updated channels
 $channelQuery = "
     SELECT 
         c.id, 
         c.name,
+        cm.is_muted,
+        (
+            SELECT COUNT(*) 
+            FROM chat_messages m 
+            WHERE m.conversation_id = c.id 
+              AND m.sender_id != ? 
+              AND NOT EXISTS (
+                  SELECT 1 FROM chat_message_reads r 
+                  WHERE r.message_id = m.id 
+                    AND r.user_id = ?
+              )
+        ) as unread_count,
         (
             SELECT content 
             FROM chat_messages 
@@ -55,21 +66,34 @@ $channelQuery = "
       AND c.archived = 0 
       AND cm.user_id = ? 
       AND cm.left_at IS NULL
+      AND cm.is_archived = 0
     ORDER BY c.name ASC
 ";
 
 $stmt = $conn->prepare($channelQuery);
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param("iii", $user_id, $user_id, $user_id); 
 $stmt->execute();
 $channels = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Fetch updated DMs
+// Fetch updated DMs with unread_count, is_muted, and sender info
 $dmQuery = "
     SELECT 
         c.id,
         u.id as user_id,
         CONCAT(u.fname, ' ', u.lname) as name,
+        cm.is_muted,
+        (
+            SELECT COUNT(*) 
+            FROM chat_messages m 
+            WHERE m.conversation_id = c.id 
+              AND m.sender_id != ? 
+              AND NOT EXISTS (
+                  SELECT 1 FROM chat_message_reads r 
+                  WHERE r.message_id = m.id 
+                    AND r.user_id = ?
+              )
+        ) as unread_count,
         (
             SELECT content 
             FROM chat_messages 
@@ -116,7 +140,7 @@ $dmQuery = "
 ";
 
 $dmStmt = $conn->prepare($dmQuery);
-$dmStmt->bind_param("ii", $user_id, $user_id);
+$dmStmt->bind_param("iiiii", $user_id, $user_id, $user_id, $user_id, $user_id);
 $dmStmt->execute();
 $dms = $dmStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $dmStmt->close();
