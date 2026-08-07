@@ -238,7 +238,7 @@ include 'header.php';
                                     <?php if ($isMuted): ?>
                                         <i class="fa-regular fa-bell-slash muted-icon"></i>
                                     <?php endif; ?>
-                                    <?php if ($unreadCount > 0): ?>
+                                    <?php if ($unreadCount > 0 && !$isMuted): ?>
                                         <span class="unread-dot"></span>
                                     <?php endif; ?>
                                 </div>
@@ -340,7 +340,7 @@ include 'header.php';
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                             <div class="chat-menu-dropdown" id="chatMenuDropdown" style="display: none;">
-                                <button data-action="add-people">Add People</button>
+                                <button data-action="add-people">Members List</button>
                                 <button data-action="mute">Mute</button>
                                 <button data-action="archive">Archive</button>
                                 <button data-action="leave">Leave</button>

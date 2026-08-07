@@ -145,7 +145,7 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- Create Channel Modal -->
     <div class="floating-container" id="floatingCreateChannelContainer">
-        <iframe src="<?php echo $basePath;?>modals/create_channel.php" frameborder="0" class="floating-iframe" id="createChannelFrame"></iframe>
+        <iframe src="<?php echo $basePath; ?>modals/create_channel.php" frameborder="0" class="floating-iframe" id="createChannelFrame"></iframe>
     </div>
 
     <!-- Navigation Bar -->
@@ -165,6 +165,7 @@ if (isset($_SESSION['user_id'])) {
                 <?php if (isset($_SESSION['first_name'])): ?>
                     <div class="chat-icon-container">
                         <img src="<?php echo $basePath; ?>components/icons/chat-icon.svg" alt="" class="chat-icon" onclick="window.location.href='<?php echo $basePath; ?>message.php'">
+                        <span class="chat-dot" id="chatDot" style="display: none;"></span>
                     </div>
                     <div class="notification-bell-container">
                         <span class="material-symbols-rounded bell-icon" id="fa-bell" onclick="window.location.href='<?php echo $basePath; ?>notifications.php'">

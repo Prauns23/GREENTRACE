@@ -383,8 +383,37 @@ function showCreateChannelModal() {
   }
 }
 
+function updateChatBadgeCount() {
+  fetch('actions/get_unread_chat_count.php')
+      .then(response => response.json())
+      .then(data => {
+        const dot = document.getElementById('chatDot');
+        if (dot) {
+          if (data.unread > 0) {
+            dot.style.display = 'block';
+          } else {
+            dot.style.display = 'none';
+          }
+        }
+      })
+      .catch(err => console.error('Error fetching unread count:', err));
+}
+
+// Call on load
+
+document.addEventListener('DOMContentLoaded', function() {
+  updateBadgeCount();
+  updateChatBadgeCount();
+});
+
+// Periodic update every 3 seconds
+setInterval(() => {
+  updateBadgeCount();
+  updateChatBadgeCount();
+}, 3000);
+
 // Call it on page load
-document.addEventListener("DOMContentLoaded", updateBadgeCount);
+// document.addEventListener("DOMContentLoaded", updateBadgeCount);
 
 window.showCreateChannelModal = showCreateChannelModal;
 window.showAddMessageModal = showAddMessageModal;
