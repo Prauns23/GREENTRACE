@@ -247,8 +247,6 @@ include 'header.php';
                     </ul>
                 </div>
             </div>
-
-            <!-- Direct Messages Section -->
             <!-- Direct Messages Section -->
             <div class="sidebar-section directMessages">
                 <div class="section-header">Direct Messages</div>
@@ -295,7 +293,9 @@ include 'header.php';
                                 <?php if ($isMuted): ?>
                                     <i class="fa-regular fa-bell-slash muted-icon"></i>
                                 <?php endif; ?>
-                                <!-- We can add unread dot later -->
+                                <?php if ($unreadCount > 0 && !$isMuted): ?>
+                                    <span class="unread-dot"></span>
+                                <?php endif; ?>
                             </div>
                         </li>
                     <?php endforeach; ?>
