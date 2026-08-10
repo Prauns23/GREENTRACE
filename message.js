@@ -219,6 +219,21 @@ function fetchMessages(isInitial = false) {
     });
 }
 
+function updateChatVisibility(isChatVisible) {
+  const chatPlaceholder = document.getElementById("chatPlaceholder");
+  const chatWindow = document.getElementById("chatWindow");
+
+  if (!chatPlaceholder || !chatWindow) return;
+
+  if (isChatVisible) {
+    chatPlaceholder.style.display = "none";
+    chatWindow.style.display = "flex";
+  } else {
+    chatPlaceholder.style.display = "flex";
+    chatWindow.style.display = "none";
+  }
+}
+
 function loadMoreMessages() {
   fetchMessages(false);
 }
@@ -227,6 +242,9 @@ function loadMoreMessages() {
 // 6. Load a conversation
 //
 function loadConversation(type, id) {
+  // Hide members panel if open
+  hideMembersPanel();
+
   // Convert id to integer (for channels, id is numeric from DB)
   const numericId = parseInt(id, 10);
   if (isNaN(numericId)) {
@@ -240,8 +258,7 @@ function loadConversation(type, id) {
   allMessages = [];
   oldestTimestamp = null;
 
-  document.getElementById("chatPlaceholder").style.display = "none";
-  document.getElementById("chatWindow").style.display = "flex";
+  updateChatVisibility(true);
 
   // Clear messages
   renderMessages([]);
@@ -1021,6 +1038,14 @@ function showMembersPanel() {
   if (chatMessages && membersPanel) {
     chatMessages.style.display = "none";
     membersPanel.style.display = "flex";
+    console.log("Panel displayed, now loading members...");
+
+    // Load members if we have a conversation
+    if (currentConversation && currentConversation.id) {
+      loadChannelMembers(currentConversation.id);
+    } else {
+      console.warn("No conversation ID to load members");
+    }
   }
 
   // Hide chat input
@@ -1118,3 +1143,190 @@ document.addEventListener("click", function (e) {
     }
   });
 });
+
+//
+// 17. Fetch and render channel members
+//
+
+function loadChannelMembers(conversationId) {
+  console.log("loadChannelMembers called with ID:", conversationId);
+  const membersListContainer = document.getElementById("membersListContainer");
+  const membersCount = document.getElementById("membersCount");
+
+  console.log("membersListContainer found?", membersListContainer);
+  console.log("membersCount found?", membersCount);
+
+  if (!membersListContainer) {
+    console.error("membersListContainer element not found!");
+    return;
+  }
+  // Show loading state
+  membersListContainer.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #a0aec0;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
+            <p style="margin-top: 12px;">Loading members...</p>
+        </div>
+    `;
+
+  fetch("actions/get_channel_members.php?conversation_id=" + conversationId)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.error) {
+        membersListContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #e53e3e;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
+                        <p style="margin-top: 12px;">${data.error}</p>
+                    </div>
+                `;
+        return;
+      }
+
+      // Update member count
+      if (membersCount) {
+        membersCount.textContent = data.total + " USERS";
+      }
+
+      // Render members
+      let html = "";
+      data.members.forEach((member) => {
+        const isCurrentUser = member.is_current_user;
+        const isCreator = member.role === "owner";
+        const roleBadge =
+          member.role === "owner"
+            ? "owner"
+            : member.role === "admin"
+              ? "admin"
+              : "member";
+        const roleLabel =
+          member.role === "owner"
+            ? "Creator"
+            : member.role.charAt(0).toUpperCase() + member.role.slice(1);
+
+        // Build the "Added by" / "Group creator" text
+        let addedByText = "";
+        if (isCreator) {
+          addedByText = `<span class="creator-text">Group creator : ${member.email}</span>`;
+        } else {
+          const adderName = member.added_by_name || creatorName;
+          addedByText = `Added by ${adderName} : ${member.email}`;
+        }
+
+        // Determine dropdown actions based on role and current user
+        let dropdownButtons = "";
+        if (isCurrentUser) {
+          // Current user's own card - only show Leave
+          dropdownButtons = `
+                        <button data-action="leave" data-user-id="${member.user_id}">Leave</button>
+                    `;
+        } else if (
+          data.current_user_role === "owner" ||
+          data.current_user_role === "admin"
+        ) {
+          // Owner/Admin can manage others
+          dropdownButtons = `
+                        <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
+                        <button data-action="kick" data-user-id="${member.user_id}">Kick</button>
+                        <button data-action="mute-member" data-user-id="${member.user_id}">Mute</button>
+                    `;
+          if (data.current_user_role === "owner" && member.role !== "owner") {
+            dropdownButtons += `
+                            <button data-action="make-admin" data-user-id="${member.user_id}">Make Admin</button>
+                        `;
+          }
+        } else {
+          // Regular member sees limited options
+          dropdownButtons = `
+                        <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
+                    `;
+        }
+
+        html += `
+        <div class="member-card" data-user-id="${member.user_id}" data-role="${member.role}">
+            <div class="member-avatar">
+                <span class="material-symbols-rounded">person</span>
+            </div>
+            <div class="member-info">
+                <div class="member-name-row">
+                    <span class="member-name">${member.full_name} ${isCurrentUser ? "(You)" : ""}</span>
+                </div>
+                <span class="member-added-by">${addedByText}</span>
+            </div>
+            <div class="member-actions">
+                <div class="members-menu-wrapper">
+                    <button class="members-menu-btn" onclick="toggleMembersDropdown(this)">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <div class="members-dropdown" style="display: none;">
+                        ${dropdownButtons}
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+      });
+
+      membersListContainer.innerHTML = html;
+
+      // Attach dropdown button click handlers
+      document
+        .querySelectorAll(".members-dropdown button[data-action]")
+        .forEach((btn) => {
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const action = this.dataset.action;
+            const userId = parseInt(this.dataset.userId);
+            const dropdown = this.closest(".members-dropdown");
+            if (dropdown) dropdown.style.display = "none";
+
+            handleMemberAction(action, userId, conversationId);
+          });
+        });
+    })
+    .catch((err) => {
+      console.error("Error loading members:", err);
+      membersListContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #e53e3e;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
+                    <p style="margin-top: 12px;">Failed to load members</p>
+                </div>
+            `;
+    });
+}
+
+//
+// 18. Handle member actions
+//
+
+function handleMemberAction(action, userId, conversationId) {
+  switch (action) {
+    case "add-contact":
+      // Add as contact (we'll implement later)
+      showToast("Add as contact feature coming soon", 3000, "info");
+      break;
+    case "kick":
+      if (
+        confirm("Are you sure you want to kick this user from the channel?")
+      ) {
+        // Kick user (we'll implement later)
+        showToast("Kick feature coming soon", 3000, "info");
+      }
+      break;
+    case "mute-member":
+      // Mute user in this channel (we'll implement later)
+      showToast("Mute member feature coming soon", 3000, "info");
+      break;
+    case "make-admin":
+      if (confirm("Make this user an admin?")) {
+        // Make admin (we'll implement later)
+        showToast("Make admin feature coming soon", 3000, "info");
+      }
+      break;
+    case "leave":
+      if (confirm("Are you sure you want to leave this channel?")) {
+        leaveChannel();
+      }
+      break;
+    default:
+      showToast("Unknown action", 3000, "error");
+  }
+}

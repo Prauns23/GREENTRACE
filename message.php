@@ -340,7 +340,8 @@ include 'header.php';
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                             <div class="chat-menu-dropdown" id="chatMenuDropdown" style="display: none;">
-                                <button data-action="add-people">Members List</button>
+                                <!-- Only show Members List for channels -->
+                                <button data-action="add-people" id="membersListBtn">Members List</button>
                                 <button data-action="mute">Mute</button>
                                 <button data-action="archive">Archive</button>
                                 <button data-action="leave">Leave</button>

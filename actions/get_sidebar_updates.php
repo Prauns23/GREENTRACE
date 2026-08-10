@@ -1,4 +1,8 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 require_once '../init_session.php';
 require_once '../config.php';
 
@@ -71,7 +75,7 @@ $channelQuery = "
 ";
 
 $stmt = $conn->prepare($channelQuery);
-$stmt->bind_param("iii", $user_id, $user_id, $user_id); 
+$stmt->bind_param("iii", $user_id, $user_id, $user_id);
 $stmt->execute();
 $channels = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
