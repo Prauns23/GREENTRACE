@@ -350,7 +350,6 @@ include 'header.php';
                     <div class="chat-header-main">
                         <div class="chat-header-left">
                             <div class="chat-avatar">
-                                <!-- <i class="fa-solid fa-user"></i> -->
                                 <span class="material-symbols-rounded" id="chatAvatarIcon">
                                     person
                                 </span>
@@ -363,9 +362,39 @@ include 'header.php';
                         <span id="chatRoleBadge" class="role-badge" style="display: none;">Volunteer</span>
                     </div>
                 </div>
+
+                <!-- Chat Messages -->
                 <div class="chat-messages" id="chatMessages">
                     <!-- Messages will be dynamically loaded here -->
                 </div>
+
+                <!-- Members Panel (replaces chat messages) -->
+                <div id="membersPanel" class="members-panel" style="display: none;">
+                    <!-- Panel Header -->
+                    <div class="members-panel-header">
+                        <div class="members-header-left">
+                            <div class="members-header-info">
+                                <h3>CHAT MEMBERS LIST</h3>
+                            </div>
+                        </div>
+                        <span class="members-count" id="membersCount">0 USERS</span>
+                    </div>
+
+                    <!-- Members List -->
+                    <div class="members-list-container" id="membersListContainer">
+                        <!-- Dynamic content will be loaded here -->
+                    </div>
+                    <div class="add-members-btn">
+                        <button class="add-volunteer-btn" onclick="showAddVolunteerModal()">
+                            <span class="material-symbols-rounded">
+                                person_add
+                            </span>
+                            <p>Add volunteers</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
                 <div class="chat-input">
                     <input type="text" placeholder="Type your message..." id="messageInput">
                     <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
@@ -373,12 +402,11 @@ include 'header.php';
             </div>
         </div>
     </div>
-</div>
 
-<script src="message.js"></script>
-<script>
-    // Pass current user ID to JavaScript for "You" detection
-    const currentUserId = <?= json_encode($user_id) ?>;
-</script>
+    <script src="message.js"></script>
+    <script>
+        // Pass current user ID to JavaScript for "You" detection
+        const currentUserId = <?= json_encode($user_id) ?>;
+    </script>
 
-<?php include 'footer.php'; ?>
+    <?php include 'footer.php'; ?>

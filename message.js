@@ -500,7 +500,15 @@ document.addEventListener("DOMContentLoaded", function () {
             toggleArchive();
             break;
           case "add-people":
-            showToast("Add people coming soon", 3000, "info");
+            if (currentConversation && currentConversation.type === "channel") {
+              showMembersPanel();
+            } else {
+              showToast(
+                "Members list is only available for channels",
+                3000,
+                "error",
+              );
+            }
             break;
           default:
             showToast(`Action: ${action} (coming soon)`, 3000, "info");
@@ -998,3 +1006,115 @@ function toggleArchive() {
     })
     .catch((err) => console.error(err));
 }
+
+//
+// 16. Members Panel
+//
+
+function showMembersPanel() {
+  const chatMessages = document.getElementById("chatMessages");
+  const membersPanel = document.getElementById("membersPanel");
+  const chatMenuBtn = document.getElementById("chatMenuBtn");
+  const chatMenuDropdown = document.getElementById("chatMenuDropdown");
+  const chatInput = document.querySelector(".chat-input");
+
+  if (chatMessages && membersPanel) {
+    chatMessages.style.display = "none";
+    membersPanel.style.display = "flex";
+  }
+
+  // Hide chat input
+  if (chatInput) {
+    chatInput.style.display = "none";
+  }
+
+  // Change the menu button to a close (X) icon
+  if (chatMenuBtn) {
+    chatMenuBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    // Remove existing listeners by replacing with new one
+    chatMenuBtn.replaceWith(chatMenuBtn.cloneNode(true));
+    const newBtn = document.getElementById("chatMenuBtn");
+    newBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      hideMembersPanel();
+    });
+  }
+
+  // Close dropdown if open
+  if (chatMenuDropdown) {
+    chatMenuDropdown.style.display = "none";
+  }
+}
+
+function hideMembersPanel() {
+  const chatMessages = document.getElementById("chatMessages");
+  const membersPanel = document.getElementById("membersPanel");
+  const chatMenuBtn = document.getElementById("chatMenuBtn");
+  const chatInput = document.querySelector(".chat-input");
+
+  if (chatMessages && membersPanel) {
+    membersPanel.style.display = "none";
+    chatMessages.style.display = "flex";
+  }
+
+  // Show chat input
+  if (chatInput) {
+    chatInput.style.display = "flex";
+  }
+
+  // Restore the menu button to ellipsis
+  if (chatMenuBtn) {
+    chatMenuBtn.innerHTML = '<i class="fa-solid fa-ellipsis-vertical"></i>';
+    // Remove existing listeners by replacing with new one
+    chatMenuBtn.replaceWith(chatMenuBtn.cloneNode(true));
+    const newBtn = document.getElementById("chatMenuBtn");
+    newBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleChatMenu(e);
+    });
+  }
+}
+
+function toggleMembersDropdown(btn) {
+  event.stopPropagation();
+  const wrapper = btn.closest(".members-menu-wrapper");
+  const dropdown = wrapper.querySelector(".members-dropdown");
+
+  // Close other open dropdowns
+  document.querySelectorAll(".members-dropdown").forEach((d) => {
+    if (d !== dropdown) d.style.display = "none";
+  });
+
+  dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener("click", function (e) {
+  document.querySelectorAll(".members-dropdown").forEach((d) => {
+    if (!d.closest(".members-menu-wrapper").contains(e.target)) {
+      d.style.display = "none";
+    }
+  });
+});
+
+function toggleMembersDropdown(btn) {
+  event.stopPropagation();
+  const wrapper = btn.closest(".members-menu-wrapper");
+  const dropdown = wrapper.querySelector(".members-dropdown");
+
+  // Close other open dropdowns
+  document.querySelectorAll(".members-dropdown").forEach((d) => {
+    if (d !== dropdown) d.style.display = "none";
+  });
+
+  dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener("click", function (e) {
+  document.querySelectorAll(".members-dropdown").forEach((d) => {
+    if (!d.closest(".members-menu-wrapper").contains(e.target)) {
+      d.style.display = "none";
+    }
+  });
+});
