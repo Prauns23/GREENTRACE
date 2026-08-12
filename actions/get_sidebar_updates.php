@@ -80,13 +80,13 @@ $stmt->execute();
 $channels = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Fetch updated DMs with unread_count, is_muted, and sender info
+// Fetch updated DMs with unread_count, is_muted (current user), and sender info
 $dmQuery = "
     SELECT 
         c.id,
-        u.id as user_id,
-        CONCAT(u.fname, ' ', u.lname) as name,
-        cm.is_muted,
+        u_other.id as user_id,
+        CONCAT(u_other.fname, ' ', u_other.lname) as name,
+        cm_current.is_muted,
         (
             SELECT COUNT(*) 
             FROM chat_messages m 
@@ -113,9 +113,9 @@ $dmQuery = "
             LIMIT 1
         ) as last_message_time,
         (
-            SELECT CONCAT(u2.fname, ' ', u2.lname) 
+            SELECT CONCAT(u_sender.fname, ' ', u_sender.lname) 
             FROM chat_messages m
-            LEFT JOIN users_tbl u2 ON m.sender_id = u2.id
+            LEFT JOIN users_tbl u_sender ON m.sender_id = u_sender.id
             WHERE m.conversation_id = c.id 
             ORDER BY m.created_at DESC 
             LIMIT 1
@@ -128,23 +128,19 @@ $dmQuery = "
             LIMIT 1
         ) as last_sender_id
     FROM chat_conversations c
-    JOIN chat_conversation_members cm ON c.id = cm.conversation_id
-    JOIN users_tbl u ON u.id = cm.user_id
-    WHERE c.type = 'direct' 
+    JOIN chat_conversation_members cm_current ON c.id = cm_current.conversation_id AND cm_current.user_id = ?
+    JOIN chat_conversation_members cm_other ON c.id = cm_other.conversation_id AND cm_other.user_id != ?
+    JOIN users_tbl u_other ON u_other.id = cm_other.user_id
+    WHERE c.type = 'direct'
       AND c.archived = 0
-      AND cm.user_id != ?
-      AND cm.left_at IS NULL
-      AND EXISTS (
-          SELECT 1 FROM chat_conversation_members cm2 
-          WHERE cm2.conversation_id = c.id 
-          AND cm2.user_id = ?
-          AND cm2.left_at IS NULL
-      )
+      AND cm_current.left_at IS NULL
+      AND cm_other.left_at IS NULL
+      AND cm_current.is_archived = 0
     ORDER BY last_message_time DESC
 ";
 
 $dmStmt = $conn->prepare($dmQuery);
-$dmStmt->bind_param("iiiii", $user_id, $user_id, $user_id, $user_id, $user_id);
+$dmStmt->bind_param("iiii", $user_id, $user_id, $user_id, $user_id);
 $dmStmt->execute();
 $dms = $dmStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $dmStmt->close();

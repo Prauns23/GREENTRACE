@@ -638,47 +638,74 @@ function updateChannelList(channels) {
 }
 
 function updateDMList(dms) {
-  const dmItems = document.querySelectorAll(".dm-item");
-  dmItems.forEach((item) => {
-    const id = item.dataset.id;
-    const dmData = dms.find((d) => d.id == id);
-    if (dmData) {
-      // Update last message with sender name
-      const lastMsgSpan = item.querySelector(".dm-last-msg");
-      const timeSpan = item.querySelector(".dm-time");
+    const dmItems = document.querySelectorAll(".dm-item");
+    dmItems.forEach((item) => {
+        const id = item.dataset.id;
+        const dmData = dms.find((d) => d.id == id);
+        if (dmData) {
+            // Update last message with sender name
+            const lastMsgSpan = item.querySelector(".dm-last-msg");
+            const timeSpan = item.querySelector(".dm-time");
 
-      let displayMsg = "No messages yet";
-      if (dmData.last_message && dmData.last_sender_name) {
-        const isSelf = dmData.last_sender_id == currentUserId;
-        const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
-        displayMsg = senderDisplay + ": " + dmData.last_message;
-      }
-      lastMsgSpan.textContent = displayMsg;
+            let displayMsg = "No messages yet";
+            if (dmData.last_message && dmData.last_sender_name) {
+                const isSelf = dmData.last_sender_id == currentUserId;
+                const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
+                displayMsg = senderDisplay + ": " + dmData.last_message;
+            }
+            lastMsgSpan.textContent = displayMsg;
 
-      // Update time
-      if (dmData.last_message_time) {
-        timeSpan.textContent = formatDisplayTime(dmData.last_message_time);
-      }
+            // Update time
+            if (dmData.last_message_time) {
+                timeSpan.textContent = formatDisplayTime(dmData.last_message_time);
+            }
 
-      // Update mute state
-      const muted = parseInt(dmData.is_muted) === 1;
-      item.dataset.muted = muted ? "1" : "0";
-      item.classList.toggle("muted", muted);
+            // Update unread state (but only if not muted)
+            const unreadCount = parseInt(dmData.unread_count) || 0;
+            const muted = parseInt(dmData.is_muted) === 1;
+            item.dataset.unread = unreadCount;
+            item.dataset.muted = muted ? "1" : "0";
+            item.classList.toggle("unread", unreadCount > 0 && !muted);
+            item.classList.toggle("muted", muted);
 
-      const rightSection = item.querySelector(".right-channel-item");
-      if (rightSection) {
-        // Handle mute icon
-        const existingIcon = rightSection.querySelector(".muted-icon");
-        if (muted && !existingIcon) {
-          const icon = document.createElement("i");
-          icon.className = "fa-regular fa-bell-slash muted-icon";
-          rightSection.prepend(icon);
-        } else if (!muted && existingIcon) {
-          existingIcon.remove();
+            const rightSection = item.querySelector(".right-channel-item");
+            if (rightSection) {
+                // Handle unread dot
+                let dot = rightSection.querySelector(".unread-dot");
+                if (unreadCount > 0 && !muted) {
+                    if (!dot) {
+                        dot = document.createElement("span");
+                        dot.className = "unread-dot";
+                        // Insert before mute icon if exists, else append
+                        const muteIcon = rightSection.querySelector(".muted-icon");
+                        if (muteIcon) {
+                            rightSection.insertBefore(dot, muteIcon);
+                        } else {
+                            rightSection.appendChild(dot);
+                        }
+                    }
+                } else {
+                    if (dot) dot.remove();
+                }
+
+                // Handle mute icon
+                let muteIcon = rightSection.querySelector(".muted-icon");
+                if (muted && !muteIcon) {
+                    muteIcon = document.createElement("i");
+                    muteIcon.className = "fa-regular fa-bell-slash muted-icon";
+                    // Insert before unread dot if exists, else prepend
+                    const dotEl = rightSection.querySelector(".unread-dot");
+                    if (dotEl) {
+                        rightSection.insertBefore(muteIcon, dotEl);
+                    } else {
+                        rightSection.prepend(muteIcon);
+                    }
+                } else if (!muted && muteIcon) {
+                    muteIcon.remove();
+                }
+            }
         }
-      }
-    }
-  });
+    });
 }
 
 function updateSidebarUnread(conversationId) {
@@ -1253,7 +1280,9 @@ function loadChannelMembers(conversationId) {
             </div>
             <div class="member-actions">
                 <div class="members-menu-wrapper">
-                    <button class="members-menu-btn" onclick="toggleMembersDropdown(this)">
+                    <button class="members-menu-btn" onclick="toggleMembersDropdown(this)" 
+                    data-name="${member.full_name}"
+                    >
                         <i class="fa-solid fa-ellipsis-vertical"></i>
                     </button>
                     <div class="members-dropdown" style="display: none;">
@@ -1275,10 +1304,12 @@ function loadChannelMembers(conversationId) {
             e.stopPropagation();
             const action = this.dataset.action;
             const userId = parseInt(this.dataset.userId);
+            const memberCard = this.closest(".member-card");
+            const memberName = memberCard ? memberCard.dataset.name || "" : "";
             const dropdown = this.closest(".members-dropdown");
             if (dropdown) dropdown.style.display = "none";
 
-            handleMemberAction(action, userId, conversationId);
+            handleMemberAction(action, userId, conversationId, memberName);
           });
         });
     })
@@ -1300,8 +1331,10 @@ function loadChannelMembers(conversationId) {
 function handleMemberAction(action, userId, conversationId) {
   switch (action) {
     case "add-contact":
-      // Add as contact (we'll implement later)
-      showToast("Add as contact feature coming soon", 3000, "info");
+      // Add as contact
+      if (confirm(`Add ${memberName || "this user"} as a contact?`)) {
+        addContact(userId);
+      }
       break;
     case "kick":
       if (
@@ -1329,4 +1362,43 @@ function handleMemberAction(action, userId, conversationId) {
     default:
       showToast("Unknown action", 3000, "error");
   }
+}
+
+// Add contact function for member dropdown ellipsis
+
+function addContact(userId) {
+  if (!userId) return;
+
+  const payload = { recipient_ids: [userId] };
+
+  fetch("actions/create_dm.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // conversation_id returned, but we can ignore
+        const msg =
+          data.message === "Conversation already exists"
+            ? "You already have a conversation with this user."
+            : "Conversation created! You can now message this user.";
+        showToast(
+          msg,
+          3000,
+          data.message === "Conversation already exists" ? "info" : "success",
+        );
+        // Reload to update sidebar with new DM
+        location.reload();
+      } else {
+        showToast(data.error || "Failed to add contact.", 3000, "error");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      showToast("Network error. Please try again.", 3000, "error");
+    });
 }
