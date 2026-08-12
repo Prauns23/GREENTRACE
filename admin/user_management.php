@@ -409,7 +409,7 @@ include __DIR__ . '/../header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td class="action-buttons">
-                                    <button class="action-btn edit-btn" title="Edit User" data-user-id="<?= $user['id'] ?>"><i class="fas fa-pen"></i></button>
+                                    <!-- <button class="action-btn edit-btn" title="Edit User" data-user-id="<?= $user['id'] ?>"><i class="fas fa-pen"></i></button> -->
                                     <?php if ($showArchived): ?>
                                         <button class="action-btn restore-single-btn" title="Restore User" data-user-id="<?= $user['id'] ?>"><i class="fas fa-undo-alt"></i></button>
                                     <?php else: ?>

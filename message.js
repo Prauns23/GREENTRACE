@@ -638,74 +638,74 @@ function updateChannelList(channels) {
 }
 
 function updateDMList(dms) {
-    const dmItems = document.querySelectorAll(".dm-item");
-    dmItems.forEach((item) => {
-        const id = item.dataset.id;
-        const dmData = dms.find((d) => d.id == id);
-        if (dmData) {
-            // Update last message with sender name
-            const lastMsgSpan = item.querySelector(".dm-last-msg");
-            const timeSpan = item.querySelector(".dm-time");
+  const dmItems = document.querySelectorAll(".dm-item");
+  dmItems.forEach((item) => {
+    const id = item.dataset.id;
+    const dmData = dms.find((d) => d.id == id);
+    if (dmData) {
+      // Update last message with sender name
+      const lastMsgSpan = item.querySelector(".dm-last-msg");
+      const timeSpan = item.querySelector(".dm-time");
 
-            let displayMsg = "No messages yet";
-            if (dmData.last_message && dmData.last_sender_name) {
-                const isSelf = dmData.last_sender_id == currentUserId;
-                const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
-                displayMsg = senderDisplay + ": " + dmData.last_message;
+      let displayMsg = "No messages yet";
+      if (dmData.last_message && dmData.last_sender_name) {
+        const isSelf = dmData.last_sender_id == currentUserId;
+        const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
+        displayMsg = senderDisplay + ": " + dmData.last_message;
+      }
+      lastMsgSpan.textContent = displayMsg;
+
+      // Update time
+      if (dmData.last_message_time) {
+        timeSpan.textContent = formatDisplayTime(dmData.last_message_time);
+      }
+
+      // Update unread state (but only if not muted)
+      const unreadCount = parseInt(dmData.unread_count) || 0;
+      const muted = parseInt(dmData.is_muted) === 1;
+      item.dataset.unread = unreadCount;
+      item.dataset.muted = muted ? "1" : "0";
+      item.classList.toggle("unread", unreadCount > 0 && !muted);
+      item.classList.toggle("muted", muted);
+
+      const rightSection = item.querySelector(".right-channel-item");
+      if (rightSection) {
+        // Handle unread dot
+        let dot = rightSection.querySelector(".unread-dot");
+        if (unreadCount > 0 && !muted) {
+          if (!dot) {
+            dot = document.createElement("span");
+            dot.className = "unread-dot";
+            // Insert before mute icon if exists, else append
+            const muteIcon = rightSection.querySelector(".muted-icon");
+            if (muteIcon) {
+              rightSection.insertBefore(dot, muteIcon);
+            } else {
+              rightSection.appendChild(dot);
             }
-            lastMsgSpan.textContent = displayMsg;
-
-            // Update time
-            if (dmData.last_message_time) {
-                timeSpan.textContent = formatDisplayTime(dmData.last_message_time);
-            }
-
-            // Update unread state (but only if not muted)
-            const unreadCount = parseInt(dmData.unread_count) || 0;
-            const muted = parseInt(dmData.is_muted) === 1;
-            item.dataset.unread = unreadCount;
-            item.dataset.muted = muted ? "1" : "0";
-            item.classList.toggle("unread", unreadCount > 0 && !muted);
-            item.classList.toggle("muted", muted);
-
-            const rightSection = item.querySelector(".right-channel-item");
-            if (rightSection) {
-                // Handle unread dot
-                let dot = rightSection.querySelector(".unread-dot");
-                if (unreadCount > 0 && !muted) {
-                    if (!dot) {
-                        dot = document.createElement("span");
-                        dot.className = "unread-dot";
-                        // Insert before mute icon if exists, else append
-                        const muteIcon = rightSection.querySelector(".muted-icon");
-                        if (muteIcon) {
-                            rightSection.insertBefore(dot, muteIcon);
-                        } else {
-                            rightSection.appendChild(dot);
-                        }
-                    }
-                } else {
-                    if (dot) dot.remove();
-                }
-
-                // Handle mute icon
-                let muteIcon = rightSection.querySelector(".muted-icon");
-                if (muted && !muteIcon) {
-                    muteIcon = document.createElement("i");
-                    muteIcon.className = "fa-regular fa-bell-slash muted-icon";
-                    // Insert before unread dot if exists, else prepend
-                    const dotEl = rightSection.querySelector(".unread-dot");
-                    if (dotEl) {
-                        rightSection.insertBefore(muteIcon, dotEl);
-                    } else {
-                        rightSection.prepend(muteIcon);
-                    }
-                } else if (!muted && muteIcon) {
-                    muteIcon.remove();
-                }
-            }
+          }
+        } else {
+          if (dot) dot.remove();
         }
-    });
+
+        // Handle mute icon
+        let muteIcon = rightSection.querySelector(".muted-icon");
+        if (muted && !muteIcon) {
+          muteIcon = document.createElement("i");
+          muteIcon.className = "fa-regular fa-bell-slash muted-icon";
+          // Insert before unread dot if exists, else prepend
+          const dotEl = rightSection.querySelector(".unread-dot");
+          if (dotEl) {
+            rightSection.insertBefore(muteIcon, dotEl);
+          } else {
+            rightSection.prepend(muteIcon);
+          }
+        } else if (!muted && muteIcon) {
+          muteIcon.remove();
+        }
+      }
+    }
+  });
 }
 
 function updateSidebarUnread(conversationId) {
@@ -1149,28 +1149,6 @@ document.addEventListener("click", function (e) {
   });
 });
 
-function toggleMembersDropdown(btn) {
-  event.stopPropagation();
-  const wrapper = btn.closest(".members-menu-wrapper");
-  const dropdown = wrapper.querySelector(".members-dropdown");
-
-  // Close other open dropdowns
-  document.querySelectorAll(".members-dropdown").forEach((d) => {
-    if (d !== dropdown) d.style.display = "none";
-  });
-
-  dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
-}
-
-// Close dropdowns when clicking outside
-document.addEventListener("click", function (e) {
-  document.querySelectorAll(".members-dropdown").forEach((d) => {
-    if (!d.closest(".members-menu-wrapper").contains(e.target)) {
-      d.style.display = "none";
-    }
-  });
-});
-
 //
 // 17. Fetch and render channel members
 //
@@ -1235,6 +1213,7 @@ function loadChannelMembers(conversationId) {
           addedByText = `<span class="creator-text">Group creator : ${member.email}</span>`;
         } else {
           const adderName = member.added_by_name || creatorName;
+          const creatorName = data.creator_name || 'System';
           addedByText = `Added by ${adderName} : ${member.email}`;
         }
 
@@ -1268,7 +1247,9 @@ function loadChannelMembers(conversationId) {
         }
 
         html += `
-        <div class="member-card" data-user-id="${member.user_id}" data-role="${member.role}">
+        <div class="member-card" data-user-id="${member.user_id}" data-role="${member.role}"
+        data-name="${member.full_name}"
+        >
             <div class="member-avatar">
                 <span class="material-symbols-rounded">person</span>
             </div>
@@ -1328,7 +1309,7 @@ function loadChannelMembers(conversationId) {
 // 18. Handle member actions
 //
 
-function handleMemberAction(action, userId, conversationId) {
+function handleMemberAction(action, userId, conversationId, memberName) {
   switch (action) {
     case "add-contact":
       // Add as contact
@@ -1340,17 +1321,17 @@ function handleMemberAction(action, userId, conversationId) {
       if (
         confirm("Are you sure you want to kick this user from the channel?")
       ) {
-        // Kick user (we'll implement later)
+        // Kick user
         showToast("Kick feature coming soon", 3000, "info");
       }
       break;
     case "mute-member":
-      // Mute user in this channel (we'll implement later)
+      // Mute user in this channel
       showToast("Mute member feature coming soon", 3000, "info");
       break;
     case "make-admin":
       if (confirm("Make this user an admin?")) {
-        // Make admin (we'll implement later)
+        // Make admin
         showToast("Make admin feature coming soon", 3000, "info");
       }
       break;
@@ -1380,17 +1361,20 @@ function addContact(userId) {
   })
     .then((response) => response.json())
     .then((data) => {
+      console.log('create_dm response:', data);
+
       if (data.success) {
-        // conversation_id returned, but we can ignore
-        const msg =
-          data.message === "Conversation already exists"
-            ? "You already have a conversation with this user."
-            : "Conversation created! You can now message this user.";
-        showToast(
-          msg,
-          3000,
-          data.message === "Conversation already exists" ? "info" : "success",
-        );
+        let msg = '' ; 
+        let type = 'success';
+        if (data.message === 'Conversation already exists') {
+          msg = 'You already have a conversation with this user.';
+          type = 'info'
+        } else if (data.message === 'Rejoined conversation') {
+          msg = 'Conversation restored. You can now message this user.';
+        } else {
+          msg = 'Conversation created! You can now message this user.';
+        }
+        showToast(msg, 3000, type);
         // Reload to update sidebar with new DM
         location.reload();
       } else {

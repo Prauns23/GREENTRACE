@@ -56,7 +56,13 @@ if ($existing) {
     $user1_left = $existing['user1_left'];
     $user2_left = $existing['user2_left'];
 
-    // If either user left, re-add them (set left_at = NULL)
+    // If both are still members, it's an existing active conversation
+    if ($user1_left === null && $user2_left === null) {
+        echo json_encode(['success' => true, 'conversation_id' => $conv_id, 'message' => 'Conversation already exists']);
+        exit;
+    }
+
+    // Otherwisem re-add the user(s) who left
     $conn->begin_transaction();
     try {
         if ($user1_left !== null) {

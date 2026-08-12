@@ -60,7 +60,7 @@ $stmt->close();
 
 // Get channel creator info
 $creatorQuery = $conn->prepare("
-    SELECT CONCAT(u.fname, ' ', u.lname) as creator_name, u.email as creator_email
+    SELECT CONCAT(u.fname, ' ', u.lname) as creator_name
     FROM chat_conversations c
     JOIN users_tbl u ON c.created_by = u.id
     WHERE c.id = ?
@@ -68,10 +68,9 @@ $creatorQuery = $conn->prepare("
 $creatorQuery->bind_param("i", $conversation_id);
 $creatorQuery->execute();
 $creator = $creatorQuery->get_result()->fetch_assoc();
+$creatorName = $creator['creator_name'] ?? '';
 $creatorQuery->close();
 
-$creatorName = $creator['creator_name'] ?? '';
-$creatorEmail = $creator['creator_email'] ?? '';
 
 // Get current user's role in this conversation
 $roleQuery = $conn->prepare("SELECT member_role FROM chat_conversation_members WHERE conversation_id = ? AND user_id = ?");

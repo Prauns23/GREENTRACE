@@ -26,6 +26,8 @@ function getIconClass($type)
             return 'fa-bell';
         case 'report':
             return 'fa-exclamation-triangle';
+        case 'message':
+            return 'fa-comment-dots';
         default:
             return 'fa-bell';
     }
@@ -178,6 +180,8 @@ include 'header.php';
     <div class="filter-buttons">
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="application">Applications</button>
+        <button class="filter-btn"
+            data-filter="message">Message</button>
 
         <div class="action-btn-wrapper">
             <button class="action-btn" onclick="toggleBulkDropdown(event)">

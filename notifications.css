@@ -139,7 +139,7 @@
 }
 
 .notification-item[data-type="report"]:hover {
-    border-color: #e53935; /* red */
+  border-color: #e53935; /* red */
 }
 
 .notification-item.unread {
@@ -186,6 +186,12 @@
 .icon-system {
   background: #f3e8ff;
   color: #166534;
+}
+
+.icon-message {
+  background: #dcfce7;
+  color: #1b7a40;
+  font-size: 1.4rem;
 }
 
 /* Content */
@@ -305,7 +311,7 @@
 
 /* Adjust spacing for the last notification */
 .notification-item:last-child {
-    margin-bottom: 12px;
+  margin-bottom: 12px;
 }
 
 /* No results */
