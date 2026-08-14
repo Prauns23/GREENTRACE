@@ -33,6 +33,7 @@ $query = "
         cm.user_id,
         cm.member_role,
         cm.added_by,
+        cm.is_muted_by_admin,
         CONCAT(u.fname, ' ', u.lname) as full_name,
         u.email,
         u.role as user_role,
@@ -92,7 +93,7 @@ foreach ($members as $member) {
     if (!$addedByName && $member['member_role'] !== 'owner') {
         $addedByName = $creatorName;
     }
-    
+
     $formattedMembers[] = [
         'user_id' => (int)$member['user_id'],
         'full_name' => $member['full_name'],
@@ -103,7 +104,8 @@ foreach ($members as $member) {
         'is_current_user' => $isCurrentUser,
         'added_by' => $member['added_by'] ? (int)$member['added_by'] : null,
         'added_by_name' => $addedByName,
-        'last_active_at' => $member['last_active_at']
+        'last_active_at' => $member['last_active_at'],
+        'is_muted_by_admin' => (int)$member['is_muted_by_admin']
     ];
 }
 
@@ -115,4 +117,3 @@ echo json_encode([
     'current_user_role' => $currentUserRole,
     'creator_name' => $creatorName
 ]);
-?>

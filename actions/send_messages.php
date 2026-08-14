@@ -32,6 +32,25 @@ if ($check->get_result()->num_rows === 0) {
 }
 $check->close();
 
+// Check if the user is muted by an admin in this conversation
+$muteCheck = $conn->prepare("
+    SELECT is_muted_by_admin
+    FROM chat_conversation_members
+    WHERE conversation_id = ? AND user_id = ? AND left_at is NULL
+");
+
+$muteCheck->bind_param("ii", $conversation_id, $user_id);
+$muteCheck->execute();
+$muteResult = $muteCheck->get_result()->fetch_assoc();
+$muteCheck->close();
+
+if ($muteResult && $muteResult['is_muted_by_admin'] == 1) {
+    echo json_encode([
+        'error' => 'You are muted in this channel.'
+    ]);
+    exit;
+}
+
 // ----- RATE LIMIT -----
 $limit = 10;
 $window = 60;

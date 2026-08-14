@@ -614,7 +614,6 @@ function updateChannelList(channels) {
             rightSection.appendChild(dot);
           }
         }
-
         // Mute icon
         const existingMuteIcon = rightSection.querySelector(".muted-icon");
         if (muted && !existingMuteIcon) {
@@ -633,6 +632,13 @@ function updateChannelList(channels) {
 
       // Toggle muted class on the item itself (for styling)
       item.classList.toggle("muted", muted);
+    }
+
+    const channelItems = document.querySelectorAll(".channel-item");
+    const emptyChannels = document.getElementById("emptyChannels");
+    if (emptyChannels) {
+      emptyChannels.style.display =
+        channelItems.length === 0 ? "block" : "none";
     }
   });
 }
@@ -703,6 +709,12 @@ function updateDMList(dms) {
         } else if (!muted && muteIcon) {
           muteIcon.remove();
         }
+      }
+
+      const dmItems = document.querySelectorAll(".dm-item");
+      const emptyDms = document.getElementById("emptyDms");
+      if (emptyDms) {
+        emptyDms.style.display = dmItems.length === 0 ? "block" : "none";
       }
     }
   });
@@ -1207,13 +1219,16 @@ function loadChannelMembers(conversationId) {
             ? "Creator"
             : member.role.charAt(0).toUpperCase() + member.role.slice(1);
 
+        const isMutedByAdmin = member.is_muted_by_admin === 1;
+        const muteButtonText = isMutedByAdmin ? "Unmute" : "Mute";
+
         // Build the "Added by" / "Group creator" text
         let addedByText = "";
         if (isCreator) {
           addedByText = `<span class="creator-text">Group creator : ${member.email}</span>`;
         } else {
           const adderName = member.added_by_name || creatorName;
-          const creatorName = data.creator_name || 'System';
+          const creatorName = data.creator_name || "System";
           addedByText = `Added by ${adderName} : ${member.email}`;
         }
 
@@ -1232,7 +1247,7 @@ function loadChannelMembers(conversationId) {
           dropdownButtons = `
                         <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
                         <button data-action="kick" data-user-id="${member.user_id}">Kick</button>
-                        <button data-action="mute-member" data-user-id="${member.user_id}">Mute</button>
+                        <button data-action="mute-member" data-user-id="${member.user_id}">${muteButtonText}</button>
                     `;
           if (data.current_user_role === "owner" && member.role !== "owner") {
             dropdownButtons += `
@@ -1319,19 +1334,20 @@ function handleMemberAction(action, userId, conversationId, memberName) {
       break;
     case "kick":
       if (
-        confirm("Are you sure you want to kick this user from the channel?")
+        confirm(
+          `Are you sure want to kick ${memberName || "this user"} from this channel?`,
+        )
       ) {
         // Kick user
-        showToast("Kick feature coming soon", 3000, "info");
+        kickMember(userId, conversationId, memberName);
       }
       break;
     case "mute-member":
       // Mute user in this channel
-      showToast("Mute member feature coming soon", 3000, "info");
+      muteMember(userId, conversationId, memberName);
       break;
     case "make-admin":
-      if (confirm("Make this user an admin?")) {
-        // Make admin
+      if (confirm(`Make ${memberName || "this user"} an admin?`)) {
         showToast("Make admin feature coming soon", 3000, "info");
       }
       break;
@@ -1361,24 +1377,98 @@ function addContact(userId) {
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log('create_dm response:', data);
+      console.log("create_dm response:", data);
 
       if (data.success) {
-        let msg = '' ; 
-        let type = 'success';
-        if (data.message === 'Conversation already exists') {
-          msg = 'You already have a conversation with this user.';
-          type = 'info'
-        } else if (data.message === 'Rejoined conversation') {
-          msg = 'Conversation restored. You can now message this user.';
+        let msg = "";
+        let type = "success";
+        if (data.message === "Conversation already exists") {
+          msg = "You already have a conversation with this user.";
+          type = "info";
+        } else if (data.message === "Rejoined conversation") {
+          msg = "Conversation restored. You can now message this user.";
         } else {
-          msg = 'Conversation created! You can now message this user.';
+          msg = "Conversation created! You can now message this user.";
         }
         showToast(msg, 3000, type);
         // Reload to update sidebar with new DM
         location.reload();
       } else {
         showToast(data.error || "Failed to add contact.", 3000, "error");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      showToast("Network error. Please try again.", 3000, "error");
+    });
+}
+
+// Kick function
+
+function kickMember(userId, conversationId, memberName) {
+  const formData = new URLSearchParams();
+  formData.append("user_id", userId);
+  formData.append("conversation_id", conversationId);
+
+  fetch("actions/kick_member.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formData.toString(),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        showToast(
+          `${memberName || "User"} has been kicked from the channel.`,
+          3000,
+          "success",
+        );
+        // Refresh the members list
+        loadChannelMembers(conversationId);
+        fetchSidebarUpdates();
+        // If the kicked user is the current user, reload
+        if (userId == currentUserId) {
+          location.reload();
+        }
+      } else {
+        showToast(data.error || "Failed to kick user.", 3000, "error");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      showToast("Network error. Please try again", 3000, "error");
+    });
+}
+
+// Mute member function
+
+function muteMember(userId, conversationId, memberName) {
+  const formData = new URLSearchParams();
+  formData.append("user_id", userId);
+  formData.append("conversation_id", conversationId);
+
+  fetch("actions/mute_member.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formData.toString(),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        const action = data.mute ? "muted" : "unmuted";
+        showToast(
+          `${memberName || "User"} has been ${action}.`,
+          3000,
+          "success",
+        );
+        // Refresh the members list to update the dropdown button text
+        loadChannelMembers(conversationId);
+      } else {
+        showToast(data.error || "Failed to mute user.", 3000, "error");
       }
     })
     .catch((err) => {

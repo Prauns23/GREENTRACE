@@ -10,7 +10,7 @@ if(!isset($_SESSION['user_id'])) {
 }
 
 $current_user_id = $_SESSION['user_id'];
-$conversation_id = (int)($_POST['conversation_Id'] ?? 0);
+$conversation_id = (int)($_POST['conversation_id'] ?? 0);
 $target_user_id = (int)($_POST['user_id'] ?? 0);
 
 if (!$conversation_id || !$target_user_id) {

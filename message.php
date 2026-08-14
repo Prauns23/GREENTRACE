@@ -244,6 +244,11 @@ include 'header.php';
                                 </div>
                             </li>
                         <?php endforeach; ?>
+                        <!-- Inside the Channels section -->
+                        <div id="emptyChannels" style="display: none; padding: 16px; text-align: center; color: #888;">
+                            <i class="fas fa-hashtag" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+                            <p>No channels yet. Create one to start chatting!</p>
+                        </div>
                     </ul>
                 </div>
             </div>
