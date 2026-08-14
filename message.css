@@ -890,6 +890,9 @@ body {
   color: white;
   cursor: pointer;
   transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chat-input button:hover {
@@ -1161,7 +1164,7 @@ body {
 
 .members-count {
   font-size: 14px;
-  color: #5C5C5C;
+  color: #5c5c5c;
   font-weight: 500;
   margin-left: auto;
 }
@@ -1251,6 +1254,28 @@ body {
 
 .member-card:hover {
   background: #f6f6f6d1;
+}
+
+.member-card.muted-member {
+  opacity: 1;
+}
+
+
+.member-card.muted-member .member-name,
+.member-card.muted-member .member-role-badge,
+.member-card.muted-member .member-added-by {
+  color: #a0aec0;
+}
+
+.member-card .muted-label {
+  font-size: 14px;
+  color: #a0aec0;
+  font-weight: 600;
+}
+
+.member-card.muted-member .member-avatar {
+  opacity: 0.8;
+  background: #d4d6d260;
 }
 
 /* Member Avatar */
@@ -1350,14 +1375,14 @@ body {
 
 .members-dropdown {
   position: absolute;
-  top: 100%;
+  top: 100%; 
   right: 0;
   margin-top: 4px;
-  background: white;
+  background: #ffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   min-width: 160px;
-  z-index: 100;
+  z-index: 9999;
   overflow: hidden;
   padding: 4px 0;
 }

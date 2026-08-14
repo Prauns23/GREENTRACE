@@ -23,6 +23,7 @@ let isLoading = false;
 let hasMoreMessages = true;
 let allMessages = [];
 let oldestTimestamp = null;
+let currentUserMuted = false;
 
 //
 // 3. Helper functions
@@ -257,8 +258,10 @@ function loadConversation(type, id) {
   hasMoreMessages = true;
   allMessages = [];
   oldestTimestamp = null;
+  currentUserMuted = false;
 
   updateChatVisibility(true);
+  updateInputMuteState();
 
   // Clear messages
   renderMessages([]);
@@ -275,6 +278,7 @@ function loadConversation(type, id) {
   const item = document.querySelector(`${selector}[data-id="${id}"]`);
 
   if (type === "channel") {
+    loadChannelMembers(numericId, true);
     const displayName = item
       ? item.querySelector(".channel-name").textContent
       : "Channel";
@@ -1170,31 +1174,29 @@ function loadChannelMembers(conversationId) {
   const membersListContainer = document.getElementById("membersListContainer");
   const membersCount = document.getElementById("membersCount");
 
-  console.log("membersListContainer found?", membersListContainer);
-  console.log("membersCount found?", membersCount);
-
   if (!membersListContainer) {
     console.error("membersListContainer element not found!");
     return;
   }
+
   // Show loading state
   membersListContainer.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: #a0aec0;">
-            <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
-            <p style="margin-top: 12px;">Loading members...</p>
-        </div>
-    `;
+    <div style="text-align: center; padding: 40px; color: #a0aec0;">
+      <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
+      <p style="margin-top: 12px;">Loading members...</p>
+    </div>
+  `;
 
   fetch("actions/get_channel_members.php?conversation_id=" + conversationId)
     .then((response) => response.json())
     .then((data) => {
       if (data.error) {
         membersListContainer.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #e53e3e;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
-                        <p style="margin-top: 12px;">${data.error}</p>
-                    </div>
-                `;
+          <div style="text-align: center; padding: 40px; color: #e53e3e;">
+            <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
+            <p style="margin-top: 12px;">${data.error}</p>
+          </div>
+        `;
         return;
       }
 
@@ -1203,90 +1205,88 @@ function loadChannelMembers(conversationId) {
         membersCount.textContent = data.total + " USERS";
       }
 
-      // Render members
+      // ----- Update current user's mute state -----
+      const currentUserData = data.members.find((m) => m.is_current_user);
+      if (currentUserData) {
+        currentUserMuted = currentUserData.is_muted_by_admin === 1;
+        updateInputMuteState();
+      }
+
+      // ----- Render members -----
       let html = "";
       data.members.forEach((member) => {
         const isCurrentUser = member.is_current_user;
         const isCreator = member.role === "owner";
-        const roleBadge =
-          member.role === "owner"
-            ? "owner"
-            : member.role === "admin"
-              ? "admin"
-              : "member";
-        const roleLabel =
-          member.role === "owner"
-            ? "Creator"
-            : member.role.charAt(0).toUpperCase() + member.role.slice(1);
-
         const isMutedByAdmin = member.is_muted_by_admin === 1;
         const muteButtonText = isMutedByAdmin ? "Unmute" : "Mute";
+        const mutedClass = isMutedByAdmin ? "muted-member" : "";
+        const mutedLabel = isMutedByAdmin
+          ? ' <span class="muted-label">(Muted)</span>'
+          : "";
+        // 👇 Choose avatar icon based on mute status
+        const avatarIcon = isMutedByAdmin ? "person_off" : "person";
 
-        // Build the "Added by" / "Group creator" text
+        // Build "Added by" text
         let addedByText = "";
         if (isCreator) {
           addedByText = `<span class="creator-text">Group creator : ${member.email}</span>`;
         } else {
-          const adderName = member.added_by_name || creatorName;
-          const creatorName = data.creator_name || "System";
+          const adderName =
+            member.added_by_name || data.creator_name || "System";
           addedByText = `Added by ${adderName} : ${member.email}`;
         }
 
         // Determine dropdown actions based on role and current user
         let dropdownButtons = "";
         if (isCurrentUser) {
-          // Current user's own card - only show Leave
+          // Current user's own card – only Leave
           dropdownButtons = `
-                        <button data-action="leave" data-user-id="${member.user_id}">Leave</button>
-                    `;
+            <button data-action="leave" data-user-id="${member.user_id}">Leave</button>
+          `;
         } else if (
           data.current_user_role === "owner" ||
           data.current_user_role === "admin"
         ) {
           // Owner/Admin can manage others
           dropdownButtons = `
-                        <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
-                        <button data-action="kick" data-user-id="${member.user_id}">Kick</button>
-                        <button data-action="mute-member" data-user-id="${member.user_id}">${muteButtonText}</button>
-                    `;
+            <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
+            <button data-action="kick" data-user-id="${member.user_id}">Kick</button>
+            <button data-action="mute-member" data-user-id="${member.user_id}">${muteButtonText}</button>
+          `;
           if (data.current_user_role === "owner" && member.role !== "owner") {
             dropdownButtons += `
-                            <button data-action="make-admin" data-user-id="${member.user_id}">Make Admin</button>
-                        `;
+              <button data-action="make-admin" data-user-id="${member.user_id}">Make Admin</button>
+            `;
           }
         } else {
-          // Regular member sees limited options
+          // Regular member – limited options
           dropdownButtons = `
-                        <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
-                    `;
+            <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
+          `;
         }
 
         html += `
-        <div class="member-card" data-user-id="${member.user_id}" data-role="${member.role}"
-        data-name="${member.full_name}"
-        >
+          <div class="member-card ${mutedClass}" data-user-id="${member.user_id}" data-role="${member.role}" data-name="${member.full_name}">
             <div class="member-avatar">
-                <span class="material-symbols-rounded">person</span>
+              <span class="material-symbols-rounded">${avatarIcon}</span>
             </div>
             <div class="member-info">
-                <div class="member-name-row">
-                    <span class="member-name">${member.full_name} ${isCurrentUser ? "(You)" : ""}</span>
-                </div>
-                <span class="member-added-by">${addedByText}</span>
+              <div class="member-name-row">
+                <span class="member-name">${member.full_name} ${isCurrentUser ? "(You)" : ""}${mutedLabel}</span>
+              </div>
+              <span class="member-added-by">${addedByText}</span>
             </div>
             <div class="member-actions">
-                <div class="members-menu-wrapper">
-                    <button class="members-menu-btn" onclick="toggleMembersDropdown(this)" 
-                    data-name="${member.full_name}"
-                    >
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                    </button>
-                    <div class="members-dropdown" style="display: none;">
-                        ${dropdownButtons}
-                    </div>
+              <div class="members-menu-wrapper">
+                <button class="members-menu-btn" onclick="toggleMembersDropdown(this)" data-name="${member.full_name}">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="members-dropdown" style="display: none;">
+                  ${dropdownButtons}
                 </div>
+              </div>
             </div>
-        </div>
+          </div>
         `;
       });
 
@@ -1312,11 +1312,11 @@ function loadChannelMembers(conversationId) {
     .catch((err) => {
       console.error("Error loading members:", err);
       membersListContainer.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #e53e3e;">
-                    <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
-                    <p style="margin-top: 12px;">Failed to load members</p>
-                </div>
-            `;
+        <div style="text-align: center; padding: 40px; color: #e53e3e;">
+          <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
+          <p style="margin-top: 12px;">Failed to load members</p>
+        </div>
+      `;
     });
 }
 
@@ -1476,3 +1476,24 @@ function muteMember(userId, conversationId, memberName) {
       showToast("Network error. Please try again.", 3000, "error");
     });
 }
+
+function updateInputMuteState() {
+  const input = document.getElementById("messageInput");
+  if (!input) return;
+
+  input.disabled = currentUserMuted;
+  input.placeholder = currentUserMuted
+    ? "You are muted."
+    : "Type your message...";
+  input.style.cursor = currentUserMuted ? "not-allowed" : "text";
+
+  // Hide/show the send button
+  const sendBtn = document.getElementById("sendMessageBtn");
+  if (sendBtn) {
+    sendBtn.style.display = currentUserMuted ? "none" : "flex";
+  }
+}
+
+//
+// 19.
+//
