@@ -1495,5 +1495,28 @@ function updateInputMuteState() {
 }
 
 //
-// 19.
+// 19. Add Channel Members Modal
 //
+
+function showAddVolunteerModal() {
+  if (!currentConversation || currentConversation.type !== "channel") {
+    if (typeof showToast === "function") {
+      showToast("Please select a channel first.", 3000, "error");
+    } else {
+      alert("Please select a channel first.");
+    }
+    return;
+  }
+  // Call the parent function to show the modal
+  if (
+    window.parent &&
+    typeof window.parent.showAddChannelMembersModal === "function"
+  ) {
+    window.parent.showAddChannelMembersModal(currentConversation.id);
+  } else if (typeof window.showAddChannelMembersModal === "function") {
+    // Fallback if called directly in the same window (unlikely)
+    window.showAddChannelMembersModal(currentConversation.id);
+  } else {
+    alert("Modal function not available.");
+  }
+}

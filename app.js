@@ -415,6 +415,22 @@ setInterval(() => {
 // Call it on page load
 // document.addEventListener("DOMContentLoaded", updateBadgeCount);
 
+function showAddChannelMembersModal(conversationId) {
+    closeAllFloating();
+    const container = document.getElementById("floatingAddChannelMembersContainer");
+    const iframe = document.getElementById("addChannelMembersFrame");
+    if (iframe) {
+        iframe.src = (window.basePath || "") + "modals/add_channel_members.php?conversation_id=" + conversationId;
+    }
+    if (container) {
+        container.classList.add("active");
+        if (overlay) overlay.classList.add("active");
+        document.body.classList.add("login-active");
+        activeContainer = container;
+    }
+}
+
+window.showAddChannelMembersModal = showAddChannelMembersModal;
 window.showCreateChannelModal = showCreateChannelModal;
 window.showAddMessageModal = showAddMessageModal;
 window.showEditProfileModal = showEditProfileModal;

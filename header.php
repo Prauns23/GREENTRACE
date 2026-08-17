@@ -148,6 +148,11 @@ if (isset($_SESSION['user_id'])) {
         <iframe src="<?php echo $basePath; ?>modals/create_channel.php" frameborder="0" class="floating-iframe" id="createChannelFrame"></iframe>
     </div>
 
+    <!-- Add Members Modal -->
+    <div class="floating-container" id="floatingAddChannelMembersContainer">
+        <iframe src="<?php echo $basePath; ?>modals/add_channel_members.php" class="floating-iframe" id="addChannelMembersFrame"></iframe>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">
