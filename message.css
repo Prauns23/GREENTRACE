@@ -752,6 +752,17 @@ body {
   background: #e8f5e9;
 }
 
+.message-system {
+  text-align: center;
+  color: #a0aec0;
+  font-size: 0.85rem;
+  padding: 8px 0;
+  font-weight: 400;
+  margin: 4px 0;
+  background: transparent;
+  border: none;
+}
+
 .chat-input {
   flex-shrink: 0;
   border-top: 1px solid #edf2f7;

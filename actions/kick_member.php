@@ -3,6 +3,7 @@ require_once '../init_session.php';
 require_once '../config.php';
 require_once '../notifications_helper.php';
 require_once '../log_activity.php';
+require_once __DIR__ . '/../helpers/chat_system.php';
 
 header('Content-Type: application/json');
 
@@ -74,6 +75,12 @@ $kick = $conn->prepare("
     SET left_at = NOW(), kicked_by = ?
     WHERE conversation_id = ? AND user_id = ?
 ");
+
+$targetName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $target_user_id")->fetch_assoc()['name'] ?? 'User';
+$kickerName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $current_user_id")->fetch_assoc()['name'] ?? 'Admin';
+$content = "$targetName was kicked by $kickerName.";
+insertSystemMessage($conn, $conversation_id, $content);
+
 $kick->bind_param("iii", $current_user_id, $conversation_id, $target_user_id);
 $kick->execute();
 $kick->close();

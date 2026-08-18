@@ -2,6 +2,7 @@
 require_once '../init_session.php';
 require_once '../config.php';
 require_once '../notifications_helper.php';
+require_once __DIR__ . '/../helpers/chat_system.php';
 
 header('Content-Type: application/json');
 
@@ -74,13 +75,20 @@ foreach ($user_ids as $user_id) {
 
 // Send notifications to added users (optional)
 if ($added_count > 0) {
+    // Fetch adder's name
+    $adderName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $current_user_id")->fetch_assoc()['name'] ?? 'Admin';
     $channelName = $conn->query("SELECT name FROM chat_conversations WHERE id = $conversation_id")->fetch_assoc()['name'] ?? 'channel';
     $adderName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $current_user_id")->fetch_assoc()['name'] ?? 'Admin';
+
+    foreach ($user_ids as $uid) {
+        // Only notify if this user was actually added (Not skipped because already active)
+        $userName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $uid")->fetch_assoc()['name'] ?? 'User';
+        $content = "$userName was added by $adderName.";
+        insertSystemMessage($conn, $conversation_id, $content);
+    } 
+
     foreach ($user_ids as $user_id) {
         // Notify only those who were actually added (re‑joined or new)
-        // We can simply notify all; they might be already active but we can still send a "you were added" message? It's harmless.
-        // But to avoid spamming, we can check if they were re‑added or newly added.
-        // For simplicity, we'll notify all selected.
         createNotification($user_id, 'system', "Added to Channel", "You have been added to <strong>#{$channelName}</strong> by {$adderName}.", 'message.php');
     }
 }

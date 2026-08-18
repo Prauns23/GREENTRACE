@@ -1,6 +1,7 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
+require_once __DIR__ . '/../helpers/chat_system.php';
 
 header('Content-Type: application/json');
 
@@ -46,6 +47,10 @@ $update = $conn->prepare("UPDATE chat_conversation_members SET left_at = NOW() W
 $update->bind_param("ii", $conversation_id, $user_id);
 $update->execute();
 $update->close();
+
+$userName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $user_id")->fetch_assoc()['name'] ?? 'User';
+$content = "$userName has left the channel.";
+insertSystemMessage($conn, $conversation_id, $content);
 
 echo json_encode([
     'success' => true,

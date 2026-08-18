@@ -111,6 +111,16 @@ function renderMessages(messages) {
   let currentDate = null;
 
   messages.forEach((msg, index) => {
+    // System Message
+    if (msg.message_type === "system") {
+      const div = document.createElement("div");
+      div.className = "message-system";
+      div.textContent = msg.content;
+      container.appendChild(div);
+      return;
+    }
+
+    // Regular Message
     const isSelf = msg.is_self ? "self" : "";
     const senderName = getSenderName(msg);
     const avatar = getInitials(senderName);

@@ -1,6 +1,7 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
+require_once __DIR__ . '/../helpers/chat_system.php';
 
 header('Content-Type: application/json');
 
@@ -71,6 +72,12 @@ $update = $conn->prepare("
 $update->bind_param("iii", $newMuted, $conversation_id, $target_user_id);
 $update->execute();
 $update->close();
+
+$targetName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $target_user_id")->fetch_assoc()['name'] ?? 'User';
+$adminName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $current_user_id")->fetch_assoc()['name'] ?? 'Admin';
+$action = $newMuted ? 'muted' : 'unmuted';
+$content = "$targetName was $action by $adminName.";
+insertSystemMessage($conn, $conversation_id, $content);
 
 echo json_encode([
     'success' => true,
