@@ -276,6 +276,7 @@ function loadConversation(type, id) {
   }
 
   updateChatVisibility(true);
+  document.querySelector(".chat-container")?.classList.add("mobile-chat-open");
   updateInputMuteState();
 
   // Clear messages
@@ -477,6 +478,12 @@ function sendMessage() {
 // 8. Event listeners
 //
 document.addEventListener("DOMContentLoaded", function () {
+  const mobileChatBack = document.getElementById("mobileChatBack");
+  mobileChatBack?.addEventListener("click", function () {
+    document.querySelector(".chat-container")?.classList.remove("mobile-chat-open");
+    updateChatVisibility(false);
+  });
+
   // Channel clicks
   document.querySelectorAll(".channel-item").forEach((item) => {
     item.addEventListener("click", function () {

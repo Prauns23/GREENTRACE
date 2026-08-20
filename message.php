@@ -361,6 +361,9 @@ include 'header.php';
                         </div>
                     </div>
                     <div class="chat-header-main">
+                        <button class="mobile-chat-back" id="mobileChatBack" type="button" aria-label="Back to conversations">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
                         <div class="chat-header-left">
                             <div class="chat-avatar">
                                 <span class="material-symbols-rounded" id="chatAvatarIcon">
