@@ -56,7 +56,25 @@ if ($existing) {
     $user1_left = $existing['user1_left'];
     $user2_left = $existing['user2_left'];
 
-    // If both are still members, it's an existing active conversation
+    // Check archvie status for current user
+    $archCheck = $conn->prepare("SELECT is_archived FROM chat_conversation_members WHERE conversation_id = ? AND user_id = ?");
+    $archCheck->bind_param("ii", $conv_id, $current_user_id);
+    $archCheck->execute();
+    $archResult = $archCheck->get_result()->fetch_assoc();
+    $archCheck->close();
+
+    // If the current user has archived this conversation, unarchive it
+    if ($archResult && $archResult['is_archived'] == 1) {
+        $unarch = $conn->prepare("UPDATE chat_conversation_members SET is_archived = 0 WHERE conversation_id = ? AND user_id = ?");
+        $unarch->bind_param("ii", $conv_id, $current_user_id);
+        $unarch->execute();
+        $unarch->close();
+        // Now treat as a successful "re‑join"
+        echo json_encode(['success' => true, 'conversation_id' => $conv_id, 'message' => 'Conversation restored']);
+        exit;
+    }
+
+    // If both are still members (not archived), it's already active
     if ($user1_left === null && $user2_left === null) {
         echo json_encode(['success' => true, 'conversation_id' => $conv_id, 'message' => 'Conversation already exists']);
         exit;

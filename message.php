@@ -353,7 +353,7 @@ include 'header.php';
                             </button>
                             <div class="chat-menu-dropdown" id="chatMenuDropdown" style="display: none;">
                                 <!-- Only show Members List for channels -->
-                                <button data-action="add-people" id="membersListBtn">Members List</button>
+                                <button data-action="add-people" id="membersListBtn" style="display: none;">Members List</button>
                                 <button data-action="mute">Mute</button>
                                 <button data-action="archive">Archive</button>
                                 <button data-action="leave">Leave</button>

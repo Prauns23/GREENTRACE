@@ -270,6 +270,11 @@ function loadConversation(type, id) {
   oldestTimestamp = null;
   currentUserMuted = false;
 
+  const membersListBtn = document.getElementById("membersListBtn");
+  if (membersListBtn) {
+    membersListBtn.style.display = type === "channel" ? "block" : "none";
+  }
+
   updateChatVisibility(true);
   updateInputMuteState();
 
@@ -287,7 +292,7 @@ function loadConversation(type, id) {
   const selector = type === "channel" ? ".channel-item" : ".dm-item";
   const item = document.querySelector(`${selector}[data-id="${id}"]`);
 
-  if (type === "channel") {
+    if (type === "channel") {
     loadChannelMembers(numericId, true);
     const displayName = item
       ? item.querySelector(".channel-name").textContent
@@ -362,6 +367,22 @@ function loadConversation(type, id) {
       chatRoleBadge.style.display = "none";
     }
     chatAvatarIcon.textContent = "person";
+  } 
+  
+  const leaveBtn = document.querySelector('.chat-menu-dropdown button[data-action="leave"]');
+
+  if (type === 'channel') {
+    if (membersListBtn) membersListBtn.style.display = 'block';
+    if (leaveBtn) {
+      leaveBtn.textContent = 'Leave';
+      leaveBtn.dataset.action = 'leave';
+    }
+  } else {
+    if (membersListBtn) membersListBtn.style.display = 'none';
+    if (leaveBtn) {
+      leaveBtn.textContent = 'Delete';
+      leaveBtn.dataset.action = 'archive';
+    }
   }
 
   // Load first batch

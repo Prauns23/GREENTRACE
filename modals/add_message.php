@@ -28,6 +28,7 @@ $existingDmStmt = $conn->prepare("
       AND cm2.user_id != ?
       AND cm1.left_at IS NULL
       AND cm2.left_at IS NULL
+      AND cm1.is_archived = 0
 ");
 $existingDmStmt->bind_param("ii", $current_user_id, $current_user_id);
 $existingDmStmt->execute();
