@@ -46,7 +46,8 @@ $sql = "SELECT
             -- For messages from others: check if I have read it
             (SELECT COUNT(*) > 0 FROM chat_message_reads 
              WHERE message_id = m.id AND user_id = ?)
-    END as is_read
+    END as is_read,
+    (SELECT COUNT(*) FROM chat_message_reads WHERE message_id = m.id) as read_count
 FROM chat_messages m
 LEFT JOIN users_tbl u ON m.sender_id = u.id
 WHERE m.conversation_id = ? AND m.archived = 0

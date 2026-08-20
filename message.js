@@ -144,8 +144,10 @@ function renderMessages(messages) {
     // Show read receipt only on the latest self message
     let readReceipt = "";
     if (msg.is_self && msg.id === latestSelfMessageId) {
+      const readCount = Number.parseInt(msg.read_count, 10) || 0;
+      const isDirectMessage = currentConversation?.type === "dm";
       readReceipt = msg.is_read
-        ? `<span class="read-receipt">Read</span>`
+        ? `<span class="read-receipt">${isDirectMessage ? "Read" : `Read + ${readCount}`}</span>`
         : `<span class="read-receipt">Sent</span>`;
     }
 
