@@ -23,6 +23,7 @@ body {
   border-radius: 24px;
   margin: 24px 0;
   background: #e0e0e032;
+  /* background: transparent; */
 }
 
 .chat-sidebar-header {
@@ -180,6 +181,10 @@ body {
   color: white;
   font-weight: 400;
   transition: all 0.3s ease-in-out;
+}
+
+.btn-new-message #text {
+  padding-top: 8px;
 }
 
 .sidebar-actions .btn-new-message:hover {

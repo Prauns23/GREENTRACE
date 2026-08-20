@@ -85,12 +85,17 @@ if ($added_count > 0) {
         $userName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $uid")->fetch_assoc()['name'] ?? 'User';
         $content = "$userName was added by $adderName.";
         insertSystemMessage($conn, $conversation_id, $content);
-    } 
+    }
 
     foreach ($user_ids as $user_id) {
         // Notify only those who were actually added (re‑joined or new)
         createNotification($user_id, 'system', "Added to Channel", "You have been added to <strong>#{$channelName}</strong> by {$adderName}.", 'message.php');
     }
+
+    // Notify all members about the addition
+    $notifTitle = "New Member Added";
+    $notifMessage = "$adderName added " . count($user_ids) . " member(s) to #$channelName.";
+    notifyAllMembers($conn, $conversation_id, $notifTitle, $notifMessage, $current_user_id);
 }
 
 echo json_encode([

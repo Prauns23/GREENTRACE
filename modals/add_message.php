@@ -65,7 +65,7 @@ $stmt->close();
     <div class="modal-content">
         <!-- Header -->
         <div class="modal-header">
-            <h2>New Message</h2>
+            <h2>Add Contacts</h2>
         </div>
 
         <!-- Search bar -->

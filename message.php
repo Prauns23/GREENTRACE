@@ -46,6 +46,7 @@ $channelStmt = $conn->prepare("
             SELECT content 
             FROM chat_messages 
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
@@ -53,21 +54,24 @@ $channelStmt = $conn->prepare("
             SELECT created_at 
             FROM chat_messages 
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message_time,
         (
-            SELECT CONCAT(u.fname, ' ', u.lname) 
+            SELECT COALESCE(CONCAT(u.fname, ' ', u.lname), 'System')
             FROM chat_messages m
             LEFT JOIN users_tbl u ON m.sender_id = u.id
             WHERE m.conversation_id = c.id 
+              AND m.message_type != 'system'
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
         (
-            SELECT sender_id 
-            FROM chat_messages 
+            SELECT COALESCE(m.sender_id, 0)
+            FROM chat_messages m
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id
@@ -86,7 +90,6 @@ $channelStmt->execute();
 $channels = $channelStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Fetch direct message conversations
-// Fetch direct message conversations
 $dmQuery = "
     SELECT 
         c.id,
@@ -101,6 +104,7 @@ $dmQuery = "
             SELECT content 
             FROM chat_messages 
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
@@ -108,21 +112,24 @@ $dmQuery = "
             SELECT created_at 
             FROM chat_messages 
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message_time,
         (
-            SELECT CONCAT(u_sender.fname, ' ', u_sender.lname)
+            SELECT COALESCE(CONCAT(u_sender.fname, ' ', u_sender.lname), 'System')
             FROM chat_messages m
             LEFT JOIN users_tbl u_sender ON m.sender_id = u_sender.id
             WHERE m.conversation_id = c.id 
+              AND m.message_type != 'system'
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
         (
-            SELECT sender_id 
-            FROM chat_messages 
+            SELECT COALESCE(m.sender_id, 0)
+            FROM chat_messages m
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id
@@ -179,12 +186,12 @@ include 'header.php';
                         </button>
                         <button class="btn-new-message" onclick="showAddMessageModal()">
                             <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon">
-                            New Message
+                            Add Contacts
                         </button>
                     <?php else: ?>
                         <button class="btn-new-message full-width" onclick="showAddMessageModal()">
                             <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon">
-                            New Message
+                            Add Contacts
                         </button>
                     <?php endif; ?>
                 </div>
@@ -331,7 +338,7 @@ include 'header.php';
                 <div class="placeholder-content">
                     <img src="components\icons\empty-chat-img.svg" alt="">
                     <h3>Start your conversation!</h3>
-                    <p>Click the <strong><i>New Message</i></strong> and search for someone you may know! Or just click the <strong><i>Channels</i></strong>!</p>
+                    <p>Click the <strong><i>Add Contacts</i></strong> and search for someone you may know! Or just click the <strong><i>Channels</i></strong>!</p>
                 </div>
             </div>
 

@@ -39,6 +39,7 @@ $channelQuery = "
             SELECT content 
             FROM chat_messages 
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
@@ -46,21 +47,24 @@ $channelQuery = "
             SELECT created_at 
             FROM chat_messages 
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message_time,
         (
-            SELECT CONCAT(u.fname, ' ', u.lname) 
+            SELECT COALESCE(CONCAT(u.fname, ' ', u.lname), 'System')
             FROM chat_messages m
             LEFT JOIN users_tbl u ON m.sender_id = u.id
             WHERE m.conversation_id = c.id 
+              AND m.message_type != 'system'
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
         (
-            SELECT sender_id 
-            FROM chat_messages 
+            SELECT COALESCE(m.sender_id, 0) 
+            FROM chat_messages m
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id
@@ -102,6 +106,7 @@ $dmQuery = "
             SELECT content 
             FROM chat_messages 
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
@@ -109,21 +114,24 @@ $dmQuery = "
             SELECT created_at 
             FROM chat_messages 
             WHERE conversation_id = c.id 
+              AND message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message_time,
         (
-            SELECT CONCAT(u_sender.fname, ' ', u_sender.lname) 
+            SELECT COALESCE(CONCAT(u_sender.fname, ' ', u_sender.lname), 'System')
             FROM chat_messages m
             LEFT JOIN users_tbl u_sender ON m.sender_id = u_sender.id
             WHERE m.conversation_id = c.id 
+              AND m.message_type != 'system'
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
         (
-            SELECT sender_id 
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
+            SELECT COALESCE(m.sender_id, 0)
+            FROM chat_messages m
+            WHERE m.conversation_id = c.id 
+              AND m.message_type != 'system'
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id

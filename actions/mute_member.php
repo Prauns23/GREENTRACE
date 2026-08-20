@@ -5,7 +5,7 @@ require_once __DIR__ . '/../helpers/chat_system.php';
 
 header('Content-Type: application/json');
 
-if(!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id'])) {
     echo json_encode(['error' => 'Not logged in']);
     exit;
 }
@@ -79,9 +79,13 @@ $action = $newMuted ? 'muted' : 'unmuted';
 $content = "$targetName was $action by $adminName.";
 insertSystemMessage($conn, $conversation_id, $content);
 
+// Notify all members
+$notifTitle = "Member " . ucfirst($action);
+$notifMessage = "$targetName was $action by $adminName.";
+notifyAllMembers($conn, $conversation_id, $notifTitle, $notifMessage);
+
 echo json_encode([
     'success' => true,
     'mute' => (bool)$newMuted,
     'message' => $newMuted ? 'User has been muted' : 'User has been unmuted'
 ]);
-?> 

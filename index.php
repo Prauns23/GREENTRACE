@@ -14,7 +14,7 @@
 
 <!-- 2nd Page -->
 <div class="SecondPage" id="about-section">
-    <h3 class="about-title">ABOUT US</h3>
+    <h3 class="about-title">PROVIDES</h3>
     <div class="top">
         <div class="feature">
             <h2>01.</h2>

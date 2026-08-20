@@ -41,7 +41,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-//  AJAX handlers 
+// AJAX handlers 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
 
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    //  Bulk actions 
+    // Bulk actions 
     if (in_array($action, ['bulk_mark_read', 'bulk_archive', 'bulk_delete'])) {
         $ids = json_decode($_POST['ids'] ?? '[]', true);
         if (!is_array($ids) || empty($ids)) {
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-//  Main page 
+// Main page 
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -180,8 +180,7 @@ include 'header.php';
     <div class="filter-buttons">
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="application">Applications</button>
-        <button class="filter-btn"
-            data-filter="message">Message</button>
+        <button class="filter-btn" data-filter="message">Messages</button>
 
         <div class="action-btn-wrapper">
             <button class="action-btn" onclick="toggleBulkDropdown(event)">
@@ -207,7 +206,19 @@ include 'header.php';
             <div class="notification-group" data-group="<?= $label ?>">
                 <div class="group-title"><?= $label ?></div>
                 <?php foreach ($items as $notif): ?>
-                    <div class="notification-item <?= $notif['is_read'] ? 'read' : 'unread' ?>"
+                    <?php
+                    // Detect negative chat actions (kick, mute, leave)
+                    $negativeKeywords = ['Kicked', 'Muted', 'Left'];
+                    $isNegative = false;
+                    foreach ($negativeKeywords as $keyword) {
+                        if (strpos($notif['title'], $keyword) !== false) {
+                            $isNegative = true;
+                            break;
+                        }
+                    }
+                    $extraClass = $isNegative ? 'negative' : '';
+                    ?>
+                    <div class="notification-item <?= $notif['is_read'] ? 'read' : 'unread' ?> <?= $extraClass ?>"
                         data-id="<?= $notif['id'] ?>"
                         data-link="<?= htmlspecialchars($notif['link'] ?? '#') ?>"
                         data-type="<?= $notif['type'] ?>"
@@ -244,7 +255,7 @@ include 'header.php';
 </div>
 
 <script>
-    //  UI helpers 
+    // UI helpers 
     function getCSRFToken() {
         return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     }
@@ -270,7 +281,7 @@ include 'header.php';
         updateSelectAllButtonLabel();
     }
 
-    //  Dropdown toggle 
+    // Dropdown toggle 
     function toggleBulkDropdown(event) {
         event.stopPropagation();
         const dropdown = document.getElementById('bulkDropdown');
@@ -319,7 +330,7 @@ include 'header.php';
         });
     }
 
-    //  Single click: mark as read and navigate 
+    // Single click: mark as read and navigate 
     function handleNotificationClick(el) {
         if (event.target.classList.contains('notification-checkbox')) return;
 
@@ -350,7 +361,7 @@ include 'header.php';
         }
     }
 
-    //  Bulk actions 
+    // Bulk actions 
     function sendBulkAction(action, confirmMessage) {
         const ids = getSelectedIds();
         if (ids.length === 0) {
@@ -422,7 +433,7 @@ include 'header.php';
         sendBulkAction('bulk_delete', 'Delete selected notifications permanently?');
     }
 
-    //  Update label on checkbox change 
+    // Update label on checkbox change 
     document.addEventListener('change', function(e) {
         if (e.target.classList.contains('notification-checkbox')) {
             updateSelectAllButtonLabel();

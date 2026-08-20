@@ -194,6 +194,10 @@
   font-size: 1.4rem;
 }
 
+.notification-item.negative {
+  border-left: 4px solid #e53935;
+}
+
 /* Content */
 .notification-content {
   flex: 1;

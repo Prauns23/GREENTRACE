@@ -592,10 +592,15 @@ function updateChannelList(channels) {
       const timeSpan = item.querySelector(".channel-time");
 
       let displayMsg = "No messages yet";
-      if (channelData.last_message && channelData.last_sender_name) {
-        const isSelf = channelData.last_sender_id == currentUserId;
-        const senderDisplay = isSelf ? "You" : channelData.last_sender_name;
-        displayMsg = senderDisplay + ": " + channelData.last_message;
+      if (dmData.last_message) {
+        if (dmData.last_sender_id == 0) {
+          // System message – show only the content
+          displayMsg = dmData.last_message;
+        } else if (dmData.last_sender_name) {
+          const isSelf = dmData.last_sender_id == currentUserId;
+          const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
+          displayMsg = senderDisplay + ": " + dmData.last_message;
+        }
       }
       lastMsgSpan.textContent = displayMsg;
 
