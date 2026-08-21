@@ -14,7 +14,7 @@
 
 <!-- 2nd Page -->
 <div class="SecondPage" id="about-section">
-    <h3 class="about-title">PROVIDES</h3>
+    <h3 class="about-title">OUR SYSTEM</h3>
     <div class="top">
         <div class="feature">
             <h2>01.</h2>
@@ -102,7 +102,7 @@
                     <h3>Tree Space Estimation</h3>
                     <p>Estimates the mature height and canopy spread of a tree and visually projects the space it
                         will occupy.</p>
-                    <button class="explore">
+                    <button class="explore" onclick="<?php echo isset($_SESSION['user_id']) ? "window.location.href='ar-camera.php'" : "showLogin()"; ?>">
                         Explore
                         <img src="components/icons/double-arrow.svg" alt="">
                     </button>

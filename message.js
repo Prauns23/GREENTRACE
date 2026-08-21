@@ -386,7 +386,7 @@ function loadConversation(type, id) {
     if (membersListBtn) membersListBtn.style.display = "none";
     if (leaveBtn) {
       leaveBtn.textContent = "Delete";
-      leaveBtn.dataset.action = "archive";
+      leaveBtn.dataset.action = "delete";
     }
   }
 
@@ -564,6 +564,9 @@ document.addEventListener("DOMContentLoaded", function () {
             break;
           case "archive":
             toggleArchive();
+            break;
+          case "delete":
+            deleteConversation();
             break;
           case "add-people":
             if (currentConversation && currentConversation.type === "channel") {
@@ -1109,6 +1112,28 @@ function toggleArchive() {
           archiveBtn.textContent = data.archived ? "Unarchive" : "Archive";
         }
         // Reload to refresh sidebar
+        location.reload();
+      } else {
+        showToast(data.error || "Error", 3000, "error");
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
+function deleteConversation() {
+  if (!currentConversation || currentConversation.type !== "dm") return;
+  if (!confirm("Delete this conversation for both users?")) return;
+
+  const formData = new URLSearchParams();
+  formData.append("conversation_id", currentConversation.id);
+  fetch("actions/delete_conversation.php", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        showToast(data.message, 3000, "success");
         location.reload();
       } else {
         showToast(data.error || "Error", 3000, "error");
