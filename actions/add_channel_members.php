@@ -21,20 +21,22 @@ if (!$conversation_id || empty($user_ids)) {
     exit;
 }
 
-// Verify current user is owner or admin of this channel
+// Verify current user is owner or admin of this channel, or is super_admin
 $roleCheck = $conn->prepare("SELECT member_role FROM chat_conversation_members WHERE conversation_id = ? AND user_id = ? AND left_at IS NULL");
 $roleCheck->bind_param("ii", $conversation_id, $current_user_id);
 $roleCheck->execute();
 $role = $roleCheck->get_result()->fetch_assoc();
 $roleCheck->close();
 
-if (!$role || !in_array($role['member_role'], ['owner', 'admin'])) {
+$isSuperAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin';
+if (!$isSuperAdmin && (!$role || !in_array($role['member_role'], ['owner', 'admin']))) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
 
 $added_count = 0;
 $errors = [];
+$addedUserIds = [];
 
 foreach ($user_ids as $user_id) {
     $user_id = (int)$user_id;
@@ -54,6 +56,7 @@ foreach ($user_ids as $user_id) {
             $update->bind_param("iii", $current_user_id, $conversation_id, $user_id);
             if ($update->execute()) {
                 $added_count++;
+                $addedUserIds[] = $user_id;
             } else {
                 $errors[] = "Failed to re-add user $user_id";
             }
@@ -66,6 +69,7 @@ foreach ($user_ids as $user_id) {
         $insert->bind_param("iii", $conversation_id, $user_id, $current_user_id);
         if ($insert->execute()) {
             $added_count++;
+            $addedUserIds[] = $user_id;
         } else {
             $errors[] = "Failed to add user $user_id: " . $conn->error;
         }
@@ -73,28 +77,27 @@ foreach ($user_ids as $user_id) {
     }
 }
 
-// Send notifications to added users (optional)
+// Send notifications and system messages
 if ($added_count > 0) {
     // Fetch adder's name
     $adderName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $current_user_id")->fetch_assoc()['name'] ?? 'Admin';
     $channelName = $conn->query("SELECT name FROM chat_conversations WHERE id = $conversation_id")->fetch_assoc()['name'] ?? 'channel';
-    $adderName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $current_user_id")->fetch_assoc()['name'] ?? 'Admin';
 
-    foreach ($user_ids as $uid) {
-        // Only notify if this user was actually added (Not skipped because already active)
+    // System messages in chat
+    foreach ($addedUserIds as $uid) {
         $userName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $uid")->fetch_assoc()['name'] ?? 'User';
         $content = "$userName was added by $adderName.";
         insertSystemMessage($conn, $conversation_id, $content);
     }
 
-    foreach ($user_ids as $user_id) {
-        // Notify only those who were actually added (re‑joined or new)
-        createNotification($user_id, 'system', "Added to Channel", "You have been added to <strong>#{$channelName}</strong> by {$adderName}.", 'message.php');
+    // Notifications to each added user
+    foreach ($addedUserIds as $uid) {
+        createNotification($uid, 'system', "Added to Channel", "You have been added to <strong>#{$channelName}</strong> by {$adderName}.", 'message.php');
     }
 
-    // Notify all members about the addition
+    // Notify all other members about the addition
     $notifTitle = "New Member Added";
-    $notifMessage = "$adderName added " . count($user_ids) . " member(s) to #$channelName.";
+    $notifMessage = "$adderName added " . count($addedUserIds) . " member(s) to #$channelName.";
     notifyAllMembers($conn, $conversation_id, $notifTitle, $notifMessage, $current_user_id);
 }
 

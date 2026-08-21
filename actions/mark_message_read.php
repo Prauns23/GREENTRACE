@@ -12,8 +12,9 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $conversation_id = (int)($_POST['conversation_id'] ?? 0);
 $message_ids = json_decode($_POST['message_ids'] ?? '[]', true);
+$mark_all = ($_POST['mark_all'] ?? '') === '1';
 
-if (!$conversation_id || empty($message_ids)) {
+if (!$conversation_id || (!$mark_all && empty($message_ids))) {
     echo json_encode(['error' => 'Invalid input']);
     exit;
 }
@@ -28,13 +29,37 @@ if ($check->get_result()->num_rows === 0) {
 }
 $check->close();
 
+if ($mark_all) {
+    $unreadStmt = $conn->prepare("
+        SELECT m.id
+        FROM chat_messages m
+        WHERE m.conversation_id = ?
+          AND m.sender_id != ?
+          AND m.message_type != 'system'
+          AND m.archived = 0
+          AND NOT EXISTS (
+              SELECT 1 FROM chat_message_reads r
+              WHERE r.message_id = m.id AND r.user_id = ?
+          )
+    ");
+    $unreadStmt->bind_param("iii", $conversation_id, $user_id, $user_id);
+    $unreadStmt->execute();
+    $message_ids = array_column($unreadStmt->get_result()->fetch_all(MYSQLI_ASSOC), 'id');
+    $unreadStmt->close();
+}
+
+if (empty($message_ids)) {
+    echo json_encode(['success' => true, 'message' => 'All messages already read']);
+    exit;
+}
+
 // Build bulk insert for read receipts
 $placeholders = implode(',', array_fill(0, count($message_ids), '?'));
 
 // First, check which messages are already read
 $checkRead = $conn->prepare("SELECT message_id FROM chat_message_reads WHERE user_id = ? AND message_id IN ($placeholders)");
 $types = str_repeat('i', count($message_ids));
-$checkRead->bind_param($types . 'i', ...array_merge($message_ids, [$user_id]));
+$checkRead->bind_param('i' . $types, ...array_merge([$user_id], $message_ids));
 $checkRead->execute();
 $alreadyRead = $checkRead->get_result()->fetch_all(MYSQLI_ASSOC);
 $alreadyReadIds = array_column($alreadyRead, 'message_id');

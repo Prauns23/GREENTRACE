@@ -38,6 +38,7 @@ $sql = "SELECT
     u.fname, 
     u.lname,
     CASE 
+        WHEN m.sender_id is NULL THEN 1 -- system messages are always marked as read
         WHEN m.sender_id = ? THEN
             -- For messages I sent: check if any OTHER user has read it
             (SELECT COUNT(*) > 0 FROM chat_message_reads 

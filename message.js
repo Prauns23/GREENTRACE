@@ -295,7 +295,7 @@ function loadConversation(type, id) {
   const selector = type === "channel" ? ".channel-item" : ".dm-item";
   const item = document.querySelector(`${selector}[data-id="${id}"]`);
 
-    if (type === "channel") {
+  if (type === "channel") {
     loadChannelMembers(numericId, true);
     const displayName = item
       ? item.querySelector(".channel-name").textContent
@@ -370,21 +370,23 @@ function loadConversation(type, id) {
       chatRoleBadge.style.display = "none";
     }
     chatAvatarIcon.textContent = "person";
-  } 
-  
-  const leaveBtn = document.querySelector('.chat-menu-dropdown button[data-action="leave"]');
+  }
 
-  if (type === 'channel') {
-    if (membersListBtn) membersListBtn.style.display = 'block';
+  const leaveBtn = document.querySelector(
+    '.chat-menu-dropdown button[data-action="leave"]',
+  );
+
+  if (type === "channel") {
+    if (membersListBtn) membersListBtn.style.display = "block";
     if (leaveBtn) {
-      leaveBtn.textContent = 'Leave';
-      leaveBtn.dataset.action = 'leave';
+      leaveBtn.textContent = "Leave";
+      leaveBtn.dataset.action = "leave";
     }
   } else {
-    if (membersListBtn) membersListBtn.style.display = 'none';
+    if (membersListBtn) membersListBtn.style.display = "none";
     if (leaveBtn) {
-      leaveBtn.textContent = 'Delete';
-      leaveBtn.dataset.action = 'archive';
+      leaveBtn.textContent = "Delete";
+      leaveBtn.dataset.action = "archive";
     }
   }
 
@@ -397,6 +399,7 @@ function loadConversation(type, id) {
 //
 // 7. Send a message
 //
+
 function sendMessage() {
   const input = document.getElementById("messageInput");
   const text = input.value.trim();
@@ -482,7 +485,9 @@ function sendMessage() {
 document.addEventListener("DOMContentLoaded", function () {
   const mobileChatBack = document.getElementById("mobileChatBack");
   mobileChatBack?.addEventListener("click", function () {
-    document.querySelector(".chat-container")?.classList.remove("mobile-chat-open");
+    document
+      .querySelector(".chat-container")
+      ?.classList.remove("mobile-chat-open");
     updateChatVisibility(false);
   });
 
@@ -622,14 +627,14 @@ function updateChannelList(channels) {
       const timeSpan = item.querySelector(".channel-time");
 
       let displayMsg = "No messages yet";
-      if (dmData.last_message) {
-        if (dmData.last_sender_id == 0) {
+      if (channelData.last_message) {
+        if (channelData.last_sender_id == 0) {
           // System message – show only the content
-          displayMsg = dmData.last_message;
-        } else if (dmData.last_sender_name) {
-          const isSelf = dmData.last_sender_id == currentUserId;
-          const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
-          displayMsg = senderDisplay + ": " + dmData.last_message;
+          displayMsg = channelData.last_message;
+        } else if (channelData.last_sender_name) {
+          const isSelf = channelData.last_sender_id == currentUserId;
+          const senderDisplay = isSelf ? "You" : channelData.last_sender_name;
+          displayMsg = senderDisplay + ": " + channelData.last_message;
         }
       }
       lastMsgSpan.textContent = displayMsg;
@@ -812,9 +817,9 @@ let lastReadMessageId = null;
 function markMessageAsRead() {
   if (!currentConversation || !allMessages.length) return;
 
-  // Find all unread messages (not from current user)
+  // Find all unread messages (not from current user, not system)
   const unreadMessages = allMessages.filter(
-    (msg) => !msg.is_self && !msg.is_read,
+    (msg) => !msg.is_self && !msg.is_read && msg.message_type !== "system",
   );
 
   // If none unread, still ensure sidebar is up‑to‑date
@@ -833,7 +838,7 @@ function markMessageAsRead() {
   fetch("actions/mark_message_read.php", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `message_ids=${JSON.stringify(unreadIds)}&conversation_id=${currentConversation.id}`,
+    body: `message_ids=${JSON.stringify(unreadIds)}&conversation_id=${currentConversation.id}&mark_all=1`,
   })
     .then((response) => response.json())
     .then((data) => {

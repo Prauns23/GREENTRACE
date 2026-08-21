@@ -22,6 +22,7 @@ $sql = "SELECT COUNT(DISTINCT m.id) as total
         WHERE r.id IS NULL
             AND m.sender_id != ?
             AND m.archived = 0
+            AND m.message_type != 'system'
 ";
 
 $stmt = $conn->prepare($sql);

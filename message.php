@@ -36,6 +36,7 @@ $channelStmt = $conn->prepare("
             FROM chat_messages m 
             WHERE m.conversation_id = c.id 
               AND m.sender_id != ? 
+              AND m.message_type != 'system'
               AND NOT EXISTS (
                   SELECT 1 FROM chat_message_reads r 
                   WHERE r.message_id = m.id 

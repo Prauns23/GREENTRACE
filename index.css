@@ -116,7 +116,7 @@ body.login-active {
 #floatingSignUpContainer .floating-iframe {
   height: 1100px;
   max-height: 90vh;
-  margin-top: 20px;
+  margin-top: 60px;
 }
 
 #floatingLoginContainer .floating-iframe,
