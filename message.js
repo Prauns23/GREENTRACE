@@ -24,11 +24,16 @@ let hasMoreMessages = true;
 let allMessages = [];
 let oldestTimestamp = null;
 let currentUserMuted = false;
-let suppressSearchBarUntil = 0;
+let isProgrammaticChatScroll = false;
 
 function scrollChatToBottom(container) {
-  suppressSearchBarUntil = performance.now() + 100;
+  isProgrammaticChatScroll = true;
   container.scrollTop = container.scrollHeight;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      isProgrammaticChatScroll = false;
+    });
+  });
 }
 
 //
@@ -543,6 +548,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector(".chat-search-bar");
   let searchBarTimeout = null;
   let searchBarVisible = false;
+  let userScrollIntent = false;
 
   function showChatSearchBar() {
     if (!chatSearchBar) return;
@@ -569,18 +575,28 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }, 300);
       }
-    }, 3000);
+    }, 2000);
   }
 
   if (chatMessages) {
+    chatMessages.addEventListener("wheel", () => {
+      userScrollIntent = true;
+    }, { passive: true });
+    chatMessages.addEventListener("touchmove", () => {
+      userScrollIntent = true;
+    }, { passive: true });
+    chatMessages.addEventListener("pointerdown", () => {
+      userScrollIntent = true;
+    }, { passive: true });
     chatMessages.addEventListener("scroll", function () {
       // Load more messages if at top
       if (this.scrollTop === 0 && !isLoading && hasMoreMessages) {
         loadMoreMessages();
       }
-      // Ignore scroll events caused by loading or sending messages.
-      if (performance.now() >= suppressSearchBarUntil) {
+      // Ignore scroll events caused by layout changes or automatic scrolling.
+      if (userScrollIntent && !isProgrammaticChatScroll) {
         showChatSearchBar();
+        userScrollIntent = false;
       }
     });
   }
