@@ -1,5 +1,29 @@
 <?php
-// error_logger.php – Centralized error logging
+// Centralized system error and audit logging.
+
+define('SYSTEM_LOG_FILE', __DIR__ . '/logs/system.log');
+define('AUDIT_LOG_FILE', __DIR__ . '/logs/audit.log');
+
+/**
+ * Write one structured JSON log entry to an application-owned file.
+ */
+function writeApplicationLog($file, $level, $message, $context = []) {
+    $entry = [
+        'timestamp' => date('c'),
+        'level' => $level,
+        'message' => (string) $message,
+        'user_id' => $_SESSION['user_id'] ?? null,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+        'method' => $_SERVER['REQUEST_METHOD'] ?? null,
+        'uri' => $_SERVER['REQUEST_URI'] ?? null,
+        'context' => $context,
+    ];
+
+    $encoded = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($encoded !== false) {
+        error_log($encoded . PHP_EOL, 3, $file);
+    }
+}
 
 /**
  * Log an error with context
@@ -7,39 +31,14 @@
  * @param array  $context    Additional data (e.g., user_id, file, line, query)
  */
 function logError($message, $context = []) {
-    // Build log entry
-    $log = '[' . date('Y-m-d H:i:s') . '] ';
-    
-    // Add user info if logged in
-    if (isset($_SESSION['user_id'])) {
-        $log .= '[User: ' . $_SESSION['user_id'] . '] ';
-    } else {
-        $log .= '[User: guest] ';
-    }
-    
-    // Add IP
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $log .= '[IP: ' . $ip . '] ';
-    
-    // Add request URI
-    $uri = $_SERVER['REQUEST_URI'] ?? 'unknown';
-    $log .= '[URI: ' . $uri . '] ';
-    
-    // Add main message
-    $log .= $message;
-    
-    // Add context details (if any)
-    if (!empty($context)) {
-        foreach ($context as $key => $value) {
-            if (is_array($value)) {
-                $value = json_encode($value);
-            }
-            $log .= " [$key: $value]";
-        }
-    }
-    
-    // Send to server's error log
-    error_log($log);
+    writeApplicationLog(SYSTEM_LOG_FILE, 'error', $message, $context);
+}
+
+/**
+ * Record a security or user activity event without mixing it with errors.
+ */
+function logAudit($action, $context = []) {
+    writeApplicationLog(AUDIT_LOG_FILE, 'audit', $action, $context);
 }
 
 /**
@@ -73,10 +72,9 @@ function setupErrorHandling($environment = 'production') {
         ini_set('display_startup_errors', 1);
     }
     
-    // Always log errors
+    // Always log errors to the application-owned system log.
     ini_set('log_errors', 1);
-    // Optional: set a custom error log file (uncomment if needed)
-    // ini_set('error_log', __DIR__ . '/logs/php_errors.log');
+    ini_set('error_log', SYSTEM_LOG_FILE);
     
     // Set error reporting level (log everything)
     error_reporting(E_ALL);

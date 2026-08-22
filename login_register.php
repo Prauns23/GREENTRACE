@@ -14,7 +14,7 @@ $ip = $_SERVER['REMOTE_ADDR'];
 // Helper: send JSON error and log
 function sendJsonError($message, $logMessage = null) {
     if ($logMessage) {
-        error_log("login_register.php error: $logMessage");
+        logError("login_register.php error: $logMessage");
     }
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'error' => $message]);
@@ -72,6 +72,7 @@ if (isset($_POST['sign-up'])) {
             $_SESSION['email']      = $email;
             $_SESSION['role']       = $role;
             $_SESSION['user_id']    = $newUserId;
+            logAudit('user_registered', ['user_id' => $newUserId]);
 
             // Send welcome email (best effort)
             require_once __DIR__ . '/email_helper.php';
@@ -135,6 +136,7 @@ if (isset($_POST['sign-in'])) {
                 $_SESSION['email']      = $user['email'];
                 $_SESSION['role']       = $user['role'];
                 $_SESSION['user_id']    = $user['id'];
+                logAudit('user_logged_in', ['user_id' => $user['id']]);
                 echo json_encode(['success' => true, 'message' => "Welcome back, " . $user['fname'] . "!"]);
                 exit;
             }
