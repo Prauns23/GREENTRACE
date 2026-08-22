@@ -95,6 +95,32 @@ function formatDisplayTime(timestamp) {
   return raw;
 }
 
+function toggleReaction(messageId, reaction) {
+  const formData = new URLSearchParams();
+  formData.append("message_id", messageId);
+  formData.append("reaction", reaction);
+
+  fetch("actions/toggle_reaction.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData.toString(),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        // Refresh messages to update UI
+        refreshMessages();
+      } else {
+        showToast(data.error || "Failed to toggle reaction", 3000, "error");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      showToast("Network error", 3000, "error");
+    });
+}
+
 //
 // 4. Render messages
 //
@@ -175,6 +201,36 @@ function renderMessages(messages) {
                 ${readReceipt ? `<div class="message-footer">${readReceipt}</div>` : ""}
             </div>
         `;
+    //  Reactions
+    const reactions = msg.reactions || [];
+    const currentUserReacted = reactions.some(
+      (r) => r.user_id === currentUserId && r.reaction === "heart",
+    );
+    const heartCount = reactions.filter((r) => r.reaction === "heart").length;
+
+    // Reaction trigger (hidden by default, shown when the message is hovered)
+    const toolbar = document.createElement("div");
+    toolbar.className = "reaction-toolbar";
+    toolbar.innerHTML = `
+    <button class="reaction-btn reaction-trigger" data-msg-id="${msg.id}" title="React with heart" type="button">
+      <img src="components/icons/heart-plus.png" alt="Add heart reaction">
+    </button>
+`;
+    div.appendChild(toolbar);
+
+    // Reactions display (below message)
+    const reactionsDisplay = document.createElement("div");
+    reactionsDisplay.className = "reactions-display";
+    if (heartCount > 0) {
+      reactionsDisplay.innerHTML = `
+        <span class="reaction-item ${currentUserReacted ? "user-reacted" : ""}">
+          <img src="components/icons/heart.png" alt="Heart reaction">
+            <span class="reaction-count">${heartCount}</span>
+        </span>
+    `;
+    }
+    div.querySelector(".message-wrapper").appendChild(reactionsDisplay);
+
     container.appendChild(div);
   });
 
@@ -578,16 +634,37 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 2000);
   }
 
+  document.addEventListener("click", function (e) {
+    const heartBtn = e.target.closest(".reaction-trigger");
+    if (heartBtn) {
+      e.preventDefault();
+      const msgId = heartBtn.dataset.msgId;
+      toggleReaction(msgId, "heart");
+    }
+  });
+
   if (chatMessages) {
-    chatMessages.addEventListener("wheel", () => {
-      userScrollIntent = true;
-    }, { passive: true });
-    chatMessages.addEventListener("touchmove", () => {
-      userScrollIntent = true;
-    }, { passive: true });
-    chatMessages.addEventListener("pointerdown", () => {
-      userScrollIntent = true;
-    }, { passive: true });
+    chatMessages.addEventListener(
+      "wheel",
+      () => {
+        userScrollIntent = true;
+      },
+      { passive: true },
+    );
+    chatMessages.addEventListener(
+      "touchmove",
+      () => {
+        userScrollIntent = true;
+      },
+      { passive: true },
+    );
+    chatMessages.addEventListener(
+      "pointerdown",
+      () => {
+        userScrollIntent = true;
+      },
+      { passive: true },
+    );
     chatMessages.addEventListener("scroll", function () {
       // Load more messages if at top
       if (this.scrollTop === 0 && !isLoading && hasMoreMessages) {

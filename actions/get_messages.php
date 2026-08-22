@@ -82,4 +82,31 @@ $stmt->close();
 // Reverse order to display oldest first
 $messages = array_reverse($messages);
 
+
+// Get reactions for these messages
+$messageIds = array_column($messages, 'id');
+if (!empty($messageIds)) {
+    $placeholders = implode(',', array_fill(0, count($messageIds), '?'));
+    $reactStmt = $conn->prepare("SELECT message_id, user_id, reaction FROM chat_message_reactions WHERE message_id IN ($placeholders)");
+    $reactStmt->bind_param(str_repeat('i', count($messageIds)), ...$messageIds);
+    $reactStmt->execute();
+    $reactResult = $reactStmt->get_result();
+    $reactionsByMessage = [];
+    while ($row = $reactResult->fetch_assoc()) {
+        $reactionsByMessage[$row['message_id']][] = ['user_id' => (int)$row['user_id'], 'reaction' => $row['reaction']];
+    }
+    $reactStmt->close();
+    // Attach to messages
+    foreach ($messages as &$msg) {
+        $msg['reactions'] = $reactionsByMessage[$msg['id']] ?? [];
+    }
+    unset($msg);
+} else {
+    foreach ($messages as &$msg) {
+        $msg['reactions'] = [];
+    }
+    unset($msg);
+}
+
+
 echo json_encode(['success' => true, 'messages' => $messages]);

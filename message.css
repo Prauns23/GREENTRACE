@@ -1437,17 +1437,19 @@ body {
 }
 
 .chat-search-bar {
-    transition: opacity 0.3s ease, max-height 0.3s ease;
-    overflow: hidden;
-    max-height: 0;
-    opacity: 0;
-    padding: 0 20px;
+  transition:
+    opacity 0.3s ease,
+    max-height 0.3s ease;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  padding: 0 20px;
 }
 
 .chat-search-bar.visible {
-    max-height: 60px;
-    opacity: 1;
-    padding: 8px 20px;
+  max-height: 60px;
+  opacity: 1;
+  padding: 8px 20px;
 }
 
 /* Chat search bar */
@@ -1464,6 +1466,85 @@ body {
   text-align: center;
   padding: 40px 20px;
   color: #a0aec0;
+}
+
+/* Reaction toolbar */
+.reaction-toolbar {
+  display: none;
+  align-self: center;
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+.message-item:hover .reaction-toolbar,
+.reaction-toolbar:hover {
+  display: flex;
+}
+
+.reaction-toolbar button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.reaction-toolbar button:hover {
+  background: #f1f5f9;
+}
+
+.reaction-toolbar img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+}
+
+.reaction-trigger img {
+  transition: transform 0.2s;
+}
+
+.reaction-trigger:hover img {
+  transform: scale(1.2);
+}
+
+/* Reactions display */
+.reactions-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+.reaction-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 2px 8px 2px 6px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #475569;
+  border: 1px solid transparent;
+}
+
+.reaction-item img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.reaction-item.user-reacted {
+  background: #fee2e2;
+  border-color: #e53e3e;
+}
+
+.reaction-count {
+  font-weight: 500;
+  margin-left: 2px;
 }
 
 /* Members panel responsiveness */
