@@ -24,6 +24,12 @@ let hasMoreMessages = true;
 let allMessages = [];
 let oldestTimestamp = null;
 let currentUserMuted = false;
+let suppressSearchBarUntil = 0;
+
+function scrollChatToBottom(container) {
+  suppressSearchBarUntil = performance.now() + 100;
+  container.scrollTop = container.scrollHeight;
+}
 
 //
 // 3. Helper functions
@@ -166,11 +172,17 @@ function renderMessages(messages) {
         `;
     container.appendChild(div);
   });
+
+  // If there's an active search, re‑apply it
+  if (chatSearchTerm) {
+    searchMessages(chatSearchTerm);
+  }
 }
 
 //
 // 5. Fetch messages from server
 //
+
 function fetchMessages(isInitial = false) {
   if (isLoading || !hasMoreMessages || !currentConversation) return;
   isLoading = true;
@@ -214,7 +226,7 @@ function fetchMessages(isInitial = false) {
 
         if (isInitial) {
           const container = document.getElementById("chatMessages");
-          container.scrollTop = container.scrollHeight;
+          scrollChatToBottom(container);
 
           // Mark messages as read after loading
           setTimeout(markMessageAsRead, 500);
@@ -254,6 +266,7 @@ function loadMoreMessages() {
 //
 // 6. Load a conversation
 //
+
 function loadConversation(type, id) {
   // Hide members panel if open
   hideMembersPanel();
@@ -441,7 +454,7 @@ function sendMessage() {
         });
         renderMessages(allMessages);
         const container = document.getElementById("chatMessages");
-        container.scrollTop = container.scrollHeight;
+        scrollChatToBottom(container);
         input.value = "";
         sendBtn.disabled = false;
 
@@ -523,23 +536,82 @@ document.addEventListener("DOMContentLoaded", function () {
     if (e.key === "Enter") sendMessage();
   });
 
-  // Infinite scroll
+  // Infinite scroll and temporary search bar visibility
   const chatMessages = document.getElementById("chatMessages");
-  chatMessages.addEventListener("scroll", function () {
-    if (this.scrollTop === 0 && !isLoading && hasMoreMessages) {
-      loadMoreMessages();
+  const chatSearchBar =
+    document.getElementById("chatSearchBar") ||
+    document.querySelector(".chat-search-bar");
+  let searchBarTimeout = null;
+  let searchBarVisible = false;
+
+  function showChatSearchBar() {
+    if (!chatSearchBar) return;
+    clearTimeout(searchBarTimeout);
+    if (!searchBarVisible) {
+      chatSearchBar.style.display = "flex";
+      requestAnimationFrame(() => {
+        chatSearchBar.classList.add("visible");
+        searchBarVisible = true;
+      });
     }
-  });
+    // Auto-hide after 2 seconds only if search input is empty and not focused
+    searchBarTimeout = setTimeout(() => {
+      const isSearching =
+        chatSearchInput &&
+        (chatSearchInput.value.trim() !== "" ||
+          document.activeElement === chatSearchInput);
+      if (!isSearching) {
+        chatSearchBar.classList.remove("visible");
+        setTimeout(() => {
+          if (!chatSearchBar.classList.contains("visible")) {
+            chatSearchBar.style.display = "none";
+            searchBarVisible = false;
+          }
+        }, 300);
+      }
+    }, 3000);
+  }
+
+  if (chatMessages) {
+    chatMessages.addEventListener("scroll", function () {
+      // Load more messages if at top
+      if (this.scrollTop === 0 && !isLoading && hasMoreMessages) {
+        loadMoreMessages();
+      }
+      // Ignore scroll events caused by loading or sending messages.
+      if (performance.now() >= suppressSearchBarUntil) {
+        showChatSearchBar();
+      }
+    });
+  }
 
   // Start sidebar polling
   startSidebarPolling();
 
-  // Chat menu toggle — event listener only (no inline onclick)
+  // Chat menu toggle
   const chatMenuBtn = document.getElementById("chatMenuBtn");
   if (chatMenuBtn) {
     chatMenuBtn.addEventListener("click", toggleChatMenu);
   }
 
+  // Chat search input events
+
+  const chatSearchInput = document.getElementById("chatSearchInput");
+  const chatSearchClear = document.getElementById("chatSearchClear");
+
+  if (chatSearchInput) {
+    chatSearchInput.addEventListener("input", function () {
+      searchMessages(this.value);
+    });
+  }
+
+  if (chatSearchClear) {
+    chatSearchClear.addEventListener("click", function () {
+      chatSearchInput.value = "";
+      searchMessages("");
+      this.style.display = "none";
+    });
+  }
   // Dropdown action buttons
   document
     .querySelectorAll(".chat-menu-dropdown button[data-action]")
@@ -863,6 +935,54 @@ function markMessageAsRead() {
       }
     })
     .catch((err) => console.error("Error marking messages as read:", err));
+}
+
+//
+// Search/Filter Function
+//
+
+function filterSidebar(term) {
+  const query = term.toLowerCase().trim();
+  const channelItems = document.querySelectorAll(".channel-item");
+  const dmItems = document.querySelectorAll(".dm-item");
+
+  // Filter channels
+  channelItems.forEach((item) => {
+    const name =
+      item.querySelector(".channel-name")?.textContent.toLowerCase() || "";
+    const lastMsg =
+      item.querySelector(".channel-last-msg")?.textContent.toLowerCase() || "";
+    const matches = name.includes(query) || lastMsg.includes(query);
+    item.style.display = matches ? "" : "none";
+  });
+
+  // Filter DMs
+  dmItems.forEach((item) => {
+    const name =
+      item.querySelector(".dm-name")?.textContent.toLowerCase() || "";
+    const lastMsg =
+      item.querySelector(".dm-last-msg")?.textContent.toLowerCase() || "";
+    const matches = name.includes(query) || lastMsg.includes(query);
+    item.style.display = matches ? "" : "none";
+  });
+
+  // Update empty states based on visibility
+  const visibleChannels = document.querySelectorAll(
+    '.channel-item:not([style*="display: none"])',
+  );
+  const visibleDms = document.querySelectorAll(
+    '.dm-item:not([style*="display: none"])',
+  );
+  const emptyChannels = document.getElementById("emptyChannels");
+  const emptyDms = document.getElementById("emptyDms");
+
+  if (emptyChannels) {
+    emptyChannels.style.display =
+      visibleChannels.length === 0 ? "block" : "none";
+  }
+  if (emptyDms) {
+    emptyDms.style.display = visibleDms.length === 0 ? "block" : "none";
+  }
 }
 
 //
@@ -1594,4 +1714,130 @@ function showAddVolunteerModal() {
   } else {
     alert("Modal function not available.");
   }
+}
+
+//
+// 20. Chat Search Function
+//
+
+let chatSearchTerm = "";
+let chatSearchMatches = [];
+
+function searchMessages(term) {
+  const container = document.getElementById("chatMessages");
+  if (!container) return;
+
+  chatSearchTerm = term.trim().toLowerCase();
+  chatSearchMatches = [];
+
+  if (!chatSearchTerm) {
+    // Remove all highlight spans and show all messages
+    document
+      .querySelectorAll(".message-item, .message-system")
+      .forEach((el) => {
+        el.style.display = "";
+        // Remove .highlight spans
+        el.querySelectorAll(".highlight").forEach((span) => {
+          const parent = span.parentNode;
+          parent.replaceChild(document.createTextNode(span.textContent), span);
+          parent.normalize();
+        });
+      });
+    document.getElementById("chatSearchClear").style.display = "none";
+    return;
+  }
+
+  const messageItems = container.querySelectorAll(
+    ".message-item, .message-system",
+  );
+  let matchCount = 0;
+
+  messageItems.forEach((el) => {
+    const text = el.textContent.toLowerCase();
+    if (text.includes(chatSearchTerm)) {
+      el.style.display = "";
+      highlightMatches(el);
+      matchCount++;
+    } else {
+      el.style.display = "none";
+    }
+  });
+
+  // Show/hide clear button
+  const clearBtn = document.getElementById("chatSearchClear");
+  if (clearBtn) {
+    clearBtn.style.display = matchCount > 0 ? "block" : "none";
+  }
+
+  // If no matches, show a message
+  const noResults = container.querySelector(".search-no-results");
+  if (matchCount === 0 && chatSearchTerm) {
+    if (!noResults) {
+      const div = document.createElement("div");
+      div.className = "search-no-results";
+      div.textContent = 'No messages found for "' + chatSearchTerm + '"';
+      div.style.textAlign = "center";
+      div.style.padding = "40px 20px";
+      div.style.color = "#a0aec0";
+      container.appendChild(div);
+    }
+  } else if (noResults) {
+    noResults.remove();
+  }
+}
+
+function highlightMatches(el) {
+  // Remove existing highlights
+  el.querySelectorAll(".highlight").forEach((span) => {
+    const parent = span.parentNode;
+    parent.replaceChild(document.createTextNode(span.textContent), span);
+    parent.normalize();
+  });
+
+  if (!chatSearchTerm) return;
+
+  const walker = document.createTreeWalker(
+    el,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false,
+  );
+  const nodes = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (node.parentElement && !node.parentElement.closest(".highlight")) {
+      nodes.push(node);
+    }
+  }
+
+  nodes.forEach((node) => {
+    const text = node.textContent;
+    const lowerText = text.toLowerCase();
+    let index = lowerText.indexOf(chatSearchTerm);
+    if (index === -1) return;
+
+    const fragment = document.createDocumentFragment();
+    let lastIndex = 0;
+    while (index !== -1) {
+      // Text before match
+      if (index > lastIndex) {
+        fragment.appendChild(
+          document.createTextNode(text.substring(lastIndex, index)),
+        );
+      }
+      // Highlighted match
+      const span = document.createElement("span");
+      span.className = "highlight";
+      span.textContent = text.substring(index, index + chatSearchTerm.length);
+      fragment.appendChild(span);
+
+      lastIndex = index + chatSearchTerm.length;
+      index = lowerText.indexOf(chatSearchTerm, lastIndex);
+    }
+    // Remaining text
+    if (lastIndex < text.length) {
+      fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+    }
+    node.parentNode.replaceChild(fragment, node);
+  });
 }

@@ -1427,6 +1427,45 @@ body {
   border-bottom: 1px solid #f1f5f9;
 }
 
+/* Search highlight */
+
+.highlight {
+  background: #fbbf24;
+  color: #1a202c;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.chat-search-bar {
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    padding: 0 20px;
+}
+
+.chat-search-bar.visible {
+    max-height: 60px;
+    opacity: 1;
+    padding: 8px 20px;
+}
+
+/* Chat search bar */
+.chat-search-bar input::placeholder {
+  color: #a0aec0;
+}
+
+.chat-search-bar input:focus {
+  background: transparent;
+}
+
+/* No results message */
+.search-no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #a0aec0;
+}
+
 /* Members panel responsiveness */
 
 @media (max-width: 768px) {

@@ -176,7 +176,7 @@ include 'header.php';
                 <h3>Messages</h3>
                 <div class="sidebar-search">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search Chats, Channels">
+                    <input type="text" id="sidebarSearchInput" placeholder="Search Chats, Channels" oninput="filterSidebar(this.value)">
                 </div>
                 <!-- sidebar actions -->
                 <div class="sidebar-actions">
@@ -378,6 +378,12 @@ include 'header.php';
                         </div>
                         <span id="chatRoleBadge" class="role-badge" style="display: none;">Volunteer</span>
                     </div>
+                </div>
+
+                <div class="chat-search-bar" style="display: flex; padding: 8px 20px; border-bottom: 1px solid #edf2f7; gap: 8px; align-items: center;">
+                    <i class="fas fa-search" style="color: #a0aec0;"></i>
+                    <input type="text" id="chatSearchInput" placeholder="Search in this conversation..." style="flex: 1; border: none; outline: none; padding: 8px 0; font-size: 0.9rem; background: transparent;">
+                    <button id="chatSearchClear" style="background: none; border: none; color: #a0aec0; cursor: pointer; display: none; font-size: 1.2rem;">&times;</button>
                 </div>
 
                 <!-- Chat Messages -->
