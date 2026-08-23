@@ -48,6 +48,13 @@ function getInitials(name) {
     .toUpperCase();
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => {
+    const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+    return entities[character];
+  });
+}
+
 function getSenderName(msg) {
   return msg.sender_name || "Unknown";
 }
@@ -183,30 +190,54 @@ function renderMessages(messages) {
     if (msg.is_self && msg.id === latestSelfMessageId) {
       const readCount = Number.parseInt(msg.read_count, 10) || 0;
       const isDirectMessage = currentConversation?.type === "dm";
+      const readers = (msg.readers || []).map((reader) => reader.user_name);
+      const readByTitle = readers.length
+        ? `Seen by ${readers.join(", ")}`
+        : `Seen by ${readCount} user${readCount === 1 ? "" : "s"}`;
       readReceipt = msg.is_read
-        ? `<span class="read-receipt">${isDirectMessage ? "Read" : `Read + ${readCount}`}</span>`
+        ? `<span class="read-receipt" title="${escapeHtml(readByTitle)}">${isDirectMessage ? "Read" : `Read + ${readCount}`}</span>`
         : `<span class="read-receipt">Sent</span>`;
     }
 
-    const div = document.createElement("div");
-    div.className = `message-item ${isSelf}`;
-    div.innerHTML = `
-            <div class="message-avatar">${avatar}</div>
-            <div class="message-wrapper">
-                <div class="message-content">
-                    <div class="message-sender">${senderName}</div>
-                    <div class="message-text">${msg.content}</div>
-                    <div class="message-time">${new Date(msg.created_at).toLocaleString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div>
-                </div>
-                ${readReceipt ? `<div class="message-footer">${readReceipt}</div>` : ""}
-            </div>
-        `;
-    //  Reactions
     const reactions = msg.reactions || [];
     const currentUserReacted = reactions.some(
       (r) => r.user_id === currentUserId && r.reaction === "heart",
     );
     const heartCount = reactions.filter((r) => r.reaction === "heart").length;
+    const reactors = reactions
+      .filter((reaction) => reaction.reaction === "heart")
+      .map((reaction) => reaction.user_name || "Unknown user");
+    const reactionTitle = reactors.length
+      ? `Reacted by ${reactors.join(", ")}`
+      : "Heart reaction";
+    const reactionMarkup = heartCount > 0
+      ? `<span class="reaction-item ${currentUserReacted ? "user-reacted" : ""}" title="${escapeHtml(reactionTitle)}">
+          <img src="components/icons/heart-fill.png" alt="Heart reaction">
+          <span class="reaction-count">${heartCount}</span>
+        </span>`
+      : "";
+    const footerMarkup = reactionMarkup || readReceipt
+      ? `<div class="message-footer">
+          <div class="reactions-display">${reactionMarkup}</div>
+          ${readReceipt}
+        </div>`
+      : "";
+
+    const div = document.createElement("div");
+    div.className = `message-item ${isSelf}`;
+    div.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+        <div class="message-body">
+          <div class="message-wrapper">
+            <div class="message-content">
+              <div class="message-sender">${senderName}</div>
+              <div class="message-text">${msg.content}</div>
+              <div class="message-time">${new Date(msg.created_at).toLocaleString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div>
+            </div>
+                </div>
+          ${footerMarkup}
+            </div>
+        `;
 
     // Reaction trigger (hidden by default, shown when the message is hovered)
     const toolbar = document.createElement("div");
@@ -217,19 +248,6 @@ function renderMessages(messages) {
     </button>
 `;
     div.appendChild(toolbar);
-
-    // Reactions display (below message)
-    const reactionsDisplay = document.createElement("div");
-    reactionsDisplay.className = "reactions-display";
-    if (heartCount > 0) {
-      reactionsDisplay.innerHTML = `
-        <span class="reaction-item ${currentUserReacted ? "user-reacted" : ""}">
-          <img src="components/icons/heart.png" alt="Heart reaction">
-            <span class="reaction-count">${heartCount}</span>
-        </span>
-    `;
-    }
-    div.querySelector(".message-wrapper").appendChild(reactionsDisplay);
 
     container.appendChild(div);
   });
@@ -638,6 +656,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const heartBtn = e.target.closest(".reaction-trigger");
     if (heartBtn) {
       e.preventDefault();
+      e.stopPropagation();
       const msgId = heartBtn.dataset.msgId;
       toggleReaction(msgId, "heart");
     }

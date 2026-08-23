@@ -1,0 +1,28 @@
+{"timestamp":"2026-08-23T22:35:19+08:00","level":"error","message":"Uncaught Exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 22","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(22): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}"}}
+[23-Aug-2026 22:35:19 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php:22
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php(22): mysqli->prepare('\r\n    SELECT m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php on line 22
+{"timestamp":"2026-08-23T22:35:19+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php:22\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(22): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 22","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-23T22:40:14+08:00","level":"error","message":"Uncaught Exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 22","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(22): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}"}}
+[23-Aug-2026 22:40:14 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php:22
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php(22): mysqli->prepare('\r\n    SELECT m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php on line 22
+{"timestamp":"2026-08-23T22:40:14+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php:22\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(22): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 22","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-23T22:44:48+08:00","level":"error","message":"Uncaught Exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 26","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(26): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}"}}
+[23-Aug-2026 22:44:48 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php:26
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php(26): mysqli->prepare('\r\n    SELECT m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php on line 26
+{"timestamp":"2026-08-23T22:44:48+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php:26\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(26): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 26","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-23T22:44:51+08:00","level":"error","message":"Uncaught Exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 26","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(26): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}"}}
+[23-Aug-2026 22:44:51 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php:26
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php(26): mysqli->prepare('\r\n    SELECT m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php on line 26
+{"timestamp":"2026-08-23T22:44:51+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php:26\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(26): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 26","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"type":"shutdown"}}

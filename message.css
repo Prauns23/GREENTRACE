@@ -837,7 +837,9 @@ body {
 /* Footer for read receipt (below bubble) */
 .message-footer {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-top: 4px;
   padding: 0 4px;
 }
@@ -847,6 +849,7 @@ body {
   color: #2e7d32;
   font-weight: 500;
   padding: 6px 0;
+  cursor: pointer;
   border-radius: 10px;
   /* background: #e8f5e9; */
 }
@@ -888,6 +891,10 @@ body {
 
 /* For self messages, align footer to the right */
 .message-item.self .message-footer {
+  justify-content: space-between;
+}
+
+.message-item:not(.self) .message-footer {
   justify-content: flex-end;
 }
 
@@ -1080,6 +1087,13 @@ body {
 .message-wrapper {
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  min-width: 80px;
+}
+
+.message-body {
+  display: flex;
+  flex-direction: column;
   max-width: 75%;
   min-width: 60px;
 }
@@ -1125,7 +1139,9 @@ body {
 /* Footer for read receipt */
 .message-footer {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-top: 4px;
   padding: 0 4px;
 }
@@ -1513,33 +1529,40 @@ body {
 /* Reactions display */
 .reactions-display {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 4px;
-  padding-left: 4px;
+  min-height: 20px;
+  cursor: pointer;
 }
 
 .reaction-item {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #f1f5f9;
-  padding: 2px 8px 2px 6px;
-  border-radius: 12px;
+  background: #e8f5e9;
+  padding: 2px 7px 2px 5px;
+  border-radius: 999px;
   font-size: 0.75rem;
-  color: #475569;
-  border: 1px solid transparent;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+  line-height: 1;
 }
 
 .reaction-item img {
   width: 16px;
   height: 16px;
   object-fit: contain;
+  transition: all 0.3s ease;
+}
+
+.reaction-item img:hover {
+  transform: scale(1.2);
 }
 
 .reaction-item.user-reacted {
-  background: #fee2e2;
-  border-color: #e53e3e;
+  background: #c8e6c9;
+  border-color: #81c784;
 }
 
 .reaction-count {
