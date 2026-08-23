@@ -1,6 +1,7 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
+require_once '../notifications_helper.php';
 require_once __DIR__ . '/../helpers/chat_system.php';
 
 header('Content-Type: application/json');
@@ -79,10 +80,10 @@ $action = $newMuted ? 'muted' : 'unmuted';
 $content = "$targetName was $action by $adminName.";
 insertSystemMessage($conn, $conversation_id, $content);
 
-// Notify all members
-$notifTitle = "Member " . ucfirst($action);
-$notifMessage = "$targetName was $action by $adminName.";
-notifyAllMembers($conn, $conversation_id, $notifTitle, $notifMessage);
+// // Notify all members
+// $notifTitle = "Member " . ucfirst($action);
+// $notifMessage = "$targetName was $action by $adminName.";
+// notifyAllMembers($conn, $conversation_id, $notifTitle, $notifMessage);
 
 echo json_encode([
     'success' => true,

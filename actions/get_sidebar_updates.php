@@ -29,7 +29,7 @@ $channelQuery = "
             FROM chat_messages m 
             WHERE m.conversation_id = c.id 
               AND m.sender_id != ? 
-              AND m.message_type != 'system'
+              AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
               AND NOT EXISTS (
                   SELECT 1 FROM chat_message_reads r 
                   WHERE r.message_id = m.id 
@@ -40,7 +40,7 @@ $channelQuery = "
             SELECT content 
             FROM chat_messages 
             WHERE conversation_id = c.id 
-              AND message_type != 'system'
+              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
@@ -48,7 +48,7 @@ $channelQuery = "
             SELECT created_at 
             FROM chat_messages 
             WHERE conversation_id = c.id 
-              AND message_type != 'system'
+              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message_time,
@@ -57,7 +57,7 @@ $channelQuery = "
             FROM chat_messages m
             LEFT JOIN users_tbl u ON m.sender_id = u.id
             WHERE m.conversation_id = c.id 
-              AND m.message_type != 'system'
+              AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
@@ -65,7 +65,7 @@ $channelQuery = "
             SELECT COALESCE(m.sender_id, 0) 
             FROM chat_messages m
             WHERE conversation_id = c.id 
-              AND message_type != 'system'
+              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id
@@ -97,7 +97,7 @@ $dmQuery = "
             FROM chat_messages m 
             WHERE m.conversation_id = c.id 
               AND m.sender_id != ? 
-              AND m.message_type != 'system'
+              AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
               AND NOT EXISTS (
                   SELECT 1 FROM chat_message_reads r 
                   WHERE r.message_id = m.id 
@@ -108,7 +108,7 @@ $dmQuery = "
             SELECT content 
             FROM chat_messages 
             WHERE conversation_id = c.id 
-              AND message_type != 'system'
+              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
@@ -116,7 +116,7 @@ $dmQuery = "
             SELECT created_at 
             FROM chat_messages 
             WHERE conversation_id = c.id 
-              AND message_type != 'system'
+              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message_time,
@@ -125,7 +125,7 @@ $dmQuery = "
             FROM chat_messages m
             LEFT JOIN users_tbl u_sender ON m.sender_id = u_sender.id
             WHERE m.conversation_id = c.id 
-              AND m.message_type != 'system'
+              AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
@@ -133,7 +133,7 @@ $dmQuery = "
             SELECT COALESCE(m.sender_id, 0)
             FROM chat_messages m
             WHERE m.conversation_id = c.id 
-              AND m.message_type != 'system'
+              AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id

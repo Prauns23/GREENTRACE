@@ -1308,7 +1308,7 @@ function leaveChannel() {
   if (!confirm("Are you sure you want to leave this channel?")) return;
   const formData = new URLSearchParams();
   formData.append("conversation_id", currentConversation.id);
-  fetch("actions/leave_channel.php", {
+  fetch("actions/leave_conversation.php", {
     method: "POST",
     body: formData,
   })
@@ -1316,9 +1316,15 @@ function leaveChannel() {
     .then((data) => {
       if (data.success) {
         showToast(data.message, 3000, "success");
-        // Reload sidebar or hide the conversation
-        // For now, reload the page to reflect changes
-        location.reload();
+        const item = document.querySelector(
+          `.channel-item[data-id="${currentConversation.id}"]`,
+        );
+        item?.remove();
+        document.querySelector(".chat-container")?.classList.remove("mobile-chat-open");
+        updateChatVisibility(false);
+        currentConversation = null;
+        stopMessageRefresh();
+        fetchSidebarUpdates();
       } else {
         showToast(data.error || "Error", 3000, "error");
       }
@@ -1698,8 +1704,7 @@ function addContact(userId) {
           msg = "Conversation created! You can now message this user.";
         }
         showToast(msg, 3000, type);
-        // Reload to update sidebar with new DM
-        location.reload();
+        fetchSidebarUpdates();
       } else {
         showToast(data.error || "Failed to add contact.", 3000, "error");
       }
@@ -1735,9 +1740,15 @@ function kickMember(userId, conversationId, memberName) {
         // Refresh the members list
         loadChannelMembers(conversationId);
         fetchSidebarUpdates();
-        // If the kicked user is the current user, reload
+        // Remove the current user's chat immediately after being kicked.
         if (userId == currentUserId) {
-          location.reload();
+          document.querySelector(`.channel-item[data-id="${conversationId}"]`)?.remove();
+          document.querySelector(".chat-container")?.classList.remove("mobile-chat-open");
+          updateChatVisibility(false);
+          currentConversation = null;
+          stopMessageRefresh();
+        } else {
+          refreshMessages();
         }
       } else {
         showToast(data.error || "Failed to kick user.", 3000, "error");
