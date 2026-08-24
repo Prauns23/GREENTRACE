@@ -1094,7 +1094,7 @@ body {
 .message-body {
   display: flex;
   flex-direction: column;
-  max-width: 75%;
+  max-width: 364px;
   min-width: 60px;
 }
 
@@ -1681,9 +1681,9 @@ body {
   .chat-main {
     min-width: 0;
   }
-  
+
   .message-body {
-    max-width: min(100%, 340px);
+    max-width: min(100%, 240px);
   }
 }
 
