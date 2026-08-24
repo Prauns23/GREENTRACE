@@ -1681,9 +1681,9 @@ body {
   .chat-main {
     min-width: 0;
   }
-
-  .message-wrapper {
-    max-width: min(75%, 520px);
+  
+  .message-body {
+    max-width: min(100%, 340px);
   }
 }
 

@@ -26,3 +26,31 @@ Stack trace:
 #1 {main}
   thrown in C:\xampp\htdocs\GREENTRACE\actions\toggle_reaction.php on line 26
 {"timestamp":"2026-08-23T22:44:51+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'c.id' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php:26\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php(26): mysqli->prepare('\\r\\n    SELECT m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\toggle_reaction.php on line 26","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/toggle_reaction.php","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-23T23:31:13+08:00","level":"error","message":"Uncaught Exception: Call to undefined function createNotification() in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php on line 40","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php(85): notifyAllMembers(Object(mysqli), 33, 'Member Muted', 'Drake Dongers w...')\n#1 {main}"}}
+[23-Aug-2026 23:31:13 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to undefined function createNotification() in C:\xampp\htdocs\GREENTRACE\helpers\chat_system.php:40
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\mute_member.php(85): notifyAllMembers(Object(mysqli), 33, 'Member Muted', 'Drake Dongers w...')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\helpers\chat_system.php on line 40
+{"timestamp":"2026-08-23T23:31:13+08:00","level":"error","message":"Fatal Error: Uncaught Error: Call to undefined function createNotification() in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php:40\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php(85): notifyAllMembers(Object(mysqli), 33, 'Member Muted', 'Drake Dongers w...')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php on line 40","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-23T23:31:26+08:00","level":"error","message":"Uncaught Exception: Call to undefined function createNotification() in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php on line 40","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php(85): notifyAllMembers(Object(mysqli), 36, 'Member Muted', 'Drake Dongers w...')\n#1 {main}"}}
+[23-Aug-2026 23:31:26 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to undefined function createNotification() in C:\xampp\htdocs\GREENTRACE\helpers\chat_system.php:40
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\mute_member.php(85): notifyAllMembers(Object(mysqli), 36, 'Member Muted', 'Drake Dongers w...')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\helpers\chat_system.php on line 40
+{"timestamp":"2026-08-23T23:31:26+08:00","level":"error","message":"Fatal Error: Uncaught Error: Call to undefined function createNotification() in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php:40\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php(85): notifyAllMembers(Object(mysqli), 36, 'Member Muted', 'Drake Dongers w...')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php on line 40","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-23T23:31:44+08:00","level":"error","message":"Uncaught Exception: Call to undefined function createNotification() in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php on line 40","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php(85): notifyAllMembers(Object(mysqli), 36, 'Member Unmuted', 'Drake Dongers w...')\n#1 {main}"}}
+[23-Aug-2026 23:31:44 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to undefined function createNotification() in C:\xampp\htdocs\GREENTRACE\helpers\chat_system.php:40
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\mute_member.php(85): notifyAllMembers(Object(mysqli), 36, 'Member Unmuted', 'Drake Dongers w...')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\helpers\chat_system.php on line 40
+{"timestamp":"2026-08-23T23:31:44+08:00","level":"error","message":"Fatal Error: Uncaught Error: Call to undefined function createNotification() in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php:40\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php(85): notifyAllMembers(Object(mysqli), 36, 'Member Unmuted', 'Drake Dongers w...')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\helpers\\chat_system.php on line 40","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-23T23:40:02+08:00","level":"error","message":"Uncaught Exception: Call to undefined function notifyAllMembers() in C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php on line 81","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"trace":"#0 {main}"}}
+[23-Aug-2026 23:40:02 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to undefined function notifyAllMembers() in C:\xampp\htdocs\GREENTRACE\actions\mute_member.php:81
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\mute_member.php on line 81
+{"timestamp":"2026-08-23T23:40:02+08:00","level":"error","message":"Fatal Error: Uncaught Error: Call to undefined function notifyAllMembers() in C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php:81\nStack trace:\n#0 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php on line 81","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"type":"shutdown"}}
+[23-Aug-2026 23:45:16 Asia/Manila] CSRF Verification: POST=7614448a, Session=7614448a, Match=YES

@@ -3,6 +3,61 @@
 
 define('SYSTEM_LOG_FILE', __DIR__ . '/logs/system.log');
 define('AUDIT_LOG_FILE', __DIR__ . '/logs/audit.log');
+define('LOG_ARCHIVE_DIR', __DIR__ . '/logs/archive');
+define('SYSTEM_LOG_MAX_BYTES', 100 * 1024 * 1024);
+define('AUDIT_ARCHIVE_RETENTION_MONTHS', 36);
+
+/**
+ * Prepare the log directory and rotate application-owned logs when required.
+ */
+function prepareApplicationLog($file, $level) {
+    $directory = dirname($file);
+    if (!is_dir($directory)) {
+        @mkdir($directory, 0750, true);
+    }
+
+    if ($level === 'error') {
+        $size = is_file($file) ? @filesize($file) : 0;
+        if ($size !== false && $size >= SYSTEM_LOG_MAX_BYTES) {
+            $archive = $file . '.' . date('Ymd-His') . '.log';
+            @rename($file, $archive);
+            if (is_file($archive)) {
+                @chmod($archive, 0440);
+            }
+        }
+        return;
+    }
+
+    if ($level !== 'audit' || !is_file($file) || @filesize($file) === 0) {
+        return;
+    }
+
+    $currentMonth = date('Y-m');
+    $lastModified = @filemtime($file);
+    if ($lastModified === false || date('Y-m', $lastModified) === $currentMonth) {
+        return;
+    }
+
+    if (!is_dir(LOG_ARCHIVE_DIR)) {
+        @mkdir(LOG_ARCHIVE_DIR, 0750, true);
+    }
+
+    $archive = LOG_ARCHIVE_DIR . '/audit-' . date('Y-m', $lastModified) . '.log';
+    if (!is_file($archive) && @rename($file, $archive)) {
+        @chmod($archive, 0440);
+    }
+
+    if (!is_file($file)) {
+        @touch($file);
+    }
+
+    $cutoff = strtotime('-' . AUDIT_ARCHIVE_RETENTION_MONTHS . ' months');
+    foreach (glob(LOG_ARCHIVE_DIR . '/audit-????-??.log') ?: [] as $oldArchive) {
+        if (@filemtime($oldArchive) !== false && @filemtime($oldArchive) < $cutoff) {
+            @unlink($oldArchive);
+        }
+    }
+}
 
 /**
  * Write one structured JSON log entry to an application-owned file.
@@ -21,6 +76,7 @@ function writeApplicationLog($file, $level, $message, $context = []) {
 
     $encoded = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($encoded !== false) {
+        prepareApplicationLog($file, $level);
         error_log($encoded . PHP_EOL, 3, $file);
     }
 }
