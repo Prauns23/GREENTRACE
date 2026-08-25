@@ -109,6 +109,26 @@ function formatDisplayTime(timestamp) {
 }
 
 function toggleReaction(messageId, reaction) {
+  const message = allMessages.find((msg) => String(msg.id) === String(messageId));
+  if (!message) return;
+
+  message.reactions = message.reactions || [];
+  const previousReactions = [...message.reactions];
+  const existingIndex = message.reactions.findIndex(
+    (item) => item.user_id === currentUserId && item.reaction === reaction,
+  );
+
+  if (existingIndex === -1) {
+    message.reactions.push({
+      user_id: currentUserId,
+      reaction,
+      user_name: "You",
+    });
+  } else {
+    message.reactions.splice(existingIndex, 1);
+  }
+  renderMessages(allMessages);
+
   const formData = new URLSearchParams();
   formData.append("message_id", messageId);
   formData.append("reaction", reaction);
@@ -122,14 +142,18 @@ function toggleReaction(messageId, reaction) {
     .then((res) => res.json())
     .then((data) => {
       if (data.success) {
-        // Refresh messages to update UI
+        // Confirm the optimistic update with the server state.
         refreshMessages();
       } else {
+        message.reactions = previousReactions;
+        renderMessages(allMessages);
         showToast(data.error || "Failed to toggle reaction", 3000, "error");
       }
     })
     .catch((err) => {
       console.error(err);
+      message.reactions = previousReactions;
+      renderMessages(allMessages);
       showToast("Network error", 3000, "error");
     });
 }
@@ -1181,13 +1205,13 @@ function startMessageRefresh() {
   if (messageRefreshInterval) {
     clearInterval(messageRefreshInterval);
   }
-  // Refresh messages every 10 seconds to update read receipts
+  // Keep reactions and read receipts current for other participants.
 
   messageRefreshInterval = setInterval(() => {
     if (currentConversation && !isLoading) {
       refreshMessages();
     }
-  }, 10000);
+  }, 2000);
 }
 
 function stopMessageRefresh() {
