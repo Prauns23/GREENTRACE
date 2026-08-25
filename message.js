@@ -50,7 +50,13 @@ function getInitials(name) {
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => {
-    const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    };
     return entities[character];
   });
 }
@@ -210,18 +216,20 @@ function renderMessages(messages) {
     const reactionTitle = reactors.length
       ? `Reacted by ${reactors.join(", ")}`
       : "Heart reaction";
-    const reactionMarkup = heartCount > 0
-      ? `<span class="reaction-item ${currentUserReacted ? "user-reacted" : ""}" title="${escapeHtml(reactionTitle)}">
+    const reactionMarkup =
+      heartCount > 0
+        ? `<span class="reaction-item ${currentUserReacted ? "user-reacted" : ""}" title="${escapeHtml(reactionTitle)}">
           <img src="components/icons/heart-fill.png" alt="Heart reaction">
           <span class="reaction-count">${heartCount}</span>
         </span>`
-      : "";
-    const footerMarkup = reactionMarkup || readReceipt
-      ? `<div class="message-footer">
+        : "";
+    const footerMarkup =
+      reactionMarkup || readReceipt
+        ? `<div class="message-footer">
           <div class="reactions-display">${reactionMarkup}</div>
           ${readReceipt}
         </div>`
-      : "";
+        : "";
 
     const div = document.createElement("div");
     div.className = `message-item ${isSelf}`;
@@ -262,7 +270,7 @@ function renderMessages(messages) {
 // 5. Fetch messages from server
 //
 
-function fetchMessages(isInitial = false) {
+function fetchMessages(isInitial = false, isInitialLoad = isInitial) {
   if (isLoading || !hasMoreMessages || !currentConversation) return;
   isLoading = true;
 
@@ -287,6 +295,10 @@ function fetchMessages(isInitial = false) {
           } else {
             renderMessages(allMessages);
           }
+          if (isInitialLoad) {
+            scrollChatToBottom(document.getElementById("chatMessages"));
+            setTimeout(markMessageAsRead, 500);
+          }
           return;
         }
 
@@ -303,12 +315,23 @@ function fetchMessages(isInitial = false) {
 
         renderMessages(allMessages);
 
-        if (isInitial) {
+        if (isInitialLoad) {
           const container = document.getElementById("chatMessages");
-          scrollChatToBottom(container);
+          isLoading = false;
 
-          // Mark messages as read after loading
-          setTimeout(markMessageAsRead, 500);
+          if (
+            container &&
+            container.scrollHeight <= container.clientHeight &&
+            messages.length === MESSAGES_PER_PAGE
+          ) {
+            fetchMessages(false, true);
+          } else {
+            scrollChatToBottom(container);
+
+            // Mark messages as read after loading
+            setTimeout(markMessageAsRead, 500);
+          }
+          return;
         }
         isLoading = false;
       } else {
@@ -1320,7 +1343,9 @@ function leaveChannel() {
           `.channel-item[data-id="${currentConversation.id}"]`,
         );
         item?.remove();
-        document.querySelector(".chat-container")?.classList.remove("mobile-chat-open");
+        document
+          .querySelector(".chat-container")
+          ?.classList.remove("mobile-chat-open");
         updateChatVisibility(false);
         currentConversation = null;
         stopMessageRefresh();
@@ -1536,7 +1561,7 @@ function loadChannelMembers(conversationId) {
         const mutedLabel = isMutedByAdmin
           ? ' <span class="muted-label">(Muted)</span>'
           : "";
-        // 👇 Choose avatar icon based on mute status
+        // Choose avatar icon based on mute status
         const avatarIcon = isMutedByAdmin ? "person_off" : "person";
 
         // Build "Added by" text
@@ -1567,9 +1592,11 @@ function loadChannelMembers(conversationId) {
             <button data-action="mute-member" data-user-id="${member.user_id}">${muteButtonText}</button>
           `;
           if (data.current_user_role === "owner" && member.role !== "owner") {
+            const adminButtonText =
+              member.role === "admin" ? "Remove Admin" : "Make Admin";
             dropdownButtons += `
-              <button data-action="make-admin" data-user-id="${member.user_id}">Make Admin</button>
-            `;
+        <button data-action="make-admin" data-user-id="${member.user_id}">${adminButtonText}</button>
+    `;
           }
         } else {
           // Regular member – limited options
@@ -1660,8 +1687,12 @@ function handleMemberAction(action, userId, conversationId, memberName) {
       muteMember(userId, conversationId, memberName);
       break;
     case "make-admin":
-      if (confirm(`Make ${memberName || "this user"} an admin?`)) {
-        showToast("Make admin feature coming soon", 3000, "info");
+      if (
+        confirm(
+          `Are you sure you want to ${memberName ? "change role for " + memberName : "change this user's role"}?`,
+        )
+      ) {
+        makeAdmin(userId, conversationId, memberName);
       }
       break;
     case "leave":
@@ -1742,8 +1773,12 @@ function kickMember(userId, conversationId, memberName) {
         fetchSidebarUpdates();
         // Remove the current user's chat immediately after being kicked.
         if (userId == currentUserId) {
-          document.querySelector(`.channel-item[data-id="${conversationId}"]`)?.remove();
-          document.querySelector(".chat-container")?.classList.remove("mobile-chat-open");
+          document
+            .querySelector(`.channel-item[data-id="${conversationId}"]`)
+            ?.remove();
+          document
+            .querySelector(".chat-container")
+            ?.classList.remove("mobile-chat-open");
           updateChatVisibility(false);
           currentConversation = null;
           stopMessageRefresh();
@@ -1963,4 +1998,33 @@ function highlightMatches(el) {
     }
     node.parentNode.replaceChild(fragment, node);
   });
+}
+
+// Make Admin Function
+function makeAdmin(userId, conversationId, memberName) {
+  const formData = new URLSearchParams();
+  formData.append("user_id", userId);
+  formData.append("conversation_id", conversationId);
+
+  fetch("actions/make_admin.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formData.toString(),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        showToast(`${memberName || "User"} ${data.message}`, 3000, "success");
+        // Refresh members list
+        loadChannelMembers(conversationId);
+      } else {
+        showToast(data.error || "Failed to update role.", 3000, "error");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      showToast("Network error. Please try again.", 3000, "error");
+    });
 }

@@ -54,3 +54,6 @@ Stack trace:
   thrown in C:\xampp\htdocs\GREENTRACE\actions\mute_member.php on line 81
 {"timestamp":"2026-08-23T23:40:02+08:00","level":"error","message":"Fatal Error: Uncaught Error: Call to undefined function notifyAllMembers() in C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php:81\nStack trace:\n#0 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\mute_member.php on line 81","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/actions/mute_member.php","context":{"type":"shutdown"}}
 [23-Aug-2026 23:45:16 Asia/Manila] CSRF Verification: POST=7614448a, Session=7614448a, Match=YES
+[25-Aug-2026 15:15:46 Asia/Manila] CSRF Verification: POST=63645d90, Session=63645d90, Match=YES
+[25-Aug-2026 15:15:52 Asia/Manila] CSRF Verification: POST=63645d90, Session=63645d90, Match=YES
+[25-Aug-2026 15:27:48 Asia/Manila] CSRF Verification: POST=63645d90, Session=63645d90, Match=YES
