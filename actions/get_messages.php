@@ -37,6 +37,9 @@ $sql = "SELECT
     m.*, 
     u.fname, 
     u.lname,
+    parent.fname as parent_fname,
+    parent.lname as parent_lname,
+    parent_msg.content as parent_content,
     CASE 
         WHEN m.sender_id is NULL THEN 1 -- system messages are always marked as read
         WHEN m.sender_id = ? THEN
@@ -51,6 +54,8 @@ $sql = "SELECT
     (SELECT COUNT(*) FROM chat_message_reads WHERE message_id = m.id) as read_count
 FROM chat_messages m
 LEFT JOIN users_tbl u ON m.sender_id = u.id
+LEFT JOIN chat_messages parent_msg ON m.reply_to_id = parent_msg.id
+LEFT JOIN users_tbl parent ON parent_msg.sender_id = parent.id
 WHERE m.conversation_id = ? AND m.archived = 0
 ";
 $params = [$user_id, $user_id, $user_id, $conversation_id];
@@ -75,6 +80,7 @@ $messages = [];
 while ($row = $result->fetch_assoc()) {
     $row['sender_name'] = $row['sender_id'] ? ($row['fname'] . ' ' . $row['lname']) : 'System';
     $row['is_self'] = ($row['sender_id'] == $user_id);
+    $row['parent_sender_name'] = $row['parent_fname'] && $row['parent_lname'] ? ($row['parent_fname'] . ' ' . $row['parent_lname']) :null;
     $messages[] = $row;
 }
 $stmt->close();

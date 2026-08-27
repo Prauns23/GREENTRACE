@@ -419,6 +419,13 @@ include 'header.php';
 
                 <!-- Chat Input -->
                 <div class="chat-input">
+                    <div id="replyPreview" class="reply-preview" style="display: none;">
+                        <div class="reply-preview-content">
+                            <span>Replying to <strong id="replyPreviewName"></strong></span>
+                            <span id="replyPreviewMessage"></span>
+                        </div>
+                        <button id="cancelReplyBtn" class="cancel-reply-btn" type="button">&times;</button>
+                    </div>
                     <input type="text" placeholder="Type your message..." id="messageInput">
                     <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
                 </div>

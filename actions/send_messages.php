@@ -16,6 +16,7 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $conversation_id = (int)($_POST['conversation_id'] ?? 0);
 $content = trim($_POST['content'] ?? '');
+$reply_to_id = isset($_POST['reply_to_id']) ? (int)$_POST['reply_to_id'] : null;
 
 if (!$conversation_id || empty($content)) {
     echo json_encode(['error' => 'Invalid input']);
@@ -51,7 +52,7 @@ if ($muteResult && $muteResult['is_muted_by_admin'] == 1) {
     exit;
 }
 
-// ----- RATE LIMIT -----
+//  RATE LIMIT 
 $limit = 10;
 $window = 60;
 
@@ -97,11 +98,11 @@ if ($count >= $limit) {
     ]);
     exit;
 }
-// ----- END RATE LIMIT -----
+//  END RATE LIMIT 
 
-// Insert message — let MySQL handle the timestamp
-$stmt = $conn->prepare("INSERT INTO chat_messages (conversation_id, sender_id, content, message_type, created_at) VALUES (?, ?, ?, 'text', NOW())");
-$stmt->bind_param("iis", $conversation_id, $user_id, $content);
+// Insert message
+$stmt = $conn->prepare("INSERT INTO chat_messages (conversation_id, sender_id, content, message_type, reply_to_id, created_at) VALUES (?, ?, ?, 'text', ?, NOW())");
+$stmt->bind_param("iisi", $conversation_id, $user_id, $content, $reply_to_id);
 if (!$stmt->execute()) {
     echo json_encode(['error' => 'Failed to send message']);
     exit;

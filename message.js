@@ -1,12 +1,15 @@
 //
 // 1. Modal handling
 //
+
 function openModal(modalId) {
   document.getElementById(modalId).style.display = "flex";
 }
+
 function closeModal(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
+
 document.addEventListener("click", function (e) {
   if (e.target.classList.contains("modal-overlay")) {
     e.target.style.display = "none";
@@ -108,8 +111,14 @@ function formatDisplayTime(timestamp) {
   return raw;
 }
 
+//
+// Reply and Reaction funcitions
+//
+
 function toggleReaction(messageId, reaction) {
-  const message = allMessages.find((msg) => String(msg.id) === String(messageId));
+  const message = allMessages.find(
+    (msg) => String(msg.id) === String(messageId),
+  );
   if (!message) return;
 
   message.reactions = message.reactions || [];
@@ -156,6 +165,35 @@ function toggleReaction(messageId, reaction) {
       renderMessages(allMessages);
       showToast("Network error", 3000, "error");
     });
+}
+
+function startReply(messageId, senderName) {
+  const replyPreview = document.getElementById("replyPreview");
+  const replyPreviewName = document.getElementById("replyPreviewName");
+  const replyPreviewMessage = document.getElementById("replyPreviewMessage");
+  if (!replyPreview) return;
+
+  // Find the original message content
+  const msg = allMessages.find((m) => String(m.id) === String(messageId));
+  const content = msg ? msg.content : "";
+
+  replyPreviewName.textContent = senderName || "User";
+  const truncated =
+    content.length > 80 ? content.substring(0, 80) + "…" : content;
+  replyPreviewMessage.textContent = truncated || "(no content)";
+
+  replyPreview.style.display = "flex";
+  document.getElementById("messageInput").focus();
+
+  window._replyTo = { id: messageId, sender: senderName };
+}
+
+function cancelReply() {
+  const replyPreview = document.getElementById("replyPreview");
+  if (replyPreview) {
+    replyPreview.style.display = "none";
+  }
+  window._replyTo = null;
 }
 
 //
@@ -255,12 +293,27 @@ function renderMessages(messages) {
         </div>`
         : "";
 
+    let replyQuote = "";
+    if (msg.reply_to_id && msg.parent_sender_name && msg.parent_content) {
+      const parentContent =
+        msg.parent_content.length > 100
+          ? msg.parent_content.substring(0, 100) + "…"
+          : msg.parent_content;
+      replyQuote = `
+        <div class="reply-quote">
+            <div class="reply-quote-header">In reply to <strong>${escapeHtml(msg.parent_sender_name)}</strong></div>
+            <div class="reply-quote-content">${escapeHtml(parentContent)}</div>
+        </div>
+    `;
+    }
+
     const div = document.createElement("div");
     div.className = `message-item ${isSelf}`;
     div.innerHTML = `
             <div class="message-avatar">${avatar}</div>
         <div class="message-body">
           <div class="message-wrapper">
+          ${replyQuote}
             <div class="message-content">
               <div class="message-sender">${senderName}</div>
               <div class="message-text">${msg.content}</div>
@@ -275,8 +328,13 @@ function renderMessages(messages) {
     const toolbar = document.createElement("div");
     toolbar.className = "reaction-toolbar";
     toolbar.innerHTML = `
+    <button class="reaction-btn reply-btn" data-msg-id="${msg.id}" data-sender="${senderName}" title="Reply">
+        <span class="material-symbols-rounded" id="replyIcon">
+        reply
+        </span>
+    </button>
     <button class="reaction-btn reaction-trigger" data-msg-id="${msg.id}" title="React with heart" type="button">
-      <img src="components/icons/heart-plus.png" alt="Add heart reaction">
+        <img src="components/icons/heart-plus.png" alt="Add heart reaction">
     </button>
 `;
     div.appendChild(toolbar);
@@ -548,9 +606,17 @@ function sendMessage() {
 
   sendBtn.disabled = true;
 
+  let replyToId = null;
+  if (window._replyTo) {
+    replyToId = window._replyTo.id;
+  }
+
   const formData = new URLSearchParams();
   formData.append("conversation_id", currentConversation.id);
   formData.append("content", text);
+  if (replyToId) {
+    formData.append("reply_to_id", replyToId);
+  }
 
   fetch("actions/send_messages.php", {
     method: "POST",
@@ -583,6 +649,7 @@ function sendMessage() {
         scrollChatToBottom(container);
         input.value = "";
         sendBtn.disabled = false;
+        cancelReply();
 
         // Refresh to update read statuses of other messages
         setTimeout(refreshMessages, 1000);
@@ -618,9 +685,11 @@ function sendMessage() {
       sendBtn.disabled = false;
     });
 }
+
 //
 // 8. Event listeners
 //
+
 document.addEventListener("DOMContentLoaded", function () {
   const mobileChatBack = document.getElementById("mobileChatBack");
   mobileChatBack?.addEventListener("click", function () {
@@ -699,6 +768,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 2000);
   }
 
+  document
+    .getElementById("cancelReplyBtn")
+    ?.addEventListener("click", cancelReply);
+
   document.addEventListener("click", function (e) {
     const heartBtn = e.target.closest(".reaction-trigger");
     if (heartBtn) {
@@ -706,6 +779,15 @@ document.addEventListener("DOMContentLoaded", function () {
       e.stopPropagation();
       const msgId = heartBtn.dataset.msgId;
       toggleReaction(msgId, "heart");
+    }
+
+    const replyBtn = e.target.closest(".reply-btn");
+    if (replyBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const msgId = replyBtn.dataset.msgId;
+      const senderName = replyBtn.dataset.sender;
+      startReply(msgId, senderName);
     }
   });
 
@@ -1023,18 +1105,6 @@ function updateSidebarUnread(conversationId) {
     if (dot) dot.remove();
   }
 }
-
-//
-// 10. Start polling when page loads
-//
-
-// Add to the existing DOMContentLoaded listener
-document.addEventListener("DOMContentLoaded", function () {
-  // ... existing code ...
-
-  // Start sidebar polling
-  startSidebarPolling();
-});
 
 // Stop polling when navigating away (optional)
 window.addEventListener("beforeunload", function () {

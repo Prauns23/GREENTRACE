@@ -57,3 +57,70 @@ Stack trace:
 [25-Aug-2026 15:15:46 Asia/Manila] CSRF Verification: POST=63645d90, Session=63645d90, Match=YES
 [25-Aug-2026 15:15:52 Asia/Manila] CSRF Verification: POST=63645d90, Session=63645d90, Match=YES
 [25-Aug-2026 15:27:48 Asia/Manila] CSRF Verification: POST=63645d90, Session=63645d90, Match=YES
+[26-Aug-2026 15:09:01 Asia/Manila] CSRF Verification: POST=a8e419f6, Session=a8e419f6, Match=YES
+[26-Aug-2026 15:09:32 Asia/Manila] CSRF Verification: POST=a8e419f6, Session=a8e419f6, Match=YES
+[26-Aug-2026 15:10:20 Asia/Manila] CSRF Verification: POST=a8e419f6, Session=a8e419f6, Match=YES
+[26-Aug-2026 15:10:37 Asia/Manila] CSRF Verification: POST=971211cf, Session=971211cf, Match=YES
+{"timestamp":"2026-08-27T11:18:46+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.fname' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 72","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(72): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:18:46 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.fname' in 'field list' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:72
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(72): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 72
+{"timestamp":"2026-08-27T11:18:46+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.fname' in 'field list' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:72\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(72): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 72","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-27T11:19:46+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:19:46 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:74
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(74): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
+{"timestamp":"2026-08-27T11:19:46+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-27T11:20:46+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:20:46 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:74
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(74): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
+{"timestamp":"2026-08-27T11:20:46+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-27T11:21:46+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:21:46 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:74
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(74): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
+{"timestamp":"2026-08-27T11:21:46+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-27T11:22:46+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:22:46 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:74
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(74): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
+{"timestamp":"2026-08-27T11:22:46+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-27T11:23:38+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:23:38 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:74
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(74): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
+{"timestamp":"2026-08-27T11:23:38+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=40&limit=6","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-27T11:23:41+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=36&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:23:41 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:74
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(74): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
+{"timestamp":"2026-08-27T11:23:41+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=36&limit=6","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-27T11:43:21+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=36&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:43:21 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:74
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(74): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
+{"timestamp":"2026-08-27T11:43:21+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=36&limit=6","context":{"type":"shutdown"}}
+{"timestamp":"2026-08-27T11:43:24+08:00","level":"error","message":"Uncaught Exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=34&limit=6","context":{"trace":"#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}"}}
+[27-Aug-2026 11:43:24 Asia/Manila] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php:74
+Stack trace:
+#0 C:\xampp\htdocs\GREENTRACE\actions\get_messages.php(74): mysqli->prepare('SELECT \r\n    m....')
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
+{"timestamp":"2026-08-27T11:43:24+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=34&limit=6","context":{"type":"shutdown"}}
