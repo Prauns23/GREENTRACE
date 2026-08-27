@@ -1508,7 +1508,7 @@ body {
 }
 
 .reaction-toolbar button:hover {
-  background: #f1f5f9;
+  /* background: #f1f5f9; */
 }
 
 .reaction-toolbar img {
@@ -1568,6 +1568,92 @@ body {
 .reaction-count {
   font-weight: 500;
   margin-left: 2px;
+}
+
+/* Reply preview bar */
+
+.reply-preview {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border-left: 3px solid #2e7d32;
+}
+
+#replyIcon {
+  font-size: 1.4rem;
+  color: #3f3f3f;
+  transition: all 0.3s ease;
+  background: transparent
+}
+
+#replyIcon:hover {
+  transform:translateX(-3px);
+}
+
+.reply-preview-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.reply-preview-content span {
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.reply-preview-content #replyPreviewName {
+    font-weight: 600;
+}
+
+.reply-preview-content #replyPreviewMessage {
+    font-size: 0.85rem;
+    color: #1a202c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cancel-reply-btn {
+    background: none;
+    border: none;
+    color: #a0aec0;
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+}
+
+.cancel-reply-btn:hover {
+    color: #e53e3e;
+}
+
+/* Reply quote inside message */
+.reply-quote {
+    background: #f8fafc;
+    border-left: 3px solid #2e7d32;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.reply-quote-header {
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 2px;
+}
+
+.reply-quote-content {
+    color: #1a202c;
+    word-break: break-word;
+    max-height: 60px;
+    overflow: hidden;
 }
 
 /* Members panel responsiveness */
