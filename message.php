@@ -387,7 +387,7 @@ include 'header.php';
                 </div>
 
                 <!-- Chat Messages -->
-                <div class="chat-messages" id="chatMessages">                    
+                <div class="chat-messages" id="chatMessages">
                     <!-- Messages will be dynamically loaded here -->
                 </div>
 
@@ -419,15 +419,21 @@ include 'header.php';
 
                 <!-- Chat Input -->
                 <div class="chat-input">
-                    <div id="replyPreview" class="reply-preview" style="display: none;">
-                        <div class="reply-preview-content">
-                            <span>Replying to <strong id="replyPreviewName"></strong></span>
-                            <span id="replyPreviewMessage"></span>
+                    <div class="reply-preview-wrapper">
+                        <div id="replyPreview" class="reply-preview" style="display: none;">
+                            <div class="reply-preview-content">
+                                <span>Replying to <strong id="replyPreviewName"></strong></span>
+                                <span id="replyPreviewMessage"></span>
+                            </div>
+                            <button id="cancelReplyBtn" class="cancel-reply-btn" type="button" aria-label="Cancel reply" title="Cancel reply">
+                                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                            </button>
                         </div>
-                        <button id="cancelReplyBtn" class="cancel-reply-btn" type="button">&times;</button>
                     </div>
-                    <input type="text" placeholder="Type your message..." id="messageInput">
-                    <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+                    <div class="chat-input-row">
+                        <input type="text" placeholder="Type your message..." id="messageInput">
+                        <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+                    </div>
                 </div>
             </div>
         </div>

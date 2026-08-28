@@ -124,3 +124,5 @@ Stack trace:
 #1 {main}
   thrown in C:\xampp\htdocs\GREENTRACE\actions\get_messages.php on line 74
 {"timestamp":"2026-08-27T11:43:24+08:00","level":"error","message":"Fatal Error: Uncaught mysqli_sql_exception: Unknown column 'parent.msg.id' in 'on clause' in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php:74\nStack trace:\n#0 C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php(74): mysqli->prepare('SELECT \\r\\n    m....')\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_messages.php on line 74","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/actions/get_messages.php?conversation_id=34&limit=6","context":{"type":"shutdown"}}
+[28-Aug-2026 22:30:46 Asia/Manila] CSRF Verification: POST=826279a0, Session=826279a0, Match=YES
+[28-Aug-2026 22:31:10 Asia/Manila] CSRF Verification: POST=826279a0, Session=826279a0, Match=YES

@@ -328,6 +328,11 @@ function renderMessages(messages) {
     const toolbar = document.createElement("div");
     toolbar.className = "reaction-toolbar";
     toolbar.innerHTML = `
+    <button class="reaction-btn more-tool" title="More" type="button">
+        <span class="material-symbols-rounded">
+        more_vert
+        </span>
+    </button>
     <button class="reaction-btn reply-btn" data-msg-id="${msg.id}" data-sender="${senderName}" title="Reply">
         <span class="material-symbols-rounded" id="replyIcon">
         reply
