@@ -28,6 +28,10 @@ let allMessages = [];
 let oldestTimestamp = null;
 let currentUserMuted = false;
 let isProgrammaticChatScroll = false;
+// Global message actions dropdown
+let currentMessageActionTarget = null;
+// Current user's role in the conversation (for pin permissions)
+let currentUserRoleInConversation = null;
 
 function scrollChatToBottom(container) {
   isProgrammaticChatScroll = true;
@@ -112,7 +116,203 @@ function formatDisplayTime(timestamp) {
 }
 
 //
-// Reply and Reaction funcitions
+// Message Actions (Pin, Edit, Unsend)
+//
+
+function setMessageToolbarState(messageItem) {
+  document.querySelectorAll(".message-item.dropdown-open").forEach((item) => {
+    if (item !== messageItem) item.classList.remove("dropdown-open");
+  });
+
+  if (messageItem) {
+    messageItem.classList.add("dropdown-open");
+  }
+}
+
+function clearMessageToolbarState() {
+  document.querySelectorAll(".message-item.dropdown-open").forEach((item) => {
+    item.classList.remove("dropdown-open");
+  });
+}
+
+function isMessageInChatViewport(messageItem) {
+  const chatMessages = document.getElementById("chatMessages");
+  if (!messageItem || !chatMessages) return false;
+
+  const messageRect = messageItem.getBoundingClientRect();
+  const chatRect = chatMessages.getBoundingClientRect();
+
+  return (
+    messageRect.bottom > chatRect.top &&
+    messageRect.top < chatRect.bottom &&
+    messageRect.right > chatRect.left &&
+    messageRect.left < chatRect.right
+  );
+}
+
+function syncDropdownToButton() {
+  const dropdown = document.getElementById("globalMessageActionsDropdown");
+  if (!dropdown || dropdown.style.display !== "block") return;
+
+  const activeId = dropdown.dataset.msgId;
+  if (!activeId) return;
+
+  const button = document.querySelector(
+    `.more-tool[data-msg-id="${CSS.escape(activeId)}"]`,
+  );
+  if (!button) {
+    hideMessageActions();
+    return;
+  }
+
+  const messageItem = button.closest(".message-item");
+  if (!messageItem || !isMessageInChatViewport(messageItem)) {
+    hideMessageActions();
+    return;
+  }
+
+  const rect = button.getBoundingClientRect();
+  dropdown.style.left = rect.left + rect.width / 2 - dropdown.offsetWidth / 2 + "px";
+  dropdown.style.top = rect.bottom + 4 + "px";
+}
+
+function shouldKeepToolbarVisible(target, relatedTarget) {
+  if (!target) return false;
+
+  const dropdown = document.getElementById("globalMessageActionsDropdown");
+  if (!dropdown || dropdown.style.display !== "block") return false;
+
+  if (relatedTarget && (dropdown.contains(relatedTarget) || target.contains(relatedTarget))) {
+    return true;
+  }
+
+  if (relatedTarget && relatedTarget.closest(".more-tool")) {
+    return true;
+  }
+
+  return false;
+}
+
+function showMessageActions(button, msgId) {
+  const dropdown = document.getElementById("globalMessageActionsDropdown");
+  if (!dropdown) return;
+
+  // Find the message object
+  const msg = allMessages.find((m) => String(m.id) === String(msgId));
+  if (!msg) return;
+
+  // Determine which actions to show
+  const isOwn = msg.is_self;
+  const isAdmin =
+    currentUserRoleInConversation === "owner" ||
+    currentUserRoleInConversation === "admin";
+  const isPinned = msg.is_pinned === 1;
+  const canEdit = isOwn && !msg.is_archived;
+  const canUnsend = isOwn && !msg.is_archived;
+  const canPin = isAdmin || isOwn;
+
+  let buttonsHtml = "";
+
+  if (canPin) {
+    const pinLabel = isPinned ? "Unpin" : "Pin";
+    const pinIcon = isPinned ? "push_pin" : "push_pin";
+    buttonsHtml += `
+      <button data-action="pin" data-msg-id="${msgId}">
+        ${pinLabel}
+      </button>
+    `;
+  }
+
+  if (canEdit) {
+    buttonsHtml += `
+      <button data-action="edit" data-msg-id="${msgId}">
+        Edit
+      </button>
+    `;
+  }
+
+  if (canUnsend) {
+    buttonsHtml += `
+      <button data-action="unsend" data-msg-id="${msgId}">
+        Unsend
+      </button>
+    `;
+  }
+
+  if (!buttonsHtml) {
+    dropdown.style.display = "none";
+    clearMessageToolbarState();
+    return;
+  }
+
+  dropdown.innerHTML = buttonsHtml;
+  dropdown.dataset.msgId = String(msgId);
+
+  // Position dropdown near the clicked button (use button, not event)
+  const rect = button.getBoundingClientRect();
+  dropdown.style.left =
+    rect.left + rect.width / 2 - dropdown.offsetWidth / 2 + "px";
+  dropdown.style.top = rect.bottom + 4 + "px";
+  dropdown.style.display = "block";
+
+  const messageItem = button.closest(".message-item");
+  setMessageToolbarState(messageItem);
+  if (messageItem && !isMessageInChatViewport(messageItem)) {
+    hideMessageActions();
+    return;
+  }
+  currentMessageActionTarget = msgId;
+
+  dropdown.querySelectorAll("button[data-action]").forEach((btn) => {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const action = this.dataset.action;
+      const msgId = this.dataset.msgId;
+      dropdown.style.display = "none";
+      handleMessageAction(action, msgId);
+    });
+  });
+}
+
+function hideMessageActions() {
+  const dropdown = document.getElementById("globalMessageActionsDropdown");
+  if (dropdown) dropdown.style.display = "none";
+  clearMessageToolbarState();
+  currentMessageActionTarget = null;
+}
+
+function handleMessageAction(action, msgId) {
+  switch (action) {
+    case "pin":
+      togglePin(msgId);
+      break;
+    case "edit":
+      startEditMessage(msgId);
+      break;
+    case "unsend":
+      unsendMessage(msgId);
+      break;
+    default:
+      showToast("Unknown action", 3000, "error");
+  }
+}
+
+// Placeholder functions – implement later
+function togglePin(msgId) {
+  showToast("Pin feature coming soon", 3000, "info");
+}
+
+function startEditMessage(msgId) {
+  showToast("Edit feature coming soon", 3000, "info");
+}
+
+function unsendMessage(msgId) {
+  if (!confirm("Unsend this message for everyone?")) return;
+  showToast("Unsend feature coming soon", 3000, "info");
+}
+
+//
+// Reply and Reaction functions
 //
 
 function toggleReaction(messageId, reaction) {
@@ -328,15 +528,11 @@ function renderMessages(messages) {
     const toolbar = document.createElement("div");
     toolbar.className = "reaction-toolbar";
     toolbar.innerHTML = `
-    <button class="reaction-btn more-tool" title="More" type="button">
-        <span class="material-symbols-rounded">
-        more_vert
-        </span>
+    <button class="reaction-btn more-tool" data-msg-id="${msg.id}" title="More" type="button">
+        <span class="material-symbols-rounded">more_vert</span>
     </button>
     <button class="reaction-btn reply-btn" data-msg-id="${msg.id}" data-sender="${senderName}" title="Reply">
-        <span class="material-symbols-rounded" id="replyIcon">
-        reply
-        </span>
+        <span class="material-symbols-rounded" id="replyIcon">reply</span>
     </button>
     <button class="reaction-btn reaction-trigger" data-msg-id="${msg.id}" title="React with heart" type="button">
         <img src="components/icons/heart-plus.png" alt="Add heart reaction">
@@ -473,6 +669,7 @@ function loadConversation(type, id) {
   allMessages = [];
   oldestTimestamp = null;
   currentUserMuted = false;
+  currentUserRoleInConversation = null; // Reset role
 
   const membersListBtn = document.getElementById("membersListBtn");
   if (membersListBtn) {
@@ -777,25 +974,6 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("cancelReplyBtn")
     ?.addEventListener("click", cancelReply);
 
-  document.addEventListener("click", function (e) {
-    const heartBtn = e.target.closest(".reaction-trigger");
-    if (heartBtn) {
-      e.preventDefault();
-      e.stopPropagation();
-      const msgId = heartBtn.dataset.msgId;
-      toggleReaction(msgId, "heart");
-    }
-
-    const replyBtn = e.target.closest(".reply-btn");
-    if (replyBtn) {
-      e.preventDefault();
-      e.stopPropagation();
-      const msgId = replyBtn.dataset.msgId;
-      const senderName = replyBtn.dataset.sender;
-      startReply(msgId, senderName);
-    }
-  });
-
   if (chatMessages) {
     chatMessages.addEventListener(
       "wheel",
@@ -819,11 +997,12 @@ document.addEventListener("DOMContentLoaded", function () {
       { passive: true },
     );
     chatMessages.addEventListener("scroll", function () {
-      // Load more messages if at top
       if (this.scrollTop === 0 && !isLoading && hasMoreMessages) {
         loadMoreMessages();
       }
-      // Ignore scroll events caused by layout changes or automatic scrolling.
+
+      syncDropdownToButton();
+
       if (userScrollIntent && !isProgrammaticChatScroll) {
         showChatSearchBar();
         userScrollIntent = false;
@@ -858,6 +1037,7 @@ document.addEventListener("DOMContentLoaded", function () {
       this.style.display = "none";
     });
   }
+
   // Dropdown action buttons
   document
     .querySelectorAll(".chat-menu-dropdown button[data-action]")
@@ -1318,8 +1498,7 @@ document.addEventListener("click", function (e) {
   }
 });
 
-// Close dropdwon on escape key
-
+// Close dropdown on escape key
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
     const dropdown = document.getElementById("chatMenuDropdown");
@@ -1352,6 +1531,115 @@ function formatDateDivider(dateString) {
     return date.toLocaleDateString("en-PH", options);
   }
 }
+
+//
+// Global click handlers for message actions (Heart, More, Reply)
+//
+
+document.addEventListener("click", function (e) {
+  // Heart reaction
+  const heartBtn = e.target.closest(".reaction-trigger");
+  if (heartBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const msgId = heartBtn.dataset.msgId;
+    toggleReaction(msgId, "heart");
+  }
+
+  // More (ellipsis) button – pass the button element
+  const moreBtn = e.target.closest(".more-tool");
+  if (moreBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dropdown = document.getElementById("globalMessageActionsDropdown");
+    const msgId = moreBtn.dataset.msgId;
+    const isSameMessageOpen =
+      dropdown &&
+      dropdown.style.display === "block" &&
+      dropdown.dataset.msgId === String(msgId);
+
+    if (isSameMessageOpen) {
+      hideMessageActions();
+      return;
+    }
+
+    showMessageActions(moreBtn, msgId);
+    return;
+  }
+
+  // Close global dropdown on outside click
+  const dropdown = document.getElementById("globalMessageActionsDropdown");
+  if (dropdown && dropdown.style.display === "block") {
+    if (!dropdown.contains(e.target) && !e.target.closest(".more-tool")) {
+      hideMessageActions();
+    }
+  }
+
+  // Keep the dropdown tied to the active message when the user is interacting nearby
+  syncDropdownToButton();
+
+  // Reply button
+  const replyBtn = e.target.closest(".reply-btn");
+  if (replyBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    const msgId = replyBtn.dataset.msgId;
+    const senderName = replyBtn.dataset.sender;
+    startReply(msgId, senderName);
+  }
+});
+
+document.addEventListener("mouseover", function (e) {
+  const dropdown = document.getElementById("globalMessageActionsDropdown");
+  if (!dropdown || dropdown.style.display !== "block") return;
+
+  const activeId = dropdown.dataset.msgId;
+  const hoveredItem = e.target.closest(".message-item");
+  const hoveredToolbar = e.target.closest(".reaction-toolbar");
+  const hoveredDropdown = e.target.closest(".message-actions-dropdown");
+
+  if (!activeId) return;
+
+  if (hoveredItem || hoveredToolbar || hoveredDropdown) {
+    const matchingButton = document.querySelector(
+      `.more-tool[data-msg-id="${CSS.escape(activeId)}"]`,
+    );
+    if (matchingButton) {
+      const messageItem = matchingButton.closest(".message-item");
+      if (messageItem) setMessageToolbarState(messageItem);
+    }
+  }
+});
+
+document.addEventListener("mouseout", function (e) {
+  const dropdown = document.getElementById("globalMessageActionsDropdown");
+  if (!dropdown || dropdown.style.display !== "block") return;
+
+  const messageItem = e.target.closest(".message-item");
+  const relatedTarget = e.relatedTarget;
+  if (!messageItem) return;
+
+  const shouldKeepVisible =
+    (relatedTarget && relatedTarget.closest(".reaction-toolbar")) ||
+    (relatedTarget && relatedTarget.closest(".message-actions-dropdown")) ||
+    (relatedTarget && relatedTarget.closest(".more-tool"));
+
+  if (shouldKeepVisible) {
+    setMessageToolbarState(messageItem);
+    return;
+  }
+
+  const moreBtn = messageItem.querySelector(".more-tool");
+  const isSameOpenMessage = moreBtn && dropdown.dataset.msgId === String(moreBtn.dataset.msgId);
+
+  if (!isSameOpenMessage && (!relatedTarget || !relatedTarget.closest(".message-item"))) {
+    hideMessageActions();
+  }
+});
+
+window.addEventListener("resize", syncDropdownToButton);
+window.addEventListener("scroll", syncDropdownToButton, true);
 
 //
 // .15 Action buttons for dropdown
@@ -1642,11 +1930,16 @@ function loadChannelMembers(conversationId) {
         membersCount.textContent = data.total + " USERS";
       }
 
-      // ----- Update current user's mute state -----
+      // ----- Update current user's mute state and role -----
       const currentUserData = data.members.find((m) => m.is_current_user);
       if (currentUserData) {
         currentUserMuted = currentUserData.is_muted_by_admin === 1;
         updateInputMuteState();
+      }
+
+      // Set the global role for permission checks
+      if (data.current_user_role) {
+        currentUserRoleInConversation = data.current_user_role;
       }
 
       // ----- Render members -----

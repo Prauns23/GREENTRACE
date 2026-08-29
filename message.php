@@ -436,6 +436,10 @@ include 'header.php';
                     </div>
                 </div>
             </div>
+            <div id="globalMessageActionsDropdown" class="message-actions-dropdown" style="display: none;
+                position: fixed; z-index: 10000; background: white; border: 1px solid #e2e8f0; border-radius: 12px; min-width: 180px; padding: 4px 0;">
+                <!-- Buttons will be dynamically inserted -->
+            </div>
         </div>
     </div>
 
