@@ -30,8 +30,9 @@ let currentUserMuted = false;
 let isProgrammaticChatScroll = false;
 // Global message actions dropdown
 let currentMessageActionTarget = null;
-// Current user's role in the conversation (for pin permissions)
+// Current user's role in the conversation
 let currentUserRoleInConversation = null;
+let editingMessageId = null;
 
 function scrollChatToBottom(container) {
   isProgrammaticChatScroll = true;
@@ -203,25 +204,11 @@ function showMessageActions(button, msgId) {
 
   // Determine which actions to show
   const isOwn = msg.is_self;
-  const isAdmin =
-    currentUserRoleInConversation === "owner" ||
-    currentUserRoleInConversation === "admin";
-  const isPinned = msg.is_pinned === 1;
-  const canEdit = isOwn && !msg.is_archived;
-  const canUnsend = isOwn && !msg.is_archived;
-  const canPin = isAdmin || isOwn;
+  const canEdit = isOwn && Number(msg.can_edit) === 1;
+  const canUnsend =
+    isOwn && Number(msg.archived) === 0 && msg.message_type === "text";
 
   let buttonsHtml = "";
-
-  if (canPin) {
-    const pinLabel = isPinned ? "Unpin" : "Pin";
-    const pinIcon = isPinned ? "push_pin" : "push_pin";
-    buttonsHtml += `
-      <button data-action="pin" data-msg-id="${msgId}">
-        ${pinLabel}
-      </button>
-    `;
-  }
 
   if (canEdit) {
     buttonsHtml += `
@@ -283,9 +270,6 @@ function hideMessageActions() {
 
 function handleMessageAction(action, msgId) {
   switch (action) {
-    case "pin":
-      togglePin(msgId);
-      break;
     case "edit":
       startEditMessage(msgId);
       break;
@@ -297,18 +281,72 @@ function handleMessageAction(action, msgId) {
   }
 }
 
-// Placeholder functions – implement later
-function togglePin(msgId) {
-  showToast("Pin feature coming soon", 3000, "info");
-}
-
 function startEditMessage(msgId) {
-  showToast("Edit feature coming soon", 3000, "info");
+  const message = allMessages.find(
+    (item) => String(item.id) === String(msgId),
+  );
+
+  if (!message || Number(message.can_edit) !== 1) {
+    showToast("This message can no longer be edited.", 3000, "error");
+    return;
+  }
+
+  cancelReply();
+  editingMessageId = message.id;
+
+  const preview = document.getElementById("replyPreview");
+  const label = document.getElementById("composerPreviewLabel");
+  const previewName = document.getElementById("replyPreviewName");
+  const previewMessage = document.getElementById("replyPreviewMessage");
+  const input = document.getElementById("messageInput");
+
+  label.textContent = "Editing message";
+  previewName.textContent = "";
+  previewMessage.textContent = message.content;
+  preview.style.display = "flex";
+
+  input.value = message.content;
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
 }
 
 function unsendMessage(msgId) {
   if (!confirm("Unsend this message for everyone?")) return;
-  showToast("Unsend feature coming soon", 3000, "info");
+
+  const formData = new URLSearchParams();
+  formData.append("message_id", msgId);
+
+  fetch("actions/unsend_message.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData.toString(),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success) {
+        showToast(data.error || "Failed to unsend message", 3000, "error");
+        return;
+      }
+
+      allMessages = allMessages.map((message) =>
+        String(message.id) === String(msgId)
+          ? { ...message, ...data.message }
+          : message,
+      );
+
+      if (String(editingMessageId) === String(msgId)) {
+        cancelReply();
+      }
+
+      renderMessages(allMessages);
+      fetchSidebarUpdates();
+      showToast("Message unsent", 3000, "success");
+    })
+    .catch((error) => {
+      console.error(error);
+      showToast("Network error", 3000, "error");
+    });
 }
 
 //
@@ -368,7 +406,14 @@ function toggleReaction(messageId, reaction) {
 }
 
 function startReply(messageId, senderName) {
+  if (editingMessageId !== null) {
+    cancelReply();
+  }
+
   const replyPreview = document.getElementById("replyPreview");
+  const composerPreviewLabel = document.getElementById(
+    "composerPreviewLabel",
+  );
   const replyPreviewName = document.getElementById("replyPreviewName");
   const replyPreviewMessage = document.getElementById("replyPreviewMessage");
   if (!replyPreview) return;
@@ -377,6 +422,7 @@ function startReply(messageId, senderName) {
   const msg = allMessages.find((m) => String(m.id) === String(messageId));
   const content = msg ? msg.content : "";
 
+  composerPreviewLabel.textContent = "Replying to";
   replyPreviewName.textContent = senderName || "User";
   const truncated =
     content.length > 80 ? content.substring(0, 80) + "…" : content;
@@ -389,11 +435,26 @@ function startReply(messageId, senderName) {
 }
 
 function cancelReply() {
+  const wasEditing = editingMessageId !== null;
   const replyPreview = document.getElementById("replyPreview");
+  const composerPreviewLabel = document.getElementById(
+    "composerPreviewLabel",
+  );
+  const replyPreviewName = document.getElementById("replyPreviewName");
+  const replyPreviewMessage = document.getElementById("replyPreviewMessage");
+  const input = document.getElementById("messageInput");
+
   if (replyPreview) {
     replyPreview.style.display = "none";
   }
+
+  if (composerPreviewLabel) composerPreviewLabel.textContent = "Replying to";
+  if (replyPreviewName) replyPreviewName.textContent = "";
+  if (replyPreviewMessage) replyPreviewMessage.textContent = "";
+  if (wasEditing && input) input.value = "";
+
   window._replyTo = null;
+  editingMessageId = null;
 }
 
 //
@@ -434,6 +495,7 @@ function renderMessages(messages) {
 
     // Regular Message
     const isSelf = msg.is_self ? "self" : "";
+    const isUnsent = Number(msg.archived) === 1;
     const senderName = getSenderName(msg);
     const avatar = getInitials(senderName);
     const msgDate = new Date(msg.created_at);
@@ -455,7 +517,7 @@ function renderMessages(messages) {
 
     // Show read receipt only on the latest self message
     let readReceipt = "";
-    if (msg.is_self && msg.id === latestSelfMessageId) {
+    if (!isUnsent && msg.is_self && msg.id === latestSelfMessageId) {
       const readCount = Number.parseInt(msg.read_count, 10) || 0;
       const isDirectMessage = currentConversation?.type === "dm";
       const readers = (msg.readers || []).map((reader) => reader.user_name);
@@ -479,7 +541,7 @@ function renderMessages(messages) {
       ? `Reacted by ${reactors.join(", ")}`
       : "Heart reaction";
     const reactionMarkup =
-      heartCount > 0
+      !isUnsent && heartCount > 0
         ? `<span class="reaction-item ${currentUserReacted ? "user-reacted" : ""}" title="${escapeHtml(reactionTitle)}">
           <img src="components/icons/heart-fill.png" alt="Heart reaction">
           <span class="reaction-count">${heartCount}</span>
@@ -494,29 +556,43 @@ function renderMessages(messages) {
         : "";
 
     let replyQuote = "";
-    if (msg.reply_to_id && msg.parent_sender_name && msg.parent_content) {
+    if (
+      !isUnsent &&
+      msg.reply_to_id &&
+      msg.parent_sender_name &&
+      msg.parent_content
+    ) {
       const parentContent =
         msg.parent_content.length > 100
           ? msg.parent_content.substring(0, 100) + "…"
           : msg.parent_content;
+      const replyHeader = msg.is_self
+        ? "You replied to yourself"
+        : `In reply to <strong>${escapeHtml(msg.parent_sender_name)}</strong>`;
+
       replyQuote = `
         <div class="reply-quote">
-            <div class="reply-quote-header">In reply to <strong>${escapeHtml(msg.parent_sender_name)}</strong></div>
+            <div class="reply-quote-header">${replyHeader}</div>
             <div class="reply-quote-content">${escapeHtml(parentContent)}</div>
         </div>
     `;
     }
 
+    const editedIndicator =
+      msg.edited_at && !isUnsent
+        ? '<span class="message-edited">Edited</span>'
+        : "";
     const div = document.createElement("div");
-    div.className = `message-item ${isSelf}`;
+    div.className = `message-item ${isSelf}${isUnsent ? " unsent" : ""}`;
     div.innerHTML = `
             <div class="message-avatar">${avatar}</div>
         <div class="message-body">
+          ${editedIndicator}
           <div class="message-wrapper">
           ${replyQuote}
             <div class="message-content">
-              <div class="message-sender">${senderName}</div>
-              <div class="message-text">${msg.content}</div>
+              <div class="message-sender">${escapeHtml(senderName)}</div>
+              <div class="message-text">${escapeHtml(msg.content)}</div>
               <div class="message-time">${new Date(msg.created_at).toLocaleString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div>
             </div>
                 </div>
@@ -524,10 +600,11 @@ function renderMessages(messages) {
             </div>
         `;
 
-    // Reaction trigger (hidden by default, shown when the message is hovered)
-    const toolbar = document.createElement("div");
-    toolbar.className = "reaction-toolbar";
-    toolbar.innerHTML = `
+    // Unsent messages cannot be replied to, reacted to, or changed again.
+    if (!isUnsent) {
+      const toolbar = document.createElement("div");
+      toolbar.className = "reaction-toolbar";
+      toolbar.innerHTML = `
     <button class="reaction-btn more-tool" data-msg-id="${msg.id}" title="More" type="button">
         <span class="material-symbols-rounded">more_vert</span>
     </button>
@@ -538,7 +615,8 @@ function renderMessages(messages) {
         <img src="components/icons/heart-plus.png" alt="Add heart reaction">
     </button>
 `;
-    div.appendChild(toolbar);
+      div.appendChild(toolbar);
+    }
 
     container.appendChild(div);
   });
@@ -655,6 +733,7 @@ function loadMoreMessages() {
 function loadConversation(type, id) {
   // Hide members panel if open
   hideMembersPanel();
+  cancelReply();
 
   // Convert id to integer (for channels, id is numeric from DB)
   const numericId = parseInt(id, 10);
@@ -814,13 +893,22 @@ function sendMessage() {
   }
 
   const formData = new URLSearchParams();
-  formData.append("conversation_id", currentConversation.id);
   formData.append("content", text);
-  if (replyToId) {
-    formData.append("reply_to_id", replyToId);
+  const isEditing = editingMessageId !== null;
+  const endpoint = isEditing
+    ? "actions/edit_message.php"
+    : "actions/send_messages.php";
+
+  if (isEditing) {
+    formData.append("message_id", editingMessageId);
+  } else {
+    formData.append("conversation_id", currentConversation.id);
+    if (replyToId) {
+      formData.append("reply_to_id", replyToId);
+    }
   }
 
-  fetch("actions/send_messages.php", {
+  fetch(endpoint, {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -832,26 +920,44 @@ function sendMessage() {
       try {
         data = JSON.parse(text);
       } catch (err) {
-        console.error("Invalid JSON response from send_messages.php:", text);
+        console.error(`Invalid JSON response from ${endpoint}:`, text);
         throw err;
       }
 
       if (data.success) {
         const msg = data.message;
-        allMessages.push({
-          id: msg.id,
-          sender_id: msg.sender_id,
-          sender_name: msg.sender_name,
-          content: msg.content,
-          created_at: msg.created_at,
-          is_self: true,
-        });
+        if (isEditing) {
+          allMessages = allMessages.map((message) =>
+            String(message.id) === String(msg.id)
+              ? { ...message, ...msg }
+              : message,
+          );
+          showToast("Message edited", 3000, "success");
+        } else {
+          allMessages.push({
+            id: msg.id,
+            sender_id: msg.sender_id,
+            sender_name: msg.sender_name,
+            content: msg.content,
+            created_at: msg.created_at,
+            message_type: "text",
+            archived: 0,
+            edited_at: null,
+            can_edit: 1,
+            is_self: true,
+          });
+        }
+
         renderMessages(allMessages);
-        const container = document.getElementById("chatMessages");
-        scrollChatToBottom(container);
+        if (!isEditing) {
+          const container = document.getElementById("chatMessages");
+          scrollChatToBottom(container);
+        }
+
+        cancelReply();
         input.value = "";
         sendBtn.disabled = false;
-        cancelReply();
+        fetchSidebarUpdates();
 
         // Refresh to update read statuses of other messages
         setTimeout(refreshMessages, 1000);
@@ -1128,7 +1234,16 @@ function updateChannelList(channels) {
       const timeSpan = item.querySelector(".channel-time");
 
       let displayMsg = "No messages yet";
-      if (channelData.last_message) {
+      if (
+        Number(channelData.last_message_unsent) === 1 &&
+        channelData.last_sender_name
+      ) {
+        const isSelf = channelData.last_sender_id == currentUserId;
+        const senderDisplay = isSelf ? "You" : channelData.last_sender_name;
+        displayMsg = isSelf
+          ? "You have unsent a message"
+          : `${senderDisplay} has unsent a message`;
+      } else if (channelData.last_message) {
         if (channelData.last_sender_id == 0) {
           // System message – show only the content
           displayMsg = channelData.last_message;
@@ -1209,7 +1324,16 @@ function updateDMList(dms) {
       const timeSpan = item.querySelector(".dm-time");
 
       let displayMsg = "No messages yet";
-      if (dmData.last_message && dmData.last_sender_name) {
+      if (
+        Number(dmData.last_message_unsent) === 1 &&
+        dmData.last_sender_name
+      ) {
+        const isSelf = dmData.last_sender_id == currentUserId;
+        const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
+        displayMsg = isSelf
+          ? "You have unsent a message"
+          : `${senderDisplay} has unsent a message`;
+      } else if (dmData.last_message && dmData.last_sender_name) {
         const isSelf = dmData.last_sender_id == currentUserId;
         const senderDisplay = isSelf ? "You" : dmData.last_sender_name;
         displayMsg = senderDisplay + ": " + dmData.last_message;
@@ -1417,34 +1541,44 @@ function refreshMessages() {
     .then((data) => {
       if (!data.success || !Array.isArray(data.messages)) return;
 
-      const newMessages = data.messages.filter(
-        (msg) => !allMessages.some((existing) => Number(existing.id) === Number(msg.id)),
-      );
+      const hasChanges = data.messages.some((incoming) => {
+        const existing = allMessages.find(
+          (message) => String(message.id) === String(incoming.id),
+        );
+        return (
+          !existing ||
+          existing.content !== incoming.content ||
+          existing.edited_at !== incoming.edited_at ||
+          Number(existing.can_edit) !== Number(incoming.can_edit) ||
+          Number(existing.archived) !== Number(incoming.archived) ||
+          Number(existing.is_read) !== Number(incoming.is_read) ||
+          Number(existing.read_count) !== Number(incoming.read_count) ||
+          JSON.stringify(existing.reactions || []) !==
+            JSON.stringify(incoming.reactions || [])
+        );
+      });
 
-      if (!newMessages.length) return;
+      if (!hasChanges) return;
 
-      allMessages = mergeMessages(allMessages, newMessages);
-
-      if (newMessages.length > 0) {
-        oldestTimestamp = newMessages[0].created_at;
-      }
-
+      allMessages = mergeMessages(allMessages, data.messages);
       renderMessages(allMessages);
     })
     .catch((err) => console.error("Error refreshing messages:", err));
 }
 
 function mergeMessages(existing, newMessages) {
-  const existingIds = new Set(existing.map((m) => m.id));
+  const existingIds = new Set(existing.map((m) => String(m.id)));
   const merged = [...existing];
 
   // Add new messages that don't exist
   for (const msg of newMessages) {
-    if (!existingIds.has(msg.id)) {
+    const messageId = String(msg.id);
+    if (!existingIds.has(messageId)) {
       merged.push(msg);
+      existingIds.add(messageId);
     } else {
       // Update existing message (for read status changes)
-      const index = merged.findIndex((m) => m.id === msg.id);
+      const index = merged.findIndex((m) => String(m.id) === messageId);
       if (index !== -1) {
         merged[index] = msg;
       }

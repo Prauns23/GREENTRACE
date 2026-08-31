@@ -39,7 +39,18 @@ $sql = "SELECT
     u.lname,
     parent.fname as parent_fname,
     parent.lname as parent_lname,
-    parent_msg.content as parent_content,
+    CASE
+        WHEN parent_msg.archived = 1 THEN 'Message unsent'
+        ELSE parent_msg.content
+    END as parent_content,
+    CASE
+        WHEN m.sender_id = ?
+         AND m.message_type = 'text'
+         AND m.archived = 0
+         AND m.created_at > DATE_SUB(NOW(), INTERVAL 60 MINUTE)
+        THEN 1
+        ELSE 0
+    END as can_edit,
     CASE 
         WHEN m.sender_id is NULL THEN 1 -- system messages are always marked as read
         WHEN m.sender_id = ? THEN
@@ -56,10 +67,10 @@ FROM chat_messages m
 LEFT JOIN users_tbl u ON m.sender_id = u.id
 LEFT JOIN chat_messages parent_msg ON m.reply_to_id = parent_msg.id
 LEFT JOIN users_tbl parent ON parent_msg.sender_id = parent.id
-WHERE m.conversation_id = ? AND m.archived = 0
+WHERE m.conversation_id = ?
 ";
-$params = [$user_id, $user_id, $user_id, $conversation_id];
-$types = "iiii";
+$params = [$user_id, $user_id, $user_id, $user_id, $conversation_id];
+$types = "iiiii";
 
 if ($before) {
     $sql .= " AND m.created_at < ?";
@@ -81,6 +92,12 @@ while ($row = $result->fetch_assoc()) {
     $row['sender_name'] = $row['sender_id'] ? ($row['fname'] . ' ' . $row['lname']) : 'System';
     $row['is_self'] = ($row['sender_id'] == $user_id);
     $row['parent_sender_name'] = $row['parent_fname'] && $row['parent_lname'] ? ($row['parent_fname'] . ' ' . $row['parent_lname']) :null;
+    if ((int) $row['archived'] === 1) {
+        $row['content'] = $row['is_self']
+            ? 'You have unsent a message'
+            : $row['sender_name'] . ' has unsent a message';
+        $row['can_edit'] = 0;
+    }
     $messages[] = $row;
 }
 $stmt->close();

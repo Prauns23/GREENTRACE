@@ -37,13 +37,21 @@ $channelQuery = "
               )
         ) as unread_count,
         (
-            SELECT content 
+            SELECT CASE WHEN archived = 1 THEN NULL ELSE content END
             FROM chat_messages 
             WHERE conversation_id = c.id 
               AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
+        (
+            SELECT archived
+            FROM chat_messages
+            WHERE conversation_id = c.id
+              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) as last_message_unsent,
         (
             SELECT created_at 
             FROM chat_messages 
@@ -105,13 +113,21 @@ $dmQuery = "
               )
         ) as unread_count,
         (
-            SELECT content 
+            SELECT CASE WHEN archived = 1 THEN NULL ELSE content END
             FROM chat_messages 
             WHERE conversation_id = c.id 
               AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
+        (
+            SELECT archived
+            FROM chat_messages
+            WHERE conversation_id = c.id
+              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) as last_message_unsent,
         (
             SELECT created_at 
             FROM chat_messages 

@@ -52,6 +52,14 @@ $channelStmt = $conn->prepare("
             LIMIT 1
         ) as last_message,
         (
+            SELECT archived
+            FROM chat_messages
+            WHERE conversation_id = c.id
+              AND message_type != 'system'
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) as last_message_unsent,
+        (
             SELECT created_at 
             FROM chat_messages 
             WHERE conversation_id = c.id 
@@ -109,6 +117,14 @@ $dmQuery = "
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_message,
+        (
+            SELECT archived
+            FROM chat_messages
+            WHERE conversation_id = c.id
+              AND message_type != 'system'
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) as last_message_unsent,
         (
             SELECT created_at 
             FROM chat_messages 
@@ -209,7 +225,13 @@ include 'header.php';
                             $unreadCount = (int)$channel['unread_count'];
                             $isMuted = (bool)$channel['is_muted'];
 
-                            if ($lastMsg && $lastSender) {
+                            if ((int)($channel['last_message_unsent'] ?? 0) === 1 && $lastSender) {
+                                $isSelf = ($channel['last_sender_id'] == $user_id);
+                                $senderDisplay = $isSelf ? 'You' : $lastSender;
+                                $lastMsgDisplay = $isSelf
+                                    ? 'You have unsent a message'
+                                    : $senderDisplay . ' has unsent a message';
+                            } elseif ($lastMsg && $lastSender) {
                                 $isSelf = ($channel['last_sender_id'] == $user_id);
                                 $senderDisplay = $isSelf ? 'You' : $lastSender;
                                 $lastMsgDisplay = $senderDisplay . ': ' . $lastMsg;
@@ -269,7 +291,13 @@ include 'header.php';
                         $lastMsg = $dm['last_message'] ?? 'No messages yet';
                         $isMuted = (bool)$dm['is_muted'];
 
-                        if ($lastMsg && $lastSender) {
+                        if ((int)($dm['last_message_unsent'] ?? 0) === 1 && $lastSender) {
+                            $isSelf = ($dm['last_sender_id'] == $user_id);
+                            $senderDisplay = $isSelf ? 'You' : $lastSender;
+                            $lastMsgDisplay = $isSelf
+                                ? 'You have unsent a message'
+                                : $senderDisplay . ' has unsent a message';
+                        } elseif ($lastMsg && $lastSender) {
                             $isSelf = ($dm['last_sender_id'] == $user_id);
                             $senderDisplay = $isSelf ? 'You' : $lastSender;
                             $lastMsgDisplay = $senderDisplay . ': ' . $lastMsg;
@@ -422,7 +450,7 @@ include 'header.php';
                     <div class="reply-preview-wrapper">
                         <div id="replyPreview" class="reply-preview" style="display: none;">
                             <div class="reply-preview-content">
-                                <span>Replying to <strong id="replyPreviewName"></strong></span>
+                                <span><span id="composerPreviewLabel">Replying to</span> <strong id="replyPreviewName"></strong></span>
                                 <span id="replyPreviewMessage"></span>
                             </div>
                             <button id="cancelReplyBtn" class="cancel-reply-btn" type="button" aria-label="Cancel reply" title="Cancel reply">
