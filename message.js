@@ -642,7 +642,7 @@ function renderMessages(messages) {
     const div = document.createElement("div");
     div.className = `message-item ${isSelf}${isUnsent ? " unsent" : ""}`;
     div.innerHTML = `
-            <div class="message-avatar">${avatar}</div>
+            <div class="message-avatar">${escapeHtml(avatar)}</div>
         <div class="message-body">
           ${messageStatusMarkup}
           <div class="message-wrapper">
@@ -662,18 +662,18 @@ function renderMessages(messages) {
     toolbar.className = "reaction-toolbar";
     toolbar.innerHTML = isUnsent
       ? `
-    <button class="reaction-btn more-tool" data-msg-id="${msg.id}" title="More" type="button">
+    <button class="reaction-btn more-tool" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" title="More" type="button">
         <span class="material-symbols-rounded">more_vert</span>
     </button>
 `
       : `
-    <button class="reaction-btn more-tool" data-msg-id="${msg.id}" title="More" type="button">
+    <button class="reaction-btn more-tool" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" title="More" type="button">
         <span class="material-symbols-rounded">more_vert</span>
     </button>
-    <button class="reaction-btn reply-btn" data-msg-id="${msg.id}" data-sender="${senderName}" title="Reply">
+    <button class="reaction-btn reply-btn" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" data-sender="${escapeHtml(senderName)}" title="Reply">
         <span class="material-symbols-rounded" id="replyIcon">reply</span>
     </button>
-    <button class="reaction-btn reaction-trigger" data-msg-id="${msg.id}" title="React with heart" type="button">
+    <button class="reaction-btn reaction-trigger" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" title="React with heart" type="button">
         <img src="components/icons/heart-plus.png" alt="Add heart reaction">
     </button>
 `;
@@ -2116,7 +2116,7 @@ function loadChannelMembers(conversationId) {
         membersListContainer.innerHTML = `
           <div style="text-align: center; padding: 40px; color: #e53e3e;">
             <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
-            <p style="margin-top: 12px;">${data.error}</p>
+            <p style="margin-top: 12px;">${escapeHtml(data.error)}</p>
           </div>
         `;
         return;
@@ -2142,6 +2142,13 @@ function loadChannelMembers(conversationId) {
       // ----- Render members -----
       let html = "";
       data.members.forEach((member) => {
+        const memberId = Number.parseInt(member.user_id, 10) || 0;
+        const safeFullName = escapeHtml(member.full_name || "Unknown user");
+        const safeEmail = escapeHtml(member.email || "");
+        const safeRole = escapeHtml(member.role || "");
+        const safeAdderName = escapeHtml(
+          member.added_by_name || data.creator_name || "System",
+        );
         const isCurrentUser = member.is_current_user;
         const isCreator = member.role === "owner";
         const isMutedByAdmin = member.is_muted_by_admin === 1;
@@ -2156,11 +2163,9 @@ function loadChannelMembers(conversationId) {
         // Build "Added by" text
         let addedByText = "";
         if (isCreator) {
-          addedByText = `<span class="creator-text">Group creator : ${member.email}</span>`;
+          addedByText = `<span class="creator-text">Group creator : ${safeEmail}</span>`;
         } else {
-          const adderName =
-            member.added_by_name || data.creator_name || "System";
-          addedByText = `Added by ${adderName} : ${member.email}`;
+          addedByText = `Added by ${safeAdderName} : ${safeEmail}`;
         }
 
         // Determine dropdown actions based on role and current user
@@ -2168,7 +2173,7 @@ function loadChannelMembers(conversationId) {
         if (isCurrentUser) {
           // Current user's own card – only Leave
           dropdownButtons = `
-            <button data-action="leave" data-user-id="${member.user_id}">Leave</button>
+            <button data-action="leave" data-user-id="${memberId}">Leave</button>
           `;
         } else if (
           data.current_user_role === "owner" ||
@@ -2176,38 +2181,38 @@ function loadChannelMembers(conversationId) {
         ) {
           // Owner/Admin can manage others
           dropdownButtons = `
-            <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
-            <button data-action="kick" data-user-id="${member.user_id}">Kick</button>
-            <button data-action="mute-member" data-user-id="${member.user_id}">${muteButtonText}</button>
+            <button data-action="add-contact" data-user-id="${memberId}">Add as contact</button>
+            <button data-action="kick" data-user-id="${memberId}">Kick</button>
+            <button data-action="mute-member" data-user-id="${memberId}">${muteButtonText}</button>
           `;
           if (data.current_user_role === "owner" && member.role !== "owner") {
             const adminButtonText =
               member.role === "admin" ? "Remove Moderator" : "Make Moderator";
             dropdownButtons += `
-        <button data-action="make-admin" data-user-id="${member.user_id}">${adminButtonText}</button>
+        <button data-action="make-admin" data-user-id="${memberId}">${adminButtonText}</button>
     `;
           }
         } else {
           // Regular member – limited options
           dropdownButtons = `
-            <button data-action="add-contact" data-user-id="${member.user_id}">Add as contact</button>
+            <button data-action="add-contact" data-user-id="${memberId}">Add as contact</button>
           `;
         }
 
         html += `
-          <div class="member-card ${mutedClass}" data-user-id="${member.user_id}" data-role="${member.role}" data-name="${member.full_name}">
+          <div class="member-card ${mutedClass}" data-user-id="${memberId}" data-role="${safeRole}" data-name="${safeFullName}">
             <div class="member-avatar">
               <span class="material-symbols-rounded">${avatarIcon}</span>
             </div>
             <div class="member-info">
               <div class="member-name-row">
-                <span class="member-name">${member.full_name} ${isCurrentUser ? "(You)" : ""}${mutedLabel}</span>
+                <span class="member-name">${safeFullName} ${isCurrentUser ? "(You)" : ""}${mutedLabel}</span>
               </div>
               <span class="member-added-by">${addedByText}</span>
             </div>
             <div class="member-actions">
               <div class="members-menu-wrapper">
-                <button class="members-menu-btn" onclick="toggleMembersDropdown(this)" data-name="${member.full_name}">
+                <button class="members-menu-btn" onclick="toggleMembersDropdown(this)" data-name="${safeFullName}">
                   <i class="fa-solid fa-ellipsis-vertical"></i>
                 </button>
                 <div class="members-dropdown" style="display: none;">

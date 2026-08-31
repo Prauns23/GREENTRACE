@@ -1,4 +1,5 @@
 <?php
+require_once '../init_session.php';
 $singleId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $idsString = isset($_GET['ids']) ? $_GET['ids'] : '';
 $isBulk = ($idsString !== '');
@@ -12,6 +13,8 @@ $message = $isBulk ? "This also removes all related applications and files. This
 
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
+    <script src="../security.js"></script>
     <title>Confirm Delete</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">

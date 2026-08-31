@@ -48,6 +48,8 @@ $stmt->close();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
+    <script src="../security.js"></script>
     <title>Add Volunteers</title>
     <link rel="stylesheet" href="add_message.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">

@@ -133,6 +133,7 @@ include __DIR__ . '/../header.php';
     <!-- Bulk Actions Bar -->
     <div class="bulk-actions-bar">
         <form method="POST" id="bulkActionForm" class="bulk-action-form">
+            <?php csrf_field(); ?>
             <input type="hidden" name="bulk_action" id="bulkActionType" value="">
             <input type="hidden" name="selected_ids" id="selectedIdsInput" value="">
             <button type="button" class="bulk-archive-btn" id="bulkArchiveBtn" disabled><i class="fas fa-archive"></i> Archive</button>

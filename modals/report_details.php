@@ -40,6 +40,8 @@ $photoStmt->close();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
+    <script src="../security.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report Details</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -130,8 +132,9 @@ $photoStmt->close();
                 <label>Evidence Photos (<?php echo count($photos); ?>)</label>
                 <div class="photos-gallery">
                     <?php foreach ($photos as $photo): ?>
-                    <div class="photo-thumb" onclick="openImageModal('<?php echo '../' . htmlspecialchars($photo['file_path']); ?>')">
-                        <img src="<?php echo '../' . htmlspecialchars($photo['file_path']); ?>" alt="<?php echo htmlspecialchars($photo['original_name']); ?>">
+                    <?php $photoPath = '../' . $photo['file_path']; ?>
+                    <div class="photo-thumb" onclick="openImageModal(<?= htmlspecialchars(json_encode($photoPath), ENT_QUOTES, 'UTF-8') ?>)">
+                        <img src="<?= htmlspecialchars($photoPath, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($photo['original_name'], ENT_QUOTES, 'UTF-8') ?>">
                     </div>
                     <?php endforeach; ?>
                 </div>

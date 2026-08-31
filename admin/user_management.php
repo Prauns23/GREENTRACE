@@ -317,6 +317,7 @@ include __DIR__ . '/../header.php';
                 </div>
             </div>
             <form method="POST" id="bulkActionForm" class="bulk-action-form">
+                <?php csrf_field(); ?>
                 <input type="hidden" name="bulk_action" id="bulkActionType" value="">
                 <input type="hidden" name="selected_ids" id="selectedIdsInput" value="">
                 <?php if ($showArchived): ?>

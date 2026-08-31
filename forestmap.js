@@ -352,7 +352,7 @@ function updateRecentActivity() {
               <div class="activity-name">${escapeHtml(item.name)}</div>
               <div class="activity-location">${escapeHtml(item.locationName)}</div>
             </div>
-            <div class="activity-status ${statusClass}">${statusText}</div>
+            <div class="activity-status ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</div>
           </div>
         `;
       })

@@ -15,4 +15,9 @@ require_once __DIR__ . '/error_logger.php';
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+$requestMethod = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+if (in_array($requestMethod, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+    requireCSRFToken();
+}
 ?>

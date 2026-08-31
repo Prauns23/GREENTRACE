@@ -18,14 +18,39 @@ function generateCSRFToken() {
  * @return bool
  */
 function verifyCSRFToken($token) {
-    $isValid = isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
-    
-    // Log for debugging
-    error_log('CSRF Verification: POST=' . substr($token ?? '', 0, 8) . 
-              ', Session=' . substr($_SESSION['csrf_token'] ?? '', 0, 8) . 
-              ', Match=' . ($isValid ? 'YES' : 'NO'));
-    
-    return $isValid;
+    return is_string($token)
+        && $token !== ''
+        && isset($_SESSION['csrf_token'])
+        && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+/**
+ * Retrieve a CSRF token from a form field or request header.
+ * @return string
+ */
+function getRequestCSRFToken() {
+    if (isset($_POST['csrf_token']) && is_string($_POST['csrf_token'])) {
+        return $_POST['csrf_token'];
+    }
+
+    return $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+}
+
+/**
+ * Reject a state-changing request that does not contain a valid token.
+ */
+function requireCSRFToken() {
+    if (verifyCSRFToken(getRequestCSRFToken())) {
+        return;
+    }
+
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'error' => 'Invalid or missing CSRF token'
+    ]);
+    exit;
 }
 
 /**
@@ -33,7 +58,9 @@ function verifyCSRFToken($token) {
  */
 function csrf_field() {
     $token = generateCSRFToken();
-    echo '<input type="hidden" name="csrf_token" value="' . $token . '">';
+    echo '<input type="hidden" name="csrf_token" value="'
+        . htmlspecialchars($token, ENT_QUOTES, 'UTF-8')
+        . '">';
 }
 
 /**

@@ -13,6 +13,19 @@ let isArMode = false;
 let currentQrTreeId = null;
 let qrCodeInstance = null;
 
+function escapeARHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    };
+    return entities[character];
+  });
+}
+
 function initThree() {
   const container = document.getElementById("threeContainer");
   const box = document.getElementById("simulationBox");
@@ -87,7 +100,7 @@ function showQrModal(treeId, treeName) {
   title.textContent = `${treeName} QR Code`;
 
   // Description
-  description.innerHTML = `Print or share this QR code. Scan it with the AR Camera to instantly view the <strong>${treeName}</strong> tree at full scale.`;
+  description.innerHTML = `Print or share this QR code. Scan it with the AR Camera to instantly view the <strong>${escapeARHtml(treeName)}</strong> tree at full scale.`;
 
   // Generate new QR code (using tree ID as content)
   qrCodeInstance = new QRCode(container, {
@@ -424,7 +437,7 @@ function buildTree(species) {
   const overlay = document.getElementById("treeInfoOverlay");
   overlay.innerHTML = `
     <div class="tree-info-details">
-        <h3><i class="fa-solid fa-expand" style="font-size: 1.2rem; margin-right: 8px;"></i> ${species.name} — ${height}m tall</h3>
+        <h3><i class="fa-solid fa-expand" style="font-size: 1.2rem; margin-right: 8px;"></i> ${escapeARHtml(species.name)} — ${height}m tall</h3>
         <p><p><span class="label">Plant spacing:</span> ${spacing.toFixed(1)}m</p></p>
         <p class="human-note">Human: 1.63m</p>
     </div>

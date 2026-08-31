@@ -33,6 +33,18 @@ function getIconClass($type)
     }
 }
 
+// Notification messages may use simple emphasis, but all data and other markup
+// must remain text so saved notifications cannot inject scripts or attributes.
+function renderNotificationMessage($message)
+{
+    $escaped = htmlspecialchars((string)$message, ENT_QUOTES, 'UTF-8');
+    return str_ireplace(
+        ['&lt;strong&gt;', '&lt;/strong&gt;'],
+        ['<strong>', '</strong>'],
+        $escaped
+    );
+}
+
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['open_signup_modal'] = true;
     header('Location: index.php');
@@ -277,7 +289,7 @@ include 'header.php';
                                 <div class="title"><?= htmlspecialchars($notif['title']) ?></div>
                                 <div class="time"><?= time_ago(strtotime($notif['created_at'])) ?></div>
                             </div>
-                            <div class="message"><?= $notif['message'] ?></div>
+                            <div class="message"><?= renderNotificationMessage($notif['message']) ?></div>
                         </div>
 
                         <?php if (!$notif['is_read']): ?>
