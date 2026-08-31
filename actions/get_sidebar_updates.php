@@ -35,29 +35,36 @@ $channelQuery = "
                   WHERE r.message_id = m.id 
                     AND r.user_id = ?
               )
+              AND NOT EXISTS (
+                  SELECT 1 FROM chat_message_user_archives a
+                  WHERE a.message_id = m.id AND a.user_id = ?
+              )
         ) as unread_count,
         (
             SELECT CASE WHEN archived = 1 THEN NULL ELSE content END
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
-              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
-            ORDER BY created_at DESC 
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND (latest.message_type != 'system' OR (latest.message_type = 'system' AND latest.content NOT LIKE '% was muted by %' AND latest.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message,
         (
             SELECT archived
-            FROM chat_messages
-            WHERE conversation_id = c.id
-              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
-            ORDER BY created_at DESC
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND (latest.message_type != 'system' OR (latest.message_type = 'system' AND latest.content NOT LIKE '% was muted by %' AND latest.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message_unsent,
         (
             SELECT created_at 
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
-              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
-            ORDER BY created_at DESC 
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND (latest.message_type != 'system' OR (latest.message_type = 'system' AND latest.content NOT LIKE '% was muted by %' AND latest.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message_time,
         (
@@ -66,6 +73,7 @@ $channelQuery = "
             LEFT JOIN users_tbl u ON m.sender_id = u.id
             WHERE m.conversation_id = c.id 
               AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = m.id AND a.user_id = ?)
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
@@ -74,6 +82,7 @@ $channelQuery = "
             FROM chat_messages m
             WHERE conversation_id = c.id 
               AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = m.id AND a.user_id = ?)
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id
@@ -88,7 +97,7 @@ $channelQuery = "
 ";
 
 $stmt = $conn->prepare($channelQuery);
-$stmt->bind_param("iii", $user_id, $user_id, $user_id);
+$stmt->bind_param("iiiiiiiii", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id);
 $stmt->execute();
 $channels = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
@@ -111,29 +120,36 @@ $dmQuery = "
                   WHERE r.message_id = m.id 
                     AND r.user_id = ?
               )
+              AND NOT EXISTS (
+                  SELECT 1 FROM chat_message_user_archives a
+                  WHERE a.message_id = m.id AND a.user_id = ?
+              )
         ) as unread_count,
         (
             SELECT CASE WHEN archived = 1 THEN NULL ELSE content END
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
-              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
-            ORDER BY created_at DESC 
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND (latest.message_type != 'system' OR (latest.message_type = 'system' AND latest.content NOT LIKE '% was muted by %' AND latest.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message,
         (
             SELECT archived
-            FROM chat_messages
-            WHERE conversation_id = c.id
-              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
-            ORDER BY created_at DESC
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND (latest.message_type != 'system' OR (latest.message_type = 'system' AND latest.content NOT LIKE '% was muted by %' AND latest.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message_unsent,
         (
             SELECT created_at 
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
-              AND (message_type != 'system' OR (message_type = 'system' AND content NOT LIKE '% was muted by %' AND content NOT LIKE '% was unmuted by %'))
-            ORDER BY created_at DESC 
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND (latest.message_type != 'system' OR (latest.message_type = 'system' AND latest.content NOT LIKE '% was muted by %' AND latest.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message_time,
         (
@@ -142,6 +158,7 @@ $dmQuery = "
             LEFT JOIN users_tbl u_sender ON m.sender_id = u_sender.id
             WHERE m.conversation_id = c.id 
               AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = m.id AND a.user_id = ?)
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
@@ -150,6 +167,7 @@ $dmQuery = "
             FROM chat_messages m
             WHERE m.conversation_id = c.id 
               AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = m.id AND a.user_id = ?)
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id
@@ -166,7 +184,7 @@ $dmQuery = "
 ";
 
 $dmStmt = $conn->prepare($dmQuery);
-$dmStmt->bind_param("iiii", $user_id, $user_id, $user_id, $user_id);
+$dmStmt->bind_param("iiiiiiiiii", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id);
 $dmStmt->execute();
 $dms = $dmStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $dmStmt->close();

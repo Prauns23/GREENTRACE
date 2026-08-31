@@ -207,6 +207,7 @@ function showMessageActions(button, msgId) {
   const canEdit = isOwn && Number(msg.can_edit) === 1;
   const canUnsend =
     isOwn && Number(msg.archived) === 0 && msg.message_type === "text";
+  const canRemove = true;
 
   let buttonsHtml = "";
 
@@ -222,6 +223,14 @@ function showMessageActions(button, msgId) {
     buttonsHtml += `
       <button data-action="unsend" data-msg-id="${msgId}">
         Unsend
+      </button>
+    `;
+  }
+
+  if (canRemove) {
+    buttonsHtml += `
+      <button data-action="remove" data-msg-id="${msgId}">
+        Remove
       </button>
     `;
   }
@@ -275,6 +284,9 @@ function handleMessageAction(action, msgId) {
       break;
     case "unsend":
       unsendMessage(msgId);
+      break;
+    case "remove":
+      removeMessage(msgId);
       break;
     default:
       showToast("Unknown action", 3000, "error");
@@ -342,6 +354,43 @@ function unsendMessage(msgId) {
       renderMessages(allMessages);
       fetchSidebarUpdates();
       showToast("Message unsent", 3000, "success");
+    })
+    .catch((error) => {
+      console.error(error);
+      showToast("Network error", 3000, "error");
+    });
+}
+
+function removeMessage(msgId) {
+  if (!confirm("Remove this message from your view?")) return;
+
+  const formData = new URLSearchParams();
+  formData.append("message_id", msgId);
+
+  fetch("actions/remove_message.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData.toString(),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success) {
+        showToast(data.error || "Failed to remove message", 3000, "error");
+        return;
+      }
+
+      allMessages = allMessages.filter(
+        (message) => String(message.id) !== String(msgId),
+      );
+
+      if (String(editingMessageId) === String(msgId)) {
+        cancelReply();
+      }
+
+      renderMessages(allMessages);
+      fetchSidebarUpdates();
+      showToast("Message removed from your view", 3000, "success");
     })
     .catch((error) => {
       console.error(error);
@@ -578,16 +627,24 @@ function renderMessages(messages) {
     `;
     }
 
-    const editedIndicator =
-      msg.edited_at && !isUnsent
-        ? '<span class="message-edited">Edited</span>'
-        : "";
+    const messageStatuses = [];
+    if (Number(msg.is_pinned) === 1 && !isUnsent) {
+      messageStatuses.push(
+        '<span class="message-pinned"><span class="material-symbols-rounded">push_pin</span>Pinned</span>',
+      );
+    }
+    if (msg.edited_at && !isUnsent) {
+      messageStatuses.push('<span class="message-edited">Edited</span>');
+    }
+    const messageStatusMarkup = messageStatuses.length
+      ? `<div class="message-statuses">${messageStatuses.join("")}</div>`
+      : "";
     const div = document.createElement("div");
     div.className = `message-item ${isSelf}${isUnsent ? " unsent" : ""}`;
     div.innerHTML = `
             <div class="message-avatar">${avatar}</div>
         <div class="message-body">
-          ${editedIndicator}
+          ${messageStatusMarkup}
           <div class="message-wrapper">
           ${replyQuote}
             <div class="message-content">
@@ -600,11 +657,16 @@ function renderMessages(messages) {
             </div>
         `;
 
-    // Unsent messages cannot be replied to, reacted to, or changed again.
-    if (!isUnsent) {
-      const toolbar = document.createElement("div");
-      toolbar.className = "reaction-toolbar";
-      toolbar.innerHTML = `
+    // Unsent messages keep the More menu so they can be removed from this user's view.
+    const toolbar = document.createElement("div");
+    toolbar.className = "reaction-toolbar";
+    toolbar.innerHTML = isUnsent
+      ? `
+    <button class="reaction-btn more-tool" data-msg-id="${msg.id}" title="More" type="button">
+        <span class="material-symbols-rounded">more_vert</span>
+    </button>
+`
+      : `
     <button class="reaction-btn more-tool" data-msg-id="${msg.id}" title="More" type="button">
         <span class="material-symbols-rounded">more_vert</span>
     </button>
@@ -615,8 +677,7 @@ function renderMessages(messages) {
         <img src="components/icons/heart-plus.png" alt="Add heart reaction">
     </button>
 `;
-      div.appendChild(toolbar);
-    }
+    div.appendChild(toolbar);
 
     container.appendChild(div);
   });
@@ -942,6 +1003,7 @@ function sendMessage() {
             created_at: msg.created_at,
             message_type: "text",
             archived: 0,
+            is_pinned: 0,
             edited_at: null,
             can_edit: 1,
             is_self: true,
@@ -1549,6 +1611,7 @@ function refreshMessages() {
           !existing ||
           existing.content !== incoming.content ||
           existing.edited_at !== incoming.edited_at ||
+          Number(existing.is_pinned) !== Number(incoming.is_pinned) ||
           Number(existing.can_edit) !== Number(incoming.can_edit) ||
           Number(existing.archived) !== Number(incoming.archived) ||
           Number(existing.is_read) !== Number(incoming.is_read) ||
@@ -2119,7 +2182,7 @@ function loadChannelMembers(conversationId) {
           `;
           if (data.current_user_role === "owner" && member.role !== "owner") {
             const adminButtonText =
-              member.role === "admin" ? "Remove Admin" : "Make Admin";
+              member.role === "admin" ? "Remove Moderator" : "Make Moderator";
             dropdownButtons += `
         <button data-action="make-admin" data-user-id="${member.user_id}">${adminButtonText}</button>
     `;

@@ -41,6 +41,12 @@ $sql = "SELECT
     parent.lname as parent_lname,
     CASE
         WHEN parent_msg.archived = 1 THEN 'Message unsent'
+        WHEN EXISTS (
+            SELECT 1
+            FROM chat_message_user_archives parent_archive
+            WHERE parent_archive.message_id = parent_msg.id
+              AND parent_archive.user_id = ?
+        ) THEN 'Message removed'
         ELSE parent_msg.content
     END as parent_content,
     CASE
@@ -68,9 +74,15 @@ LEFT JOIN users_tbl u ON m.sender_id = u.id
 LEFT JOIN chat_messages parent_msg ON m.reply_to_id = parent_msg.id
 LEFT JOIN users_tbl parent ON parent_msg.sender_id = parent.id
 WHERE m.conversation_id = ?
+  AND NOT EXISTS (
+      SELECT 1
+      FROM chat_message_user_archives message_archive
+      WHERE message_archive.message_id = m.id
+        AND message_archive.user_id = ?
+  )
 ";
-$params = [$user_id, $user_id, $user_id, $user_id, $conversation_id];
-$types = "iiiii";
+$params = [$user_id, $user_id, $user_id, $user_id, $user_id, $conversation_id, $user_id];
+$types = "iiiiiii";
 
 if ($before) {
     $sql .= " AND m.created_at < ?";

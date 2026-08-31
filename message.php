@@ -42,29 +42,36 @@ $channelStmt = $conn->prepare("
                   WHERE r.message_id = m.id 
                     AND r.user_id = ?
               )
+              AND NOT EXISTS (
+                  SELECT 1 FROM chat_message_user_archives a
+                  WHERE a.message_id = m.id AND a.user_id = ?
+              )
         ) as unread_count,
         (
             SELECT content 
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
-              AND message_type != 'system'
-            ORDER BY created_at DESC 
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND latest.message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message,
         (
             SELECT archived
-            FROM chat_messages
-            WHERE conversation_id = c.id
-              AND message_type != 'system'
-            ORDER BY created_at DESC
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND latest.message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message_unsent,
         (
             SELECT created_at 
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
-              AND message_type != 'system'
-            ORDER BY created_at DESC 
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND latest.message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message_time,
         (
@@ -73,6 +80,7 @@ $channelStmt = $conn->prepare("
             LEFT JOIN users_tbl u ON m.sender_id = u.id
             WHERE m.conversation_id = c.id 
               AND m.message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = m.id AND a.user_id = ?)
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
@@ -81,6 +89,7 @@ $channelStmt = $conn->prepare("
             FROM chat_messages m
             WHERE conversation_id = c.id 
               AND message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = m.id AND a.user_id = ?)
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id
@@ -94,7 +103,7 @@ $channelStmt = $conn->prepare("
     ORDER BY c.name ASC
 ");
 
-$channelStmt->bind_param("iii", $user_id, $user_id, $user_id);
+$channelStmt->bind_param("iiiiiiiii", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id);
 $channelStmt->execute();
 $channels = $channelStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -111,26 +120,29 @@ $dmQuery = "
         cm2.is_muted,
         (
             SELECT content 
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
-              AND message_type != 'system'
-            ORDER BY created_at DESC 
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND latest.message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message,
         (
             SELECT archived
-            FROM chat_messages
-            WHERE conversation_id = c.id
-              AND message_type != 'system'
-            ORDER BY created_at DESC
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND latest.message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message_unsent,
         (
             SELECT created_at 
-            FROM chat_messages 
-            WHERE conversation_id = c.id 
-              AND message_type != 'system'
-            ORDER BY created_at DESC 
+            FROM chat_messages latest
+            WHERE latest.conversation_id = c.id
+              AND latest.message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = latest.id AND a.user_id = ?)
+            ORDER BY latest.created_at DESC
             LIMIT 1
         ) as last_message_time,
         (
@@ -139,6 +151,7 @@ $dmQuery = "
             LEFT JOIN users_tbl u_sender ON m.sender_id = u_sender.id
             WHERE m.conversation_id = c.id 
               AND m.message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = m.id AND a.user_id = ?)
             ORDER BY m.created_at DESC 
             LIMIT 1
         ) as last_sender_name,
@@ -147,6 +160,7 @@ $dmQuery = "
             FROM chat_messages m
             WHERE conversation_id = c.id 
               AND message_type != 'system'
+              AND NOT EXISTS (SELECT 1 FROM chat_message_user_archives a WHERE a.message_id = m.id AND a.user_id = ?)
             ORDER BY created_at DESC 
             LIMIT 1
         ) as last_sender_id
@@ -171,7 +185,7 @@ $dmQuery = "
 ";
 
 $dmStmt = $conn->prepare($dmQuery);
-$dmStmt->bind_param("iii", $user_id, $user_id, $user_id);
+$dmStmt->bind_param("iiiiiiii", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id);
 $dmStmt->execute();
 $directMessages = $dmStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 

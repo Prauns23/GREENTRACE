@@ -64,7 +64,8 @@ if ($target['member_role'] === 'owner') {
 
 // Toggle: if admin -> member, else member -> admin
 $newRole = ($target['member_role'] === 'admin') ? 'member' : 'admin';
-$action = ($newRole === 'admin') ? 'made admin' : 'removed admin';
+$isAdminAssignment = ($newRole === 'admin');
+$action = $isAdminAssignment ? 'added as moderator' : 'removed as moderator';
 
 // Update role
 $update = $conn->prepare("
@@ -87,13 +88,17 @@ $ownerName = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_t
 $channelName = $conn->query("SELECT name FROM chat_conversations WHERE id = $conversation_id")->fetch_assoc()['name'] ?? 'channel';
 
 // System message
-$content = "$targetName was $action by $ownerName.";
+$content = $isAdminAssignment
+    ? "$targetName was added as moderator by $ownerName."
+    : "$targetName was removed as moderator by $ownerName.";
 insertSystemMessage($conn, $conversation_id, $content);
 
 // Notification to the target user
-$notifTitle = ucfirst($action) . " in Channel";
-$notifMessage = "You were $action in <strong>#{$channelName}</strong> by {$ownerName}.";
+$notifTitle = $isAdminAssignment ? 'Moderator Added in Channel' : 'Moderator Removed in Channel';
+$notifMessage = $isAdminAssignment
+    ? "You were added as moderator in <strong>#{$channelName}</strong> by {$ownerName}."
+    : "Your moderator role was removed in <strong>#{$channelName}</strong> by {$ownerName}.";
 createNotification($target_user_id, 'system', $notifTitle, $notifMessage, 'message.php');
 
-echo json_encode(['success' => true, 'message' => "User $action successfully"]);
+echo json_encode(['success' => true, 'message' => $isAdminAssignment ? 'User added as moderator successfully' : 'User removed as moderator successfully']);
 ?>
