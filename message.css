@@ -748,7 +748,7 @@ body {
 
 .message-content .message-time {
   font-size: 0.7rem;
-  color: #a0aec0;
+  color: #8799b1;
   margin-top: 4px;
 }
 
@@ -1555,6 +1555,45 @@ body {
   pointer-events: auto;
 }
 
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + -82px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(140px, calc(100vw - 48px));
+  min-width: 80px;
+  background: rgba(20, 30, 25, 0.664);
+  color: #ffffff;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  padding: 6px 10px;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@media (max-width: 640px) {
+  [data-tooltip]:hover::after {
+    max-width: min(80px, calc(100vw - 32px));
+  }
+}
+
+.reaction-toolbar [data-tooltip]:hover::after {
+  content: none;
+}
+
 .reaction-toolbar button {
   background: transparent;
   border: none;
@@ -1570,7 +1609,7 @@ body {
 
 .reaction-toolbar .reaction-btn:hover {
   background: rgba(46, 125, 50, 0.08);
-  transform: scale(1.2);
+  transform: scale(1.08);
 }
 
 .reaction-toolbar .more-tool {
@@ -1601,7 +1640,7 @@ body {
 }
 
 .reaction-trigger:hover img {
-  transform: scale(1.2);
+  transform: scale(1.08);
 }
 
 /* Reactions display */
@@ -1635,7 +1674,7 @@ body {
 }
 
 .reaction-item img:hover {
-  transform: scale(1.2);
+  transform: scale(1.08);
 }
 
 .reaction-item.user-reacted {
@@ -1689,7 +1728,7 @@ body {
 }
 
 #replyIcon:hover {
-  transform: translateX(-2px);
+  transform: scale(1.08);
 }
 
 .reaction-toolbar .more-tool {

@@ -574,7 +574,7 @@ function renderMessages(messages) {
         ? `Seen by ${readers.join(", ")}`
         : `Seen by ${readCount} user${readCount === 1 ? "" : "s"}`;
       readReceipt = msg.is_read
-        ? `<span class="read-receipt" title="${escapeHtml(readByTitle)}">${isDirectMessage ? "Read" : `Read + ${readCount}`}</span>`
+        ? `<span class="read-receipt" data-tooltip="${escapeHtml(readByTitle)}">${isDirectMessage ? "Read" : `Read + ${readCount}`}</span>`
         : `<span class="read-receipt">Sent</span>`;
     }
 
@@ -591,7 +591,7 @@ function renderMessages(messages) {
       : "Heart reaction";
     const reactionMarkup =
       !isUnsent && heartCount > 0
-        ? `<span class="reaction-item ${currentUserReacted ? "user-reacted" : ""}" title="${escapeHtml(reactionTitle)}">
+        ? `<span class="reaction-item ${currentUserReacted ? "user-reacted" : ""}" data-tooltip="${escapeHtml(reactionTitle)}">
           <img src="components/icons/heart-fill.png" alt="Heart reaction">
           <span class="reaction-count">${heartCount}</span>
         </span>`
@@ -662,18 +662,18 @@ function renderMessages(messages) {
     toolbar.className = "reaction-toolbar";
     toolbar.innerHTML = isUnsent
       ? `
-    <button class="reaction-btn more-tool" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" title="More" type="button">
+    <button class="reaction-btn more-tool" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" data-tooltip="More" type="button">
         <span class="material-symbols-rounded">more_vert</span>
     </button>
 `
       : `
-    <button class="reaction-btn more-tool" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" title="More" type="button">
+    <button class="reaction-btn more-tool" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" data-tooltip="More" type="button">
         <span class="material-symbols-rounded">more_vert</span>
     </button>
-    <button class="reaction-btn reply-btn" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" data-sender="${escapeHtml(senderName)}" title="Reply">
+    <button class="reaction-btn reply-btn" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" data-sender="${escapeHtml(senderName)}" data-tooltip="Reply">
         <span class="material-symbols-rounded" id="replyIcon">reply</span>
     </button>
-    <button class="reaction-btn reaction-trigger" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" title="React with heart" type="button">
+    <button class="reaction-btn reaction-trigger" data-msg-id="${Number.parseInt(msg.id, 10) || 0}" data-tooltip="React with heart" type="button">
         <img src="components/icons/heart-plus.png" alt="Add heart reaction">
     </button>
 `;

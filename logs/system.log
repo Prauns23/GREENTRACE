@@ -133,3 +133,12 @@ Stack trace:
 [31-Aug-2026 16:08:15 Asia/Manila] CSRF Verification: POST=049f198b, Session=049f198b, Match=YES
 [31-Aug-2026 16:08:18 Asia/Manila] CSRF Verification: POST=049f198b, Session=049f198b, Match=YES
 [31-Aug-2026 16:11:11 Asia/Manila] CSRF Verification: POST=049f198b, Session=049f198b, Match=YES
+[01-Sep-2026 01:21:02 Asia/Manila] Email cound not be send. Error: SMTP Error: Could not authenticate.
+{"timestamp":"2026-09-01T01:27:42+08:00","level":"error","message":"PHP Error [2]: require_once(../init_session.php): Failed to open stream: No such file or directory in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_sidebar_updates.php on line 6","user_id":"1","ip":null,"method":null,"uri":null,"context":{"type":"error_handler"}}
+[01-Sep-2026 01:27:42 Asia/Manila] PHP Warning:  require_once(../init_session.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\GREENTRACE\actions\get_sidebar_updates.php on line 6
+[01-Sep-2026 01:27:42 Asia/Manila] PHP Fatal error:  Uncaught Error: Failed opening required '../init_session.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\GREENTRACE\actions\get_sidebar_updates.php:6
+Stack trace:
+#0 Command line code(1): require()
+#1 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\actions\get_sidebar_updates.php on line 6
+{"timestamp":"2026-09-01T01:27:42+08:00","level":"error","message":"Fatal Error: Uncaught Error: Failed opening required '../init_session.php' (include_path='C:\\xampp\\php\\PEAR') in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_sidebar_updates.php:6\nStack trace:\n#0 Command line code(1): require()\n#1 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\actions\\get_sidebar_updates.php on line 6","user_id":"1","ip":null,"method":null,"uri":null,"context":{"type":"shutdown"}}

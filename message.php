@@ -36,6 +36,7 @@ $channelStmt = $conn->prepare("
             FROM chat_messages m 
             WHERE m.conversation_id = c.id 
               AND m.sender_id != ? 
+              AND m.archived = 0
               AND m.message_type != 'system'
               AND NOT EXISTS (
                   SELECT 1 FROM chat_message_reads r 
@@ -119,6 +120,22 @@ $dmQuery = "
         cm2.is_archived,
         cm2.is_muted,
         (
+            SELECT COUNT(*)
+            FROM chat_messages m
+            WHERE m.conversation_id = c.id
+              AND m.sender_id != ?
+              AND m.archived = 0
+              AND m.message_type != 'system'
+              AND NOT EXISTS (
+                  SELECT 1 FROM chat_message_reads r
+                  WHERE r.message_id = m.id AND r.user_id = ?
+              )
+              AND NOT EXISTS (
+                  SELECT 1 FROM chat_message_user_archives a
+                  WHERE a.message_id = m.id AND a.user_id = ?
+              )
+        ) as unread_count,
+        (
             SELECT content 
             FROM chat_messages latest
             WHERE latest.conversation_id = c.id
@@ -185,7 +202,7 @@ $dmQuery = "
 ";
 
 $dmStmt = $conn->prepare($dmQuery);
-$dmStmt->bind_param("iiiiiiii", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id);
+$dmStmt->bind_param("iiiiiiiiiii", $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id, $user_id);
 $dmStmt->execute();
 $directMessages = $dmStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -303,6 +320,7 @@ include 'header.php';
                     <?php foreach ($directMessages as $dm):
                         $lastSender = $dm['last_sender_name'] ?? '';
                         $lastMsg = $dm['last_message'] ?? 'No messages yet';
+                        $unreadCount = (int)($dm['unread_count'] ?? 0);
                         $isMuted = (bool)$dm['is_muted'];
 
                         if ((int)($dm['last_message_unsent'] ?? 0) === 1 && $lastSender) {
@@ -329,14 +347,15 @@ include 'header.php';
                             }
                         }
                     ?>
-                        <li class="dm-item <?= $isMuted ? 'muted' : '' ?>"
+                        <li class="dm-item <?= $isMuted ? 'muted' : '' ?> <?= $unreadCount > 0 ? 'unread' : '' ?>"
                             data-type="dm"
                             data-id="<?= $dm['id'] ?>"
                             data-email="<?= htmlspecialchars($dm['email'] ?? '') ?>"
                             data-address="<?= htmlspecialchars($dm['address'] ?? '') ?>"
                             data-role="<?= htmlspecialchars($dm['role'] ?? '') ?>"
                             data-archived="<?= $dm['is_archived'] ?>"
-                            data-muted="<?= $isMuted ? '1' : '0' ?>">
+                            data-muted="<?= $isMuted ? '1' : '0' ?>"
+                            data-unread="<?= $unreadCount ?>">
                             <div class="left-channel-item">
                                 <div class="leftItem2">
                                     <span class="dm-name"><?= htmlspecialchars($dm['name'] ?? 'Unknown') ?></span>

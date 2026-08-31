@@ -1,5 +1,8 @@
 <?php
 require_once '../init_session.php';
+
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
 require_once '../config.php';
 
 
@@ -169,6 +172,26 @@ function isActiveForm($formName, $activeForm)
             }, duration);
         }
 
+        function getCurrentAuthCSRFToken(form) {
+            let token = '';
+
+            try {
+                token = parent.getCSRFToken?.() ||
+                    parent.document.querySelector('meta[name="csrf-token"]')?.content || '';
+            } catch (_error) {
+                token = '';
+            }
+
+            const tokenField = form.querySelector('input[name="csrf_token"]');
+            token = token || tokenField?.value || '';
+
+            if (token && tokenField) {
+                tokenField.value = token;
+            }
+
+            return token;
+        }
+
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -226,16 +249,22 @@ function isActiveForm($formName, $activeForm)
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner"></span> Creating account...';
 
-            const formData = new FormData(this);
-            formData.append('sign-up', '1');
-
             try {
-                const csrfToken = this.querySelector('input[name="csrf_token"]')?.value || '';
+                const csrfToken = getCurrentAuthCSRFToken(this);
+                if (!csrfToken) {
+                    throw new Error('CSRF token is unavailable. Please refresh the page.');
+                }
+
+                const formData = new FormData(this);
+                formData.set('csrf_token', csrfToken);
+                formData.set('sign-up', '1');
+
                 const response = await fetch('../login_register.php', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-Token': csrfToken
                     },
+                    credentials: 'same-origin',
                     body: formData
                 });
                 const data = await response.json();
@@ -247,7 +276,7 @@ function isActiveForm($formName, $activeForm)
                     submitBtn.innerHTML = originalText;
                 }
             } catch (err) {
-                showSignupToast('Network error. Please try again.');
+                showSignupToast(err.message || 'Network error. Please try again.');
                 console.error(err);
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;

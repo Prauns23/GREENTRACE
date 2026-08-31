@@ -40,8 +40,18 @@ function getRequestCSRFToken() {
  * Reject a state-changing request that does not contain a valid token.
  */
 function requireCSRFToken() {
-    if (verifyCSRFToken(getRequestCSRFToken())) {
-        return;
+    $tokens = [getRequestCSRFToken()];
+
+    // A request may contain both a form field and an AJAX header. Accept either
+    // when valid so an older cached form field cannot override a current header.
+    if (isset($_SERVER['HTTP_X_CSRF_TOKEN'])) {
+        $tokens[] = $_SERVER['HTTP_X_CSRF_TOKEN'];
+    }
+
+    foreach (array_unique($tokens) as $token) {
+        if (verifyCSRFToken($token)) {
+            return;
+        }
     }
 
     http_response_code(403);

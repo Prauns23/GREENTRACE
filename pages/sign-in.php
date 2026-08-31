@@ -1,6 +1,9 @@
 <?php
 require_once '../init_session.php';
 
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+
 $errors = [
     'login' => $_SESSION['login_error'] ?? $_SESSION['csrf_error'] ?? '',
     'register' => $_SESSION['register_error'] ?? ''
@@ -114,21 +117,47 @@ function isActiveForm($formName, $activeForm)
             }
         }
 
+        function getCurrentAuthCSRFToken(form) {
+            let token = '';
+
+            try {
+                token = parent.getCSRFToken?.() ||
+                    parent.document.querySelector('meta[name="csrf-token"]')?.content || '';
+            } catch (_error) {
+                token = '';
+            }
+
+            const tokenField = form.querySelector('input[name="csrf_token"]');
+            token = token || tokenField?.value || '';
+
+            if (token && tokenField) {
+                tokenField.value = token;
+            }
+
+            return token;
+        }
+
         if (signinForm) {
             signinForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 setSigninLoading(true);
 
-                const formData = new FormData(this);
-                formData.append('sign-in', '1');
-
                 try {
-                    const csrfToken = document.querySelector('input[name="csrf_token"]')?.value || '';
+                    const csrfToken = getCurrentAuthCSRFToken(this);
+                    if (!csrfToken) {
+                        throw new Error('CSRF token is unavailable. Please refresh the page.');
+                    }
+
+                    const formData = new FormData(this);
+                    formData.set('csrf_token', csrfToken);
+                    formData.set('sign-in', '1');
+
                     const response = await fetch('../login_register.php', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-Token': csrfToken
                         },
+                        credentials: 'same-origin',
                         body: formData
                     });
                     const data = await response.json();
@@ -145,7 +174,7 @@ function isActiveForm($formName, $activeForm)
 
                     showSigninToast(data.error || 'Incorrect email or password.');
                 } catch (err) {
-                    showSigninToast('Network error. Please try again.');
+                    showSigninToast(err.message || 'Network error. Please try again.');
                     console.error(err);
                 } finally {
                     setSigninLoading(false);

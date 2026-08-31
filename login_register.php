@@ -64,6 +64,32 @@ if (isset($_POST['sign-up'])) {
         $stmt->bind_param("ssssssi", $fname, $lname, $email, $phone, $password, $role, $barangay_id);
         if ($stmt->execute()) {
             $newUserId = $conn->insert_id;
+
+            // Public channels include every active account. Enroll newly
+            // registered users in channels that existed before registration.
+            $publicChannelsStmt = $conn->prepare("
+                INSERT INTO chat_conversation_members (conversation_id, user_id, member_role)
+                SELECT c.id, ?, 'member'
+                FROM chat_conversations c
+                WHERE c.type = 'channel'
+                  AND c.visibility = 'public'
+                  AND c.archived = 0
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM chat_conversation_members cm
+                      WHERE cm.conversation_id = c.id AND cm.user_id = ?
+                  )
+            ");
+            if ($publicChannelsStmt) {
+                $publicChannelsStmt->bind_param("ii", $newUserId, $newUserId);
+                if (!$publicChannelsStmt->execute()) {
+                    logError('Could not enroll new user in public channels: ' . $publicChannelsStmt->error);
+                }
+                $publicChannelsStmt->close();
+            } else {
+                logError('Could not prepare public channel enrollment: ' . $conn->error);
+            }
+
             logLoginAttempt($ip, $email, $newUserId, 1); // log success
 
             // Auto-login

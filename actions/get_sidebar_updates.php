@@ -29,6 +29,7 @@ $channelQuery = "
             FROM chat_messages m 
             WHERE m.conversation_id = c.id 
               AND m.sender_id != ? 
+              AND m.archived = 0
               AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
               AND NOT EXISTS (
                   SELECT 1 FROM chat_message_reads r 
@@ -114,6 +115,7 @@ $dmQuery = "
             FROM chat_messages m 
             WHERE m.conversation_id = c.id 
               AND m.sender_id != ? 
+              AND m.archived = 0
               AND (m.message_type != 'system' OR (m.message_type = 'system' AND m.content NOT LIKE '% was muted by %' AND m.content NOT LIKE '% was unmuted by %'))
               AND NOT EXISTS (
                   SELECT 1 FROM chat_message_reads r 
