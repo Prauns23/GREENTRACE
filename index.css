@@ -214,11 +214,9 @@ body.login-active {
   transition: transform 0.3s ease;
 }
 
-
 #floatingCreateChannelContainer.active .floating-iframe {
   animation: slideInRight 0.3s ease forwards;
 }
-
 
 @keyframes slideInRight {
   from {
@@ -232,10 +230,10 @@ body.login-active {
 }
 
 #floatingAddChannelMembersContainer .floating-iframe {
-    width: 580px;
-    height: 100%;
-    max-height: 720px;
-    border-radius: 24px;
+  width: 580px;
+  height: 100%;
+  max-height: 720px;
+  border-radius: 24px;
 }
 
 .overlay.active {
@@ -1909,6 +1907,30 @@ body.sidebar-open {
   .explore img {
     width: 1.2rem;
     height: 1.2rem;
+  }
+
+  .nav-middle {
+    display: none;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chat-icon-container img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .notification-bell-container span {
+    font-size: 22px;
+  }
+
+  .nav-right .profile {
+    width: 25px;
+    height: 25px;
   }
 
   .ThirdPage-nav {

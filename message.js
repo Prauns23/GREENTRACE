@@ -1415,20 +1415,21 @@ function refreshMessages() {
   fetch("actions/get_messages.php?" + params.toString())
     .then((response) => response.json())
     .then((data) => {
-      if (data.success && data.messages.length > 0) {
-        const newMessages = data.messages;
+      if (!data.success || !Array.isArray(data.messages)) return;
 
-        // Merge and deduplicate messages
-        const mergedMessages = mergeMessages(allMessages, newMessages);
-        allMessages = mergedMessages;
+      const newMessages = data.messages.filter(
+        (msg) => !allMessages.some((existing) => Number(existing.id) === Number(msg.id)),
+      );
 
-        // Update oldestTimestamp
-        if (newMessages.length > 0) {
-          oldestTimestamp = newMessages[0].created_at;
-        }
+      if (!newMessages.length) return;
 
-        renderMessages(allMessages);
+      allMessages = mergeMessages(allMessages, newMessages);
+
+      if (newMessages.length > 0) {
+        oldestTimestamp = newMessages[0].created_at;
       }
+
+      renderMessages(allMessages);
     })
     .catch((err) => console.error("Error refreshing messages:", err));
 }
@@ -1460,7 +1461,6 @@ function startMessageRefresh() {
   if (messageRefreshInterval) {
     clearInterval(messageRefreshInterval);
   }
-  // Keep reactions and read receipts current for other participants.
 
   messageRefreshInterval = setInterval(() => {
     if (currentConversation && !isLoading) {

@@ -41,6 +41,19 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+$filter = $_GET['filter'] ?? 'all';
+$sort = $_GET['sort'] ?? 'newest';
+$search = trim((string)($_GET['search'] ?? ''));
+$allowedFilters = ['all', 'application', 'message', 'report'];
+$allowedSorts = ['newest', 'oldest'];
+
+if (!in_array($filter, $allowedFilters, true)) {
+    $filter = 'all';
+}
+if (!in_array($sort, $allowedSorts, true)) {
+    $sort = 'newest';
+}
+
 // AJAX handlers 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
@@ -112,30 +125,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Main page 
+// Main page
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $limit = 10;
-$offset = ($page - 1) * $limit;
 
-// Count total non-archived notifications
-$countSql = "SELECT COUNT(*) as total FROM notifications WHERE user_id = ? AND archived = 0";
-$countStmt = $conn->prepare($countSql);
-$countStmt->bind_param("i", $user_id);
-$countStmt->execute();
-$total = $countStmt->get_result()->fetch_assoc()['total'];
-$countStmt->close();
+$baseSql = "SELECT * FROM notifications WHERE user_id = ? AND archived = 0";
+$params = [$user_id];
+$types = 'i';
 
-$totalPages = ceil($total / $limit);
+if ($filter !== 'all') {
+    $baseSql .= " AND type = ?";
+    $params[] = $filter;
+    $types .= 's';
+}
 
-// Fetch only non‑archived notifications
-$stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND archived = 0 ORDER BY created_at DESC LIMIT ?, ?");
-$stmt->bind_param("iii", $user_id, $offset, $limit);
+if ($search !== '') {
+    $baseSql .= " AND (title LIKE ? OR message LIKE ?)";
+    $searchTerm = '%' . $search . '%';
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $types .= 'ss';
+}
+
+$baseSql .= " ORDER BY created_at " . ($sort === 'oldest' ? 'ASC' : 'DESC');
+
+$stmt = $conn->prepare($baseSql);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
-$notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$allNotifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
+$total = count($allNotifications);
+$totalPages = $total > 0 ? max(1, (int)ceil($total / $limit)) : 1;
+$page = min(max(1, $page), $totalPages);
+
+$offset = ($page - 1) * $limit;
+$notifications = array_slice($allNotifications, $offset, $limit);
+
+if (count($notifications) < $limit && $total > $limit) {
+    $remainingNeeded = $limit - count($notifications);
+    $continuation = array_slice($allNotifications, $offset + $limit, $remainingNeeded);
+    $notifications = array_merge($notifications, $continuation);
+}
+
 $unreadCount = 0;
-foreach ($notifications as $n) {
+foreach ($allNotifications as $n) {
     if (!$n['is_read']) $unreadCount++;
 }
 
@@ -173,14 +207,22 @@ include 'header.php';
 
     <!-- Search Bar -->
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search your notifications here">
+        <input type="text" id="searchInput" placeholder="Search your notifications here" value="<?= htmlspecialchars($search, ENT_QUOTES) ?>">
     </div>
 
     <!-- Filter Buttons with dropdown inside wrapper -->
     <div class="filter-buttons">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="application">Applications</button>
-        <button class="filter-btn" data-filter="message">Messages</button>
+        <button class="filter-btn <?= $filter === 'all' ? 'active' : '' ?>" data-filter="all">All</button>
+        <button class="filter-btn <?= $filter === 'application' ? 'active' : '' ?>" data-filter="application">Applications</button>
+        <button class="filter-btn <?= $filter === 'message' ? 'active' : '' ?>" data-filter="message">Messages</button>
+        <button class="filter-btn <?= $filter === 'report' ? 'active' : '' ?>" data-filter="report">Reports</button>
+
+        <!-- <label class="sort-wrapper" for="notificationSort">
+            <select id="notificationSort" class="sort-select">
+                <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest</option>
+                <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest</option>
+            </select>
+        </label> -->
 
         <div class="action-btn-wrapper">
             <button class="action-btn" onclick="toggleBulkDropdown(event)">
@@ -249,7 +291,7 @@ include 'header.php';
     <?php
     $queryParams = [];
     if (isset($_GET['filter'])) $queryParams['filter'] = $_GET['filter'];
-    if (isset($_GET['search'])) $queryParams['search'] = $_GET['search'];
+    if ($search !== '') $queryParams['search'] = $search;
     echo renderPagination($page, $totalPages, 'notifications.php', $queryParams);
     ?>
 </div>
@@ -298,30 +340,74 @@ include 'header.php';
         }
     });
 
-    // Search & Filter 
-    document.getElementById('searchInput').addEventListener('input', function() {
-        const term = this.value.toLowerCase();
-        document.querySelectorAll('.notification-item').forEach(item => {
-            item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none';
+    function buildNotificationsUrl(filter, sort, searchTerm = '') {
+        const params = new URLSearchParams(window.location.search);
+
+        if (filter === 'all') {
+            params.delete('filter');
+        } else {
+            params.set('filter', filter);
+        }
+
+        if (sort === 'newest') {
+            params.delete('sort');
+        } else {
+            params.set('sort', sort);
+        }
+
+        const trimmedTerm = (searchTerm || '').trim();
+        if (!trimmedTerm) {
+            params.delete('search');
+        } else {
+            params.set('search', trimmedTerm);
+        }
+
+        params.set('page', '1');
+        return 'notifications.php?' + params.toString();
+    }
+
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            const term = this.value.trim();
+            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+            const currentSort = 'newest';
+
+            if (!term) {
+                searchTimeout = setTimeout(() => {
+                    window.location.href = buildNotificationsUrl(activeFilter, currentSort, '');
+                }, 800);
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                const params = new URLSearchParams(window.location.search);
+                params.set('search', term);
+                params.set('page', '1');
+                window.location.href = 'notifications.php?' + params.toString();
+            }, 800);
         });
-        updateGroupVisibility();
-    });
+    }
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
             const filter = this.dataset.filter;
-            document.querySelectorAll('.notification-item').forEach(item => {
-                if (filter === 'all' || item.dataset.type === filter) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            updateGroupVisibility();
+            const sort = document.getElementById('notificationSort')?.value || 'newest';
+            window.location.href = buildNotificationsUrl(filter, sort);
         });
     });
+
+    const notificationSortSelect = document.getElementById('notificationSort');
+    if (notificationSortSelect) {
+        notificationSortSelect.addEventListener('change', function() {
+            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+            window.location.href = buildNotificationsUrl(activeFilter, this.value);
+        });
+    }
 
     function updateGroupVisibility() {
         document.querySelectorAll('.notification-group').forEach(group => {

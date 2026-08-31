@@ -92,12 +92,12 @@ if ($added_count > 0) {
 
     // Notifications to each added user
     foreach ($addedUserIds as $uid) {
-        createNotification($uid, 'system', "Added to Channel", "You have been added to <strong>#{$channelName}</strong> by {$adderName}.", 'message.php');
+        createNotification($uid, 'system', "Added to Channel", "You have been added to <strong>{$channelName}</strong> by {$adderName}.", 'message.php');
     }
 
     // Notify all other members about the addition
     $notifTitle = "New Member Added";
-    $notifMessage = "$adderName added " . count($addedUserIds) . " member(s) to #$channelName.";
+    $notifMessage = "$adderName added " . count($addedUserIds) . " member(s) to <strong>{$channelName}</strong>.";
     notifyAllMembers($conn, $conversation_id, $notifTitle, $notifMessage, $current_user_id);
 }
 

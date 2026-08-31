@@ -184,7 +184,7 @@
 }
 
 .icon-system {
-  background: #f3e8ff;
+  background: #dcfce7;
   color: #166534;
 }
 
@@ -195,7 +195,18 @@
 }
 
 .notification-item.negative {
-  border-left: 4px solid #e53935;
+  background: #fafafacf;
+  border: 1px solid #e2e8f0;
+  transition: border 0.2s ease;
+}
+
+.notification-item.negative .notification-icon {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.notification-item.negative:hover {
+  border: 1px solid #fa3a37;
 }
 
 /* Content */

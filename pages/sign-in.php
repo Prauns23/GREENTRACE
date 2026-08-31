@@ -59,7 +59,10 @@ function isActiveForm($formName, $activeForm)
                             <label for="">Forgot Password?</label>
                         </div>
                     </div>
-                    <button type="submit" name="sign-in" class="login-btn">Login Account</button>
+                    <button type="submit" name="sign-in" class="login-btn" id="signinSubmitBtn">
+                        <span class="btn-text">Login Account</span>
+                        <span class="btn-spinner" aria-hidden="true"></span>
+                    </button>
                     <div class="signin-link">
                         Don't have an account? <a href="#" onclick="parent.switchToSignUp && parent.switchToSignUp()">Sign up</a>
                     </div>
@@ -73,6 +76,19 @@ function isActiveForm($formName, $activeForm)
     <script src="password-toggle.js"></script>
     <script>
         const signinForm = document.getElementById('signinForm');
+        const signinSubmitBtn = document.getElementById('signinSubmitBtn');
+        const signinBtnText = signinSubmitBtn?.querySelector('.btn-text');
+
+        function setSigninLoading(isLoading) {
+            if (!signinSubmitBtn) return;
+
+            signinSubmitBtn.disabled = isLoading;
+            signinSubmitBtn.classList.toggle('is-loading', isLoading);
+
+            if (signinBtnText) {
+                signinBtnText.textContent = isLoading ? 'Signing In...' : 'Login Account';
+            }
+        }
 
         function showSigninToast(message, duration = 5000) {
             if (typeof parent !== 'undefined' && parent.showToast) {
@@ -101,6 +117,7 @@ function isActiveForm($formName, $activeForm)
         if (signinForm) {
             signinForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
+                setSigninLoading(true);
 
                 const formData = new FormData(this);
                 formData.append('sign-in', '1');
@@ -123,12 +140,15 @@ function isActiveForm($formName, $activeForm)
                         } else {
                             window.location.href = redirectUrl;
                         }
-                    } else {
-                        showSigninToast(data.error || 'Incorrect email or password.');
+                        return;
                     }
+
+                    showSigninToast(data.error || 'Incorrect email or password.');
                 } catch (err) {
                     showSigninToast('Network error. Please try again.');
                     console.error(err);
+                } finally {
+                    setSigninLoading(false);
                 }
             });
         }
