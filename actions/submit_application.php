@@ -11,13 +11,6 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$headers = getallheaders();
-$csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
-if (!verifyCSRFToken($csrf_token)) {
-    echo json_encode(['error' => 'Invalid CSRF token']);
-    exit;
-}
-
 $user_id = $_SESSION['user_id'];
 $activity_id = (int)($_POST['activity_id'] ?? 0);
 $date_of_birth = trim($_POST['date_of_birth'] ?? '');

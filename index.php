@@ -37,6 +37,7 @@
         </h3>
     </div>
     <div class="bottom">
+        <!-- The link for the application download should be inserted here/replace the activities href link -->
         <p>TECHNOLOGY AND <span class="green">NATURE</span> COLLABORATION</p>
         <button onclick="<?php echo isset($_SESSION['first_name']) ? "window.location.href='activities.php'" : "showLogin()"; ?>" class="joinBtn">
             Join us

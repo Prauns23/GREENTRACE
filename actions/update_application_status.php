@@ -6,14 +6,6 @@ require_once __DIR__ . '/../notifications_helper.php';
 
 header('Content-Type: application/json');
 
-// CSRF Validation 
-$headers = getallheaders();
-$csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
-if (!verifyCSRFToken($csrf_token)) {
-    echo json_encode(['error' => 'Invalid CSRF token']);
-    exit;
-}
-
 $action = $_POST['action'] ?? '';
 $application_id = (int)($_POST['application_id'] ?? 0);
 

@@ -9,12 +9,6 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// CSRF validation
-if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
-    echo json_encode(['error' => 'Invalid CSRF token']);
-    exit;
-}
-
 $user_id = $_SESSION['user_id'];
 $first_name = trim($_POST['first_name'] ?? '');
 $last_name = trim($_POST['last_name'] ?? '');

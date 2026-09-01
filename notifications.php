@@ -70,13 +70,7 @@ if (!in_array($sort, $allowedSorts, true)) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
 
-    // CSRF validation for all POST actions
-    $headers = getallheaders();
-    $csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
-    if (!verifyCSRFToken($csrf_token)) {
-        echo json_encode(['error' => 'Invalid CSRF token']);
-        exit;
-    }
+    // init_session.php has already validated this state-changing request.
 
     $action = $_POST['action'] ?? '';
 

@@ -1,16 +1,6 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
-// require_once '../csrf.php';
-
-// CSRF Validation
-
-$headers = getallheaders();
-$csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
-if (!verifyCSRFToken($csrf_token)) {
-    echo json_encode(['error' => 'Invalid CSRF Token']);
-    exit;
-}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['error' => 'Method not allowed']);

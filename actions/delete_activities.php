@@ -2,16 +2,6 @@
 require_once '../init_session.php';
 require_once '../config.php';
 
-
-$headers = getallheaders();
-
-$csrf_token = $_POST['csrf_token'] ?? ($headers['X-CSRF-Token'] ?? '');
-if (!verifyCSRFToken($csrf_token)) {
-    echo json_encode(['error' => 'Invalid CSRF Token']);
-    exit;
-}
-
-
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;

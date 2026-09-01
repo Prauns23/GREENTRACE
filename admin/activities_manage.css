@@ -140,6 +140,10 @@
   color: #1a1a1a;
 }
 
+#activeCard {
+  background: #a7ffab79;
+}
+
 /* Bulk Actions Bar */
 .bulk-actions-bar {
   margin-bottom: 20px;

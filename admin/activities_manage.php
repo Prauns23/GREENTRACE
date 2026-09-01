@@ -116,15 +116,15 @@ include __DIR__ . '/../header.php';
 
     <!-- Stats Cards -->
     <div class="stats-cards">
-        <div class="stat-card">
+        <div class="stat-card" id="totalCard">
             <h3>Total Activities</h3>
             <p><?= $totalAll ?></p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" id="activeCard">
             <h3>Active</h3>
             <p><?= $totalActive ?></p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" id="archivedCard">
             <h3>Archived</h3>
             <p><?= $totalArchived ?></p>
         </div>
