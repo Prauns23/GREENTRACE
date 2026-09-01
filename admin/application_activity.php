@@ -261,12 +261,23 @@ $countStmt->close();
 $totalPages = ceil($total / $limit);
 
 switch ($sort) {
-    case 'earliest':  $orderBy = "va.submitted_at ASC"; break;
-    case 'status':    $orderBy = "FIELD(va.status, 'pending', 'approved', 'rejected', 'cancelled')"; break;
-    case 'activity':  $orderBy = "a.title ASC"; break;
-    case 'user':      $orderBy = "u.fname ASC, u.lname ASC"; break;
-    case 'archived':  $orderBy = "va.archived_at DESC, va.submitted_at DESC"; break;
-    default:          $orderBy = "va.submitted_at DESC";
+    case 'earliest':
+        $orderBy = "va.submitted_at ASC";
+        break;
+    case 'status':
+        $orderBy = "FIELD(va.status, 'pending', 'approved', 'rejected', 'cancelled')";
+        break;
+    case 'activity':
+        $orderBy = "a.title ASC";
+        break;
+    case 'user':
+        $orderBy = "u.fname ASC, u.lname ASC";
+        break;
+    case 'archived':
+        $orderBy = "va.archived_at DESC, va.submitted_at DESC";
+        break;
+    default:
+        $orderBy = "va.submitted_at DESC";
 }
 
 $query = "
@@ -384,7 +395,9 @@ require_once __DIR__ . '/../header.php';
             </thead>
             <tbody>
                 <?php if (empty($applications)): ?>
-                    <tr><td colspan="11" style="text-align: center;">No applications found.<?= $showArchived ? ' (archived)' : '' ?></td></tr>
+                    <tr>
+                        <td colspan="11" style="text-align: center;">No applications found.<?= $showArchived ? ' (archived)' : '' ?></td>
+                    </tr>
                 <?php else: ?>
                     <?php foreach ($applications as $app): ?>
                         <?php
@@ -401,20 +414,27 @@ require_once __DIR__ . '/../header.php';
                             <td><?= htmlspecialchars($app['current_barangay'] ?? $app['barangay']) ?></td>
                             <td>
                                 <?php if (!empty($app['file_paths'])): ?>
-                                    <?php
+                                <?php
                                     $paths = explode('|', $app['file_paths']);
                                     $names = explode('|', $app['file_names']);
                                     echo '<div class="docs-gallery">';
                                     for ($i = 0; $i < count($paths); $i++) {
                                         $fullPath = '../' . $paths[$i];
                                         $ext = strtolower(pathinfo($paths[$i], PATHINFO_EXTENSION));
+                                        $fileName = $names[$i] ?? basename($paths[$i]);
+                                        $safeFileName = htmlspecialchars($fileName, ENT_QUOTES, 'UTF-8');
+                                        $safePath = htmlspecialchars($fullPath, ENT_QUOTES, 'UTF-8');
+
                                         if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                                             $safeJsPath = htmlspecialchars(json_encode($fullPath), ENT_QUOTES, 'UTF-8');
-                                            echo '<div class="doc-thumb" onclick="openImageModal(' . $safeJsPath . ')">
-                                                        <img src="' . htmlspecialchars($fullPath, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($names[$i], ENT_QUOTES, 'UTF-8') . '">
+                                            echo '<div class="doc-thumb" onclick="openImageModal(' . $safeJsPath . ')" title="' . $safeFileName . '">
+                                                        <img src="' . $safePath . '" alt="' . $safeFileName . '">
                                                       </div>';
                                         } else {
-                                            echo '<a href="' . htmlspecialchars($fullPath, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener" class="view-file">' . htmlspecialchars($names[$i], ENT_QUOTES, 'UTF-8') . '</a><br>';
+                                            $displayExt = strtoupper($ext ?: 'FILE');
+                                            echo '<a href="' . $safePath . '" target="_blank" rel="noopener" class="doc-file" title="' . $safeFileName . '">
+                                                        <span class="doc-file-icon"><i class="fas fa-file"></i><span class="doc-file-ext">' . htmlspecialchars($displayExt, ENT_QUOTES, 'UTF-8') . '</span></span>
+                                                  </a>';
                                         }
                                     }
                                     echo '</div>';
@@ -449,7 +469,7 @@ require_once __DIR__ . '/../header.php';
                                             </button>
                                         </form>
                                     </div>
-                                <?php else: ?>—<?php endif; ?>
+                                    <?php else: ?>—<?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
