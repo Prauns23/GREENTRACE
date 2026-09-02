@@ -37,7 +37,13 @@ function getIconClass($type)
 // must remain text so saved notifications cannot inject scripts or attributes.
 function renderNotificationMessage($message)
 {
-    $escaped = htmlspecialchars((string)$message, ENT_QUOTES, 'UTF-8');
+    // Repair the legacy kicked-channel emphasis typo before safely rendering it.
+    $normalized = preg_replace(
+        '/<strong#([^<>]+)<\/strong>/i',
+        '<strong>#$1</strong>',
+        (string)$message
+    );
+    $escaped = htmlspecialchars($normalized, ENT_QUOTES, 'UTF-8');
     return str_ireplace(
         ['&lt;strong&gt;', '&lt;/strong&gt;'],
         ['<strong>', '</strong>'],
@@ -255,27 +261,36 @@ include 'header.php';
                 <div class="group-title"><?= $label ?></div>
                 <?php foreach ($items as $notif): ?>
                     <?php
-                    // Detect negative chat actions (kick, mute, leave)
+                    $isConversationNotice = in_array(
+                        $notif['title'],
+                        ['Kicked from Channel', 'Conversation Deleted'],
+                        true
+                    );
+                    $displayType = $isConversationNotice ? 'message' : $notif['type'];
+
+                    // Keep other negative chat actions visually distinct.
                     $negativeKeywords = ['Kicked', 'Muted', 'Left'];
                     $isNegative = false;
-                    foreach ($negativeKeywords as $keyword) {
-                        if (strpos($notif['title'], $keyword) !== false) {
-                            $isNegative = true;
-                            break;
+                    if (!$isConversationNotice) {
+                        foreach ($negativeKeywords as $keyword) {
+                            if (strpos($notif['title'], $keyword) !== false) {
+                                $isNegative = true;
+                                break;
+                            }
                         }
                     }
-                    $extraClass = $isNegative ? 'negative' : '';
+                    $extraClass = ($isConversationNotice || $isNegative) ? 'negative' : '';
                     ?>
                     <div class="notification-item <?= $notif['is_read'] ? 'read' : 'unread' ?> <?= $extraClass ?>"
                         data-id="<?= $notif['id'] ?>"
                         data-link="<?= htmlspecialchars($notif['link'] ?? '#') ?>"
-                        data-type="<?= $notif['type'] ?>"
+                        data-type="<?= $displayType ?>"
                         onclick="handleNotificationClick(this)">
 
                         <input type="checkbox" class="notification-checkbox" data-id="<?= $notif['id'] ?>">
 
-                        <div class="notification-icon icon-<?= $notif['type'] ?>">
-                            <i class="fas <?= getIconClass($notif['type']) ?>"></i>
+                        <div class="notification-icon icon-<?= $displayType ?>">
+                            <i class="fas <?= getIconClass($displayType) ?>"></i>
                         </div>
 
                         <div class="notification-content">

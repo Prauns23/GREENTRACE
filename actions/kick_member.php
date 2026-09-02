@@ -93,11 +93,11 @@ $kickerName  = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users
 
 // Send notification to kicked user
 $notifTitle = "Kicked from Channel";
-$notifMessage = "You have been kicked from <strong#{$channelName}</strong> by <strong>{$kickerName}</strong>.";
-createNotification($target_user_id, 'system', $notifTitle, $notifMessage, null);
+$notifMessage = "You have been kicked from <strong>#{$channelName}</strong> by <strong>{$kickerName}</strong>.";
+createNotification($target_user_id, 'message', $notifTitle, $notifMessage, null);
 
 // Log activity
 $currentUser = $conn->query("SELECT CONCAT(fname, ' ', lname) as name FROM users_tbl WHERE id = $current_user_id")->fetch_assoc();
-logActivity($target_user_id, 'system', $conversation_id, "Kicked from#{$channelName}", 'kicked', "Kicked by {$currentUser['name']}");
+logActivity($target_user_id, 'system', $conversation_id, "Kicked from #{$channelName}", 'kicked', "Kicked by {$currentUser['name']}");
 
 echo json_encode(['success' => true, 'message' => 'User kicked successfully']);

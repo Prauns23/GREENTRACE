@@ -792,6 +792,21 @@ function loadMoreMessages() {
 // 6. Load a conversation
 //
 
+function syncConversationMenuState(item) {
+  const muteBtn = document.querySelector(
+    '.chat-menu-dropdown button[data-action="mute"]',
+  );
+  const archiveBtn = document.querySelector(
+    '.chat-menu-dropdown button[data-action="archive"]',
+  );
+
+  const muted = item?.dataset.muted === "1";
+  const archived = item?.dataset.archived === "1";
+
+  if (muteBtn) muteBtn.textContent = muted ? "Unmute" : "Mute";
+  if (archiveBtn) archiveBtn.textContent = archived ? "Unarchive" : "Archive";
+}
+
 function loadConversation(type, id) {
   // Hide members panel if open
   hideMembersPanel();
@@ -834,6 +849,7 @@ function loadConversation(type, id) {
   // Get the clicked item to read data attributes
   const selector = type === "channel" ? ".channel-item" : ".dm-item";
   const item = document.querySelector(`${selector}[data-id="${id}"]`);
+  syncConversationMenuState(item);
 
   if (type === "channel") {
     loadChannelMembers(numericId, true);
@@ -856,14 +872,6 @@ function loadConversation(type, id) {
       chatRoleBadge.style.display = "none";
     }
 
-    // Update archive button text based on current state
-    const archived = item ? item.dataset.archived === "1" : false;
-    const archiveBtn = document.querySelector(
-      '.chat-menu-dropdown button[data-action="archive"]',
-    );
-    if (archiveBtn) {
-      archiveBtn.textContent = archived ? "Unarchive" : "Archive";
-    }
   } else {
     // DM
     if (item) {
@@ -896,14 +904,6 @@ function loadConversation(type, id) {
         chatRoleBadge.style.display = "none";
       }
 
-      // Update archive button text based on current state
-      const archived = item.dataset.archived === "1";
-      const archiveBtn = document.querySelector(
-        '.chat-menu-dropdown button[data-action="archive"]',
-      );
-      if (archiveBtn) {
-        archiveBtn.textContent = archived ? "Unarchive" : "Archive";
-      }
     } else {
       chatTitle.textContent = "Direct Message";
       chatAddress.textContent = "";
@@ -1374,6 +1374,13 @@ function updateChannelList(channels) {
 
       // Toggle muted class on the item itself (for styling)
       item.classList.toggle("muted", muted);
+
+      if (
+        currentConversation?.type === "channel" &&
+        String(currentConversation.id) === String(id)
+      ) {
+        syncConversationMenuState(item);
+      }
     }
   });
   filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
@@ -1456,6 +1463,13 @@ function updateDMList(dms) {
         } else if (!muted && muteIcon) {
           muteIcon.remove();
         }
+      }
+
+      if (
+        currentConversation?.type === "dm" &&
+        String(currentConversation.id) === String(id)
+      ) {
+        syncConversationMenuState(item);
       }
 
     }
