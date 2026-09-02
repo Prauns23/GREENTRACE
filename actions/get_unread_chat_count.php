@@ -18,6 +18,7 @@ $sql = "SELECT COUNT(DISTINCT m.id) as total
         JOIN chat_conversation_members cm ON m.conversation_id = cm.conversation_id 
         AND cm.user_id = ?
         AND cm.left_at IS NULL
+        AND cm.is_archived = 0
         LEFT JOIN chat_message_reads r ON m.id = r.message_id AND r.user_id = ?
         WHERE r.id IS NULL
             AND m.sender_id != ?

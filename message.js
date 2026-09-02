@@ -33,6 +33,7 @@ let currentMessageActionTarget = null;
 // Current user's role in the conversation
 let currentUserRoleInConversation = null;
 let editingMessageId = null;
+let activeConversationFilter = "chats";
 
 function scrollChatToBottom(container) {
   isProgrammaticChatScroll = true;
@@ -1061,6 +1062,13 @@ function sendMessage() {
 //
 
 document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".conversation-filter-btn").forEach((button) => {
+    button.addEventListener("click", function () {
+      setConversationFilter(this.dataset.filter);
+    });
+  });
+  filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
+
   const mobileChatBack = document.getElementById("mobileChatBack");
   mobileChatBack?.addEventListener("click", function () {
     document
@@ -1325,9 +1333,11 @@ function updateChannelList(channels) {
       // Update unread state and border
       const unreadCount = parseInt(channelData.unread_count) || 0;
       const muted = parseInt(channelData.is_muted) === 1;
+      const archived = parseInt(channelData.is_archived) === 1;
       item.dataset.unread = unreadCount;
       item.dataset.muted = muted ? "1" : "0";
-      item.classList.toggle("unread", unreadCount > 0 && !muted);
+      item.dataset.archived = archived ? "1" : "0";
+      item.classList.toggle("unread", unreadCount > 0 && !muted && !archived);
 
       // Get right section
       const rightSection = item.querySelector(".right-channel-item");
@@ -1336,7 +1346,7 @@ function updateChannelList(channels) {
         const existingDot = rightSection.querySelector(".unread-dot");
         if (existingDot) existingDot.remove();
 
-        if (unreadCount > 0 && !muted) {
+        if (unreadCount > 0 && !muted && !archived) {
           const dot = document.createElement("span");
           dot.className = "unread-dot";
           const muteIcon = rightSection.querySelector(".muted-icon");
@@ -1365,14 +1375,8 @@ function updateChannelList(channels) {
       // Toggle muted class on the item itself (for styling)
       item.classList.toggle("muted", muted);
     }
-
-    const channelItems = document.querySelectorAll(".channel-item");
-    const emptyChannels = document.getElementById("emptyChannels");
-    if (emptyChannels) {
-      emptyChannels.style.display =
-        channelItems.length === 0 ? "block" : "none";
-    }
   });
+  filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
 }
 
 function updateDMList(dms) {
@@ -1410,16 +1414,18 @@ function updateDMList(dms) {
       // Update unread state (but only if not muted)
       const unreadCount = parseInt(dmData.unread_count) || 0;
       const muted = parseInt(dmData.is_muted) === 1;
+      const archived = parseInt(dmData.is_archived) === 1;
       item.dataset.unread = unreadCount;
       item.dataset.muted = muted ? "1" : "0";
-      item.classList.toggle("unread", unreadCount > 0 && !muted);
+      item.dataset.archived = archived ? "1" : "0";
+      item.classList.toggle("unread", unreadCount > 0 && !muted && !archived);
       item.classList.toggle("muted", muted);
 
       const rightSection = item.querySelector(".right-channel-item");
       if (rightSection) {
         // Handle unread dot
         let dot = rightSection.querySelector(".unread-dot");
-        if (unreadCount > 0 && !muted) {
+        if (unreadCount > 0 && !muted && !archived) {
           if (!dot) {
             dot = document.createElement("span");
             dot.className = "unread-dot";
@@ -1452,13 +1458,9 @@ function updateDMList(dms) {
         }
       }
 
-      const dmItems = document.querySelectorAll(".dm-item");
-      const emptyDms = document.getElementById("emptyDms");
-      if (emptyDms) {
-        emptyDms.style.display = dmItems.length === 0 ? "block" : "none";
-      }
     }
   });
+  filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
 }
 
 function updateSidebarUnread(conversationId) {
@@ -1541,47 +1543,73 @@ function markMessageAsRead() {
 // Search/Filter Function
 //
 
+function setConversationFilter(filter) {
+  activeConversationFilter = filter === "archived" ? "archived" : "chats";
+
+  document.querySelectorAll(".conversation-filter-btn").forEach((button) => {
+    const isActive = button.dataset.filter === activeConversationFilter;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
+}
+
 function filterSidebar(term) {
   const query = term.toLowerCase().trim();
   const channelItems = document.querySelectorAll(".channel-item");
   const dmItems = document.querySelectorAll(".dm-item");
+  const showArchived = activeConversationFilter === "archived";
+  let visibleChannelCount = 0;
+  let visibleDmCount = 0;
 
-  // Filter channels
   channelItems.forEach((item) => {
     const name =
       item.querySelector(".channel-name")?.textContent.toLowerCase() || "";
     const lastMsg =
       item.querySelector(".channel-last-msg")?.textContent.toLowerCase() || "";
-    const matches = name.includes(query) || lastMsg.includes(query);
-    item.style.display = matches ? "" : "none";
+    const isArchived = item.dataset.archived === "1";
+    const matchesSearch = name.includes(query) || lastMsg.includes(query);
+    const matchesFilter = showArchived ? isArchived : !isArchived;
+    const isVisible = matchesSearch && matchesFilter;
+    item.hidden = !isVisible;
+    if (isVisible) visibleChannelCount += 1;
   });
 
-  // Filter DMs
   dmItems.forEach((item) => {
     const name =
       item.querySelector(".dm-name")?.textContent.toLowerCase() || "";
     const lastMsg =
       item.querySelector(".dm-last-msg")?.textContent.toLowerCase() || "";
-    const matches = name.includes(query) || lastMsg.includes(query);
-    item.style.display = matches ? "" : "none";
+    const isArchived = item.dataset.archived === "1";
+    const matchesSearch = name.includes(query) || lastMsg.includes(query);
+    const matchesFilter = showArchived ? isArchived : !isArchived;
+    const isVisible = matchesSearch && matchesFilter;
+    item.hidden = !isVisible;
+    if (isVisible) visibleDmCount += 1;
   });
 
-  // Update empty states based on visibility
-  const visibleChannels = document.querySelectorAll(
-    '.channel-item:not([style*="display: none"])',
-  );
-  const visibleDms = document.querySelectorAll(
-    '.dm-item:not([style*="display: none"])',
-  );
   const emptyChannels = document.getElementById("emptyChannels");
   const emptyDms = document.getElementById("emptyDms");
 
   if (emptyChannels) {
-    emptyChannels.style.display =
-      visibleChannels.length === 0 ? "block" : "none";
+    emptyChannels.hidden = visibleChannelCount > 0;
+    const message = emptyChannels.querySelector("p");
+    if (message) {
+      message.textContent = query
+        ? "No matching channels."
+        : showArchived
+          ? "No archived channels."
+          : "No channels yet. Create one to start chatting!";
+    }
   }
   if (emptyDms) {
-    emptyDms.style.display = visibleDms.length === 0 ? "block" : "none";
+    emptyDms.hidden = visibleDmCount > 0;
+    emptyDms.textContent = query
+      ? "No matching direct messages."
+      : showArchived
+        ? "No archived direct messages."
+        : "No direct messages yet.";
   }
 }
 
@@ -1891,10 +1919,14 @@ function toggleMute() {
               muteIcon.remove();
             }
 
-            // Handle unread dot: show if unread AND not muted
+            // Archived conversations never surface unread indicators.
             const unreadCount = parseInt(item.dataset.unread) || 0;
             let dot = rightSection.querySelector(".unread-dot");
-            if (unreadCount > 0 && !data.muted) {
+            if (
+              unreadCount > 0 &&
+              !data.muted &&
+              item.dataset.archived !== "1"
+            ) {
               if (!dot) {
                 dot = document.createElement("span");
                 dot.className = "unread-dot";
@@ -1942,8 +1974,11 @@ function leaveChannel() {
 }
 
 function toggleArchive() {
+  if (!currentConversation) return;
+
+  const conversation = { ...currentConversation };
   const formData = new URLSearchParams();
-  formData.append("conversation_id", currentConversation.id);
+  formData.append("conversation_id", conversation.id);
   fetch("actions/toggle_archive.php", {
     method: "POST",
     body: formData,
@@ -1958,8 +1993,29 @@ function toggleArchive() {
         if (archiveBtn) {
           archiveBtn.textContent = data.archived ? "Unarchive" : "Archive";
         }
-        // Reload to refresh sidebar
-        location.reload();
+
+        const itemSelector =
+          conversation.type === "channel" ? ".channel-item" : ".dm-item";
+        const item = document.querySelector(
+          `${itemSelector}[data-id="${conversation.id}"]`,
+        );
+        if (item) {
+          item.dataset.archived = data.archived ? "1" : "0";
+          item.classList.remove("active", "unread");
+          item.querySelector(".unread-dot")?.remove();
+        }
+
+        document
+          .querySelector(".chat-container")
+          ?.classList.remove("mobile-chat-open");
+        updateChatVisibility(false);
+        currentConversation = null;
+        stopMessageRefresh();
+        filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
+        fetchSidebarUpdates();
+        if (typeof window.updateChatBadgeCount === "function") {
+          window.updateChatBadgeCount();
+        }
       } else {
         showToast(data.error || "Error", 3000, "error");
       }

@@ -100,7 +100,6 @@ $channelStmt = $conn->prepare("
       AND c.archived = 0 
       AND cm.user_id = ? 
       AND cm.left_at IS NULL
-      AND cm.is_archived = 0
     ORDER BY c.name ASC
 ");
 
@@ -190,13 +189,11 @@ $dmQuery = "
       AND c.archived = 0
       AND cm.user_id != ?
       AND cm.left_at IS NULL
-      AND cm2.is_archived = 0
       AND EXISTS (
           SELECT 1 FROM chat_conversation_members cm3
           WHERE cm3.conversation_id = c.id 
           AND cm3.user_id = ?
           AND cm3.left_at IS NULL
-          AND cm3.is_archived = 0
       )
     ORDER BY last_message_time DESC
 ";
@@ -220,7 +217,14 @@ include 'header.php';
         <div class="chat-sidebar">
             <!-- Search Bar -->
             <div class="sidebar-search-container">
-                <h3>Messages</h3>
+                <div class="conversation-filter" role="tablist" aria-label="Conversation filter">
+                    <button type="button" class="conversation-filter-btn active" data-filter="chats" role="tab" aria-selected="true" aria-label="Show chats" title="Chats">
+                        <span class="filter-label">Chats</span>
+                    </button>
+                    <button type="button" class="conversation-filter-btn" data-filter="archived" role="tab" aria-selected="false" aria-label="Show archived conversations" title="Archived">
+                        <span class="filter-label">Archived</span>
+                    </button>
+                </div>
                 <div class="sidebar-search">
                     <i class="fas fa-search"></i>
                     <input type="text" id="sidebarSearchInput" placeholder="Search Chats, Channels" oninput="filterSidebar(this.value)">
@@ -255,6 +259,7 @@ include 'header.php';
                             $lastMsg = $channel['last_message'] ?? 'No messages yet';
                             $unreadCount = (int)$channel['unread_count'];
                             $isMuted = (bool)$channel['is_muted'];
+                            $isArchived = (bool)$channel['is_archived'];
 
                             if ((int)($channel['last_message_unsent'] ?? 0) === 1 && $lastSender) {
                                 $isSelf = ($channel['last_sender_id'] == $user_id);
@@ -280,7 +285,8 @@ include 'header.php';
                                 }
                             }
                         ?>
-                            <li class="channel-item <?= $isMuted ? 'muted' : '' ?> <?= $unreadCount > 0 ? 'unread' : '' ?>"
+                            <li class="channel-item <?= $isMuted ? 'muted' : '' ?> <?= $unreadCount > 0 && !$isMuted && !$isArchived ? 'unread' : '' ?>"
+                                <?= $isArchived ? 'hidden' : '' ?>
                                 data-type="channel"
                                 data-id="<?= $channel['id'] ?>"
                                 data-description="<?= htmlspecialchars($channel['description'] ?? 'Public') ?>"
@@ -299,17 +305,16 @@ include 'header.php';
                                     <?php if ($isMuted): ?>
                                         <i class="fa-regular fa-bell-slash muted-icon"></i>
                                     <?php endif; ?>
-                                    <?php if ($unreadCount > 0 && !$isMuted): ?>
+                                    <?php if ($unreadCount > 0 && !$isMuted && !$isArchived): ?>
                                         <span class="unread-dot"></span>
                                     <?php endif; ?>
                                 </div>
                             </li>
                         <?php endforeach; ?>
-                        <!-- Inside the Channels section -->
-                        <div id="emptyChannels" style="display: none; padding: 16px; text-align: center; color: #888;">
+                        <li id="emptyChannels" class="conversation-empty-state" hidden>
                             <i class="fas fa-hashtag" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
                             <p>No channels yet. Create one to start chatting!</p>
-                        </div>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -322,6 +327,7 @@ include 'header.php';
                         $lastMsg = $dm['last_message'] ?? 'No messages yet';
                         $unreadCount = (int)($dm['unread_count'] ?? 0);
                         $isMuted = (bool)$dm['is_muted'];
+                        $isArchived = (bool)$dm['is_archived'];
 
                         if ((int)($dm['last_message_unsent'] ?? 0) === 1 && $lastSender) {
                             $isSelf = ($dm['last_sender_id'] == $user_id);
@@ -347,7 +353,8 @@ include 'header.php';
                             }
                         }
                     ?>
-                        <li class="dm-item <?= $isMuted ? 'muted' : '' ?> <?= $unreadCount > 0 ? 'unread' : '' ?>"
+                        <li class="dm-item <?= $isMuted ? 'muted' : '' ?> <?= $unreadCount > 0 && !$isMuted && !$isArchived ? 'unread' : '' ?>"
+                            <?= $isArchived ? 'hidden' : '' ?>
                             data-type="dm"
                             data-id="<?= $dm['id'] ?>"
                             data-email="<?= htmlspecialchars($dm['email'] ?? '') ?>"
@@ -367,17 +374,15 @@ include 'header.php';
                                 <?php if ($isMuted): ?>
                                     <i class="fa-regular fa-bell-slash muted-icon"></i>
                                 <?php endif; ?>
-                                <?php if ($unreadCount > 0 && !$isMuted): ?>
+                                <?php if ($unreadCount > 0 && !$isMuted && !$isArchived): ?>
                                     <span class="unread-dot"></span>
                                 <?php endif; ?>
                             </div>
                         </li>
                     <?php endforeach; ?>
-                    <?php if (empty($directMessages)): ?>
-                        <li class="dm-item" style="text-align: center; color: #a0aec0; padding: 12px;">
-                            No direct messages yet.
-                        </li>
-                    <?php endif; ?>
+                    <li id="emptyDms" class="conversation-empty-state" hidden>
+                        No direct messages yet.
+                    </li>
                 </ul>
             </div>
 

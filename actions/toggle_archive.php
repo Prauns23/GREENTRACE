@@ -29,20 +29,8 @@ if (!$member) {
     exit;
 }
 
-// Archive state is per-user. Direct-message deletion uses delete_conversation.php.
-$typeCheck = $conn->prepare("SELECT type FROM chat_conversations WHERE id = ?");
-$typeCheck->bind_param("i", $conversation_id);
-$typeCheck->execute();
-$convType = $typeCheck->get_result()->fetch_assoc()['type'] ?? '';
-$typeCheck->close();
-
+// Archive state is per-user for both channels and direct messages.
 $newArchived = $member['is_archived'] ? 0 : 1;
-
-if ($convType === 'direct') {
-    echo json_encode(['error' => 'Use the Delete action for direct conversations']);
-    $conn->close();
-    exit;
-}
 
 $update = $conn->prepare("UPDATE chat_conversation_members SET is_archived = ? WHERE conversation_id = ? AND user_id = ?");
 $update->bind_param("iii", $newArchived, $conversation_id, $user_id);

@@ -23,6 +23,7 @@ $channelQuery = "
     SELECT 
         c.id, 
         c.name,
+        cm.is_archived,
         cm.is_muted,
         (
             SELECT COUNT(*) 
@@ -93,7 +94,6 @@ $channelQuery = "
       AND c.archived = 0 
       AND cm.user_id = ? 
       AND cm.left_at IS NULL
-      AND cm.is_archived = 0
     ORDER BY c.name ASC
 ";
 
@@ -109,6 +109,7 @@ $dmQuery = "
         c.id,
         u_other.id as user_id,
         CONCAT(u_other.fname, ' ', u_other.lname) as name,
+        cm_current.is_archived,
         cm_current.is_muted,
         (
             SELECT COUNT(*) 
@@ -181,7 +182,6 @@ $dmQuery = "
       AND c.archived = 0
       AND cm_current.left_at IS NULL
       AND cm_other.left_at IS NULL
-      AND cm_current.is_archived = 0
     ORDER BY last_message_time DESC
 ";
 

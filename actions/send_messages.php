@@ -110,12 +110,6 @@ if (!$stmt->execute()) {
 $message_id = $conn->insert_id;
 $stmt->close();
 
-// A new DM message makes an archived conversation visible again to both users.
-$unarchive = $conn->prepare("UPDATE chat_conversation_members cm JOIN chat_conversations c ON c.id = cm.conversation_id SET cm.is_archived = 0 WHERE cm.conversation_id = ? AND c.type = 'direct' AND cm.left_at IS NULL");
-$unarchive->bind_param("i", $conversation_id);
-$unarchive->execute();
-$unarchive->close();
-
 // Get the inserted timestamp from MySQL (so we're consistent)
 $getTime = $conn->prepare("SELECT created_at FROM chat_messages WHERE id = ?");
 $getTime->bind_param("i", $message_id);
