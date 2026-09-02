@@ -1,8 +1,0 @@
-{"timestamp":"2026-09-01T01:19:45+08:00","level":"audit","message":"user_logged_in","user_id":45,"ip":"::1","method":"POST","uri":"/greentrace/login_register.php","context":{"user_id":45}}
-{"timestamp":"2026-08-31T19:20:35+02:00","level":"audit","message":"user_logged_out","user_id":45,"ip":"::1","method":"GET","uri":"/greentrace/logout_action.php","context":[]}
-{"timestamp":"2026-09-01T01:20:59+08:00","level":"audit","message":"user_registered","user_id":51,"ip":"::1","method":"POST","uri":"/greentrace/login_register.php","context":{"user_id":51}}
-{"timestamp":"2026-08-31T19:21:08+02:00","level":"audit","message":"user_logged_out","user_id":51,"ip":"::1","method":"GET","uri":"/greentrace/logout_action.php","context":[]}
-{"timestamp":"2026-09-01T12:36:10+08:00","level":"audit","message":"user_logged_in","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/login_register.php","context":{"user_id":40}}
-{"timestamp":"2026-09-01T16:52:46+08:00","level":"audit","message":"user_logged_in","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/login_register.php","context":{"user_id":40}}
-{"timestamp":"2026-09-01T20:29:50+08:00","level":"audit","message":"user_logged_in","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/login_register.php","context":{"user_id":40}}
-{"timestamp":"2026-09-02T11:41:53+08:00","level":"audit","message":"user_logged_in","user_id":40,"ip":"::1","method":"POST","uri":"/greentrace/login_register.php","context":{"user_id":40}}
