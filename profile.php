@@ -1,7 +1,6 @@
 <?php
 require_once 'init_session.php';
 require_once 'config.php';
-require_once 'pagination_helper.php';
 
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['open_signup_modal'] = true;
@@ -11,13 +10,76 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Get page
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$limit = 10;
-$offset = ($page - 1) * $limit;
-
 // Sync MySQL timezone with PHP to prevent timestamp mismatch
 $conn->query("SET time_zone = '" . date('P') . "'");
+
+function time_ago(int $unix): string
+{
+    $diff = time() - $unix;
+    if ($diff < 60)      return 'Just now';
+    if ($diff < 3600)    return floor($diff / 60)    . ' minutes ago';
+    if ($diff < 86400)   return floor($diff / 3600)  . ' hours ago';
+    if ($diff < 604800)  return floor($diff / 86400) . ' days ago';
+    if ($diff < 2592000) return floor($diff / 604800) . ' weeks ago';
+    return date('M j, Y', $unix);
+}
+
+function renderActivityDescription(string $description): string
+{
+    $escaped = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
+    return str_ireplace(
+        ['&lt;strong&gt;', '&lt;/strong&gt;'],
+        ['<strong>', '</strong>'],
+        $escaped
+    );
+}
+
+// Load four activity rows at a time. The fifth row only determines whether
+// another batch exists, avoiding a separate COUNT query.
+$activityLimit = 4;
+$activityPage = max(1, (int)($_GET['activity_page'] ?? 1));
+$activityOffset = ($activityPage - 1) * $activityLimit;
+$activityFetchLimit = $activityLimit + 1;
+
+$logStmt = $conn->prepare("
+    SELECT id, type, title, status, description, created_at,
+           UNIX_TIMESTAMP(created_at) AS created_unix
+    FROM user_activity_log
+    WHERE user_id = ?
+    ORDER BY created_at DESC, id DESC
+    LIMIT ?, ?
+");
+$logStmt->bind_param("iii", $user_id, $activityOffset, $activityFetchLimit);
+$logStmt->execute();
+$activityRows = $logStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$logStmt->close();
+
+$hasMoreActivities = count($activityRows) > $activityLimit;
+$activities = array_slice($activityRows, 0, $activityLimit);
+
+if (($_GET['activities_only'] ?? '') === '1') {
+    header('Content-Type: application/json');
+
+    $payload = array_map(static function (array $activity): array {
+        $timestamp = (int)$activity['created_unix'];
+        return [
+            'id' => (int)$activity['id'],
+            'type' => (string)$activity['type'],
+            'title' => (string)$activity['title'],
+            'timestamp' => $timestamp,
+            'date' => date('F j, Y', $timestamp),
+            'description_html' => renderActivityDescription((string)$activity['description'])
+        ];
+    }, $activities);
+
+    echo json_encode([
+        'success' => true,
+        'activities' => $payload,
+        'has_more' => $hasMoreActivities,
+        'next_page' => $activityPage + 1
+    ]);
+    exit;
+}
 
 // Fetch user details (including barangay)
 $userStmt = $conn->prepare("
@@ -44,42 +106,6 @@ $user = [
 // Helper: format role name
 function formatRole($role) {
     return $role === 'super_admin' ? 'Super Admin' : ucfirst($role);
-}
-
-// Activity log with pagination
-$countSql = "SELECT COUNT(*) as total FROM user_activity_log WHERE user_id = ?";
-$countStmt = $conn->prepare($countSql);
-$countStmt->bind_param("i", $user_id);
-$countStmt->execute();
-$total = $countStmt->get_result()->fetch_assoc()['total'];
-$countStmt->close();
-
-
-$totalPages = ceil($total / $limit);
-
-// Fetch activity log
-$logStmt = $conn->prepare("
-    SELECT id, type, title, status, description, created_at,
-           UNIX_TIMESTAMP(created_at) AS created_unix
-    FROM user_activity_log
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-    LIMIT ?, ?
-");
-$logStmt->bind_param("iii", $user_id, $offset, $limit);
-$logStmt->execute();
-$activities = $logStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$logStmt->close();
-
-function time_ago(int $unix): string
-{
-    $diff = time() - $unix;
-    if ($diff < 60)      return 'Just now';
-    if ($diff < 3600)    return floor($diff / 60)    . ' minutes ago';
-    if ($diff < 86400)   return floor($diff / 3600)  . ' hours ago';
-    if ($diff < 604800)  return floor($diff / 86400) . ' days ago';
-    if ($diff < 2592000) return floor($diff / 604800) . ' weeks ago';
-    return date('M j, Y', $unix);
 }
 
 include 'header.php';
@@ -145,7 +171,10 @@ include 'header.php';
         <?php if (empty($activities)): ?>
             <p class="no-activity">No recent activity to show.</p>
         <?php else: ?>
-            <div class="activity-list" id="activityList">
+            <div class="activity-list"
+                id="activityList"
+                data-next-page="2"
+                data-has-more="<?= $hasMoreActivities ? '1' : '0' ?>">
                 <?php foreach ($activities as $act):
                     $ts = (int) $act['created_unix'];
                 ?>
@@ -161,12 +190,10 @@ include 'header.php';
                             </div>
                         </div>
                         <p class="activity-date"><?php echo date('F j, Y', $ts); ?></p>
-                        <p class="activity-description"><?php echo $act['description']; ?></p>
+                        <p class="activity-description"><?php echo renderActivityDescription((string)$act['description']); ?></p>
                     </div>
                 <?php endforeach; ?>
             </div>
-            <!-- Pagination -->
-            <?php echo renderPagination($page, $totalPages, 'profile.php', []); ?>
         <?php endif; ?>
     </div>
 </div>
@@ -195,6 +222,128 @@ include 'header.php';
 
     updateTimeAgo();
     setInterval(updateTimeAgo, 30000); // re-check every 30 seconds
+
+    const activityScrollContainer = document.querySelector('.recent-act-container');
+    const activityList = document.getElementById('activityList');
+    let isLoadingActivities = false;
+    const activitySkeletonMinimumMs = 700;
+
+    async function keepSkeletonVisible(startedAt) {
+        const elapsed = performance.now() - startedAt;
+        const remaining = Math.max(0, activitySkeletonMinimumMs - elapsed);
+
+        if (remaining > 0) {
+            await new Promise(resolve => window.setTimeout(resolve, remaining));
+        }
+    }
+
+    function showActivitySkeleton() {
+        if (!activityList || document.getElementById('activityLoadingSkeleton')) return;
+
+        const skeleton = document.createElement('div');
+        skeleton.id = 'activityLoadingSkeleton';
+        skeleton.className = 'activity-item activity-skeleton';
+        skeleton.setAttribute('aria-hidden', 'true');
+        skeleton.innerHTML = `
+            <div class="skeleton-title-row">
+                <span class="skeleton-line skeleton-title"></span>
+                <span class="skeleton-line skeleton-time"></span>
+            </div>
+            <span class="skeleton-line skeleton-date"></span>
+            <span class="skeleton-line skeleton-description"></span>
+            <span class="skeleton-line skeleton-description-short"></span>
+        `;
+
+        activityList.setAttribute('aria-busy', 'true');
+        activityList.appendChild(skeleton);
+    }
+
+    function hideActivitySkeleton() {
+        document.getElementById('activityLoadingSkeleton')?.remove();
+        activityList?.removeAttribute('aria-busy');
+    }
+
+    function createActivityElement(activity) {
+        const item = document.createElement('div');
+        item.className = 'activity-item';
+        item.dataset.type = String(activity.type || '');
+        item.dataset.timestamp = String(activity.timestamp || '');
+
+        const main = document.createElement('div');
+        main.className = 'activity-main';
+
+        const titleRow = document.createElement('div');
+        titleRow.className = 'activity-title';
+
+        const title = document.createElement('h3');
+        title.textContent = String(activity.title || 'Activity');
+
+        const time = document.createElement('span');
+        time.className = 'time-ago';
+        time.dataset.ts = String(activity.timestamp || '');
+
+        const date = document.createElement('p');
+        date.className = 'activity-date';
+        date.textContent = String(activity.date || '');
+
+        const description = document.createElement('p');
+        description.className = 'activity-description';
+        // The server escapes all markup except the existing <strong> styling.
+        description.innerHTML = String(activity.description_html || '');
+
+        titleRow.append(title, time);
+        main.appendChild(titleRow);
+        item.append(main, date, description);
+        return item;
+    }
+
+    async function loadMoreActivities() {
+        if (!activityList || isLoadingActivities || activityList.dataset.hasMore !== '1') return;
+
+        isLoadingActivities = true;
+        const nextPage = Math.max(2, parseInt(activityList.dataset.nextPage || '2', 10));
+        const skeletonStartedAt = performance.now();
+        showActivitySkeleton();
+
+        try {
+            const response = await fetch(`profile.php?activities_only=1&activity_page=${nextPage}`, {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.success || !Array.isArray(data.activities)) {
+                throw new Error(data.error || 'Unable to load activity history.');
+            }
+
+            await keepSkeletonVisible(skeletonStartedAt);
+
+            const fragment = document.createDocumentFragment();
+            data.activities.forEach(activity => fragment.appendChild(createActivityElement(activity)));
+            activityList.appendChild(fragment);
+            activityList.dataset.nextPage = String(data.next_page || nextPage + 1);
+            activityList.dataset.hasMore = data.has_more ? '1' : '0';
+
+            updateTimeAgo();
+        } catch (error) {
+            await keepSkeletonVisible(skeletonStartedAt);
+            console.error('Failed to load profile activities:', error);
+        } finally {
+            isLoadingActivities = false;
+            hideActivitySkeleton();
+        }
+    }
+
+    if (activityScrollContainer && activityList) {
+        activityScrollContainer.addEventListener('scroll', () => {
+            const remaining = activityScrollContainer.scrollHeight
+                - activityScrollContainer.scrollTop
+                - activityScrollContainer.clientHeight;
+
+            if (remaining <= 64) {
+                loadMoreActivities();
+            }
+        }, { passive: true });
+    }
 
     // Dropdown toggle
     const trigger = document.getElementById('userMenuTrigger');

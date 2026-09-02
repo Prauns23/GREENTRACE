@@ -1562,8 +1562,8 @@ body {
 [data-tooltip]:hover::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: 50%;
-  bottom: calc(100% + -82px);
+  left: 34%;
+  bottom: calc(100% + -48px);
   transform: translateX(-50%);
   width: max-content;
   max-width: min(140px, calc(100vw - 48px));

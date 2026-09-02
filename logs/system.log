@@ -134,3 +134,9 @@ Stack trace:
 [31-Aug-2026 16:08:18 Asia/Manila] CSRF Verification: POST=049f198b, Session=049f198b, Match=YES
 [31-Aug-2026 16:11:11 Asia/Manila] CSRF Verification: POST=049f198b, Session=049f198b, Match=YES
 [01-Sep-2026 01:21:02 Asia/Manila] Email cound not be send. Error: SMTP Error: Could not authenticate.
+{"timestamp":"2026-09-02T11:55:22+08:00","level":"error","message":"Uncaught Exception: Call to undefined function renderPagination() in C:\\xampp\\htdocs\\GREENTRACE\\profile.php on line 195","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/profile.php?page=1","context":{"trace":"#0 {main}"}}
+[02-Sep-2026 11:55:22 Asia/Manila] PHP Fatal error:  Uncaught Error: Call to undefined function renderPagination() in C:\xampp\htdocs\GREENTRACE\profile.php:195
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\GREENTRACE\profile.php on line 195
+{"timestamp":"2026-09-02T11:55:22+08:00","level":"error","message":"Fatal Error: Uncaught Error: Call to undefined function renderPagination() in C:\\xampp\\htdocs\\GREENTRACE\\profile.php:195\nStack trace:\n#0 {main}\n  thrown in C:\\xampp\\htdocs\\GREENTRACE\\profile.php on line 195","user_id":40,"ip":"::1","method":"GET","uri":"/greentrace/profile.php?page=1","context":{"type":"shutdown"}}
