@@ -2,7 +2,7 @@
 // cron_activity_reminders.php – Run daily
 require_once 'init_session.php';
 require_once 'config.php';
-require_once 'notifications_helper.php'; // Contains createNotification()
+require_once __DIR__ . '/helpers/notifications_helper.php';
 
 // Get activities starting in exactly 7 days
 $targetDate = date('Y-m-d', strtotime('+7 days'));

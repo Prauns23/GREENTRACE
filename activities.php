@@ -1,7 +1,7 @@
 <?php
 require_once 'init_session.php';
 require_once 'config.php';
-require_once 'pagination_helper.php'; // <-- NEW
+require_once __DIR__ . '/helpers/pagination_helper.php';
 
 if (!isset($_SESSION['first_name'])) {
     $_SESSION['open_signup_modal'] = true;

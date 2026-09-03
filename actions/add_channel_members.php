@@ -1,7 +1,7 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
-require_once '../notifications_helper.php';
+require_once __DIR__ . '/../helpers/notifications_helper.php';
 require_once __DIR__ . '/../helpers/chat_system.php';
 
 header('Content-Type: application/json');

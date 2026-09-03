@@ -2,7 +2,7 @@
 require_once '../init_session.php';
 require_once '../config.php';
 require_once __DIR__ . '/../log_activity.php';
-require_once __DIR__ . '/../notifications_helper.php';
+require_once __DIR__ . '/../helpers/notifications_helper.php';
 
 header('Content-Type: application/json');
 

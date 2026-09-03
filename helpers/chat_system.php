@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/notifications_helper.php';
+
 /**
  * Insert a system message into a conversation
  * 

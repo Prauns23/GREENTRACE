@@ -101,7 +101,7 @@ if (isset($_POST['sign-up'])) {
             logAudit('user_registered', ['user_id' => $newUserId]);
 
             // Send welcome email (best effort)
-            require_once __DIR__ . '/email_helper.php';
+            require_once __DIR__ . '/helpers/email_helper.php';
             $templatePath = __DIR__ . '/welcome_template.html';
             if (file_exists($templatePath)) {
                 $emailBody = file_get_contents($templatePath);

@@ -1,7 +1,7 @@
 <?php
 require_once 'init_session.php';
 require_once 'config.php';
-require_once 'pagination_helper.php';
+require_once __DIR__ . '/helpers/pagination_helper.php';
 
 $conn->query("SET time_zone = '" . date('P') . "'");
 
@@ -71,6 +71,14 @@ if (!in_array($filter, $allowedFilters, true)) {
 if (!in_array($sort, $allowedSorts, true)) {
     $sort = 'newest';
 }
+
+$filterLabels = [
+    'all' => 'All',
+    'message' => 'Messages',
+    'application' => 'Applications',
+    'report' => 'Reports'
+];
+$activeFilterLabel = $filterLabels[$filter];
 
 // AJAX handlers 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -222,19 +230,25 @@ include 'header.php';
         <input type="text" id="searchInput" placeholder="Search your notifications here" value="<?= htmlspecialchars($search, ENT_QUOTES) ?>">
     </div>
 
-    <!-- Filter Buttons with dropdown inside wrapper -->
+    <!-- Notification controls -->
     <div class="filter-buttons">
-        <button class="filter-btn <?= $filter === 'all' ? 'active' : '' ?>" data-filter="all">All</button>
-        <button class="filter-btn <?= $filter === 'application' ? 'active' : '' ?>" data-filter="application">Applications</button>
-        <button class="filter-btn <?= $filter === 'message' ? 'active' : '' ?>" data-filter="message">Messages</button>
-        <button class="filter-btn <?= $filter === 'report' ? 'active' : '' ?>" data-filter="report">Reports</button>
-
-        <!-- <label class="sort-wrapper" for="notificationSort">
-            <select id="notificationSort" class="sort-select">
-                <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest</option>
-                <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest</option>
-            </select>
-        </label> -->
+        <div class="filter-dropdown-wrapper">
+            <button type="button" class="filter-dropdown-toggle" id="filterDropdownToggle" aria-haspopup="true" aria-expanded="false">
+                <span>Filter: <?= htmlspecialchars($activeFilterLabel, ENT_QUOTES, 'UTF-8') ?></span>
+                <i class="fas fa-chevron-down filter-chevron" aria-hidden="true"></i>
+            </button>
+            <div class="filter-dropdown" id="filterDropdown" role="menu" hidden>
+                <?php foreach ($filterLabels as $filterValue => $filterLabel): ?>
+                    <button type="button"
+                        class="filter-btn <?= $filter === $filterValue ? 'active' : '' ?>"
+                        data-filter="<?= $filterValue ?>"
+                        role="menuitem"
+                        aria-current="<?= $filter === $filterValue ? 'true' : 'false' ?>">
+                        <?= htmlspecialchars($filterLabel, ENT_QUOTES, 'UTF-8') ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        </div>
 
         <div class="action-btn-wrapper">
             <button class="action-btn" onclick="toggleBulkDropdown(event)">
@@ -267,6 +281,8 @@ include 'header.php';
                         true
                     );
                     $displayType = $isConversationNotice ? 'message' : $notif['type'];
+                    $isRejectedApplication = $notif['type'] === 'application'
+                        && stripos($notif['title'], 'rejected') !== false;
 
                     // Keep other negative chat actions visually distinct.
                     $negativeKeywords = ['Kicked', 'Muted', 'Left'];
@@ -279,7 +295,9 @@ include 'header.php';
                             }
                         }
                     }
-                    $extraClass = ($isConversationNotice || $isNegative) ? 'negative' : '';
+                    $extraClass = ($isConversationNotice || $isRejectedApplication || $isNegative)
+                        ? 'negative'
+                        : '';
                     ?>
                     <div class="notification-item <?= $notif['is_read'] ? 'read' : 'unread' ?> <?= $extraClass ?>"
                         data-id="<?= $notif['id'] ?>"
@@ -413,6 +431,34 @@ include 'header.php';
             }, 800);
         });
     }
+
+    const filterDropdownToggle = document.getElementById('filterDropdownToggle');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const filterDropdownWrapper = document.querySelector('.filter-dropdown-wrapper');
+
+    function setFilterDropdownOpen(isOpen) {
+        if (!filterDropdownToggle || !filterDropdown) return;
+        filterDropdown.hidden = !isOpen;
+        filterDropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    filterDropdownToggle?.addEventListener('click', function(event) {
+        event.stopPropagation();
+        setFilterDropdownOpen(filterDropdown.hidden);
+    });
+
+    document.addEventListener('click', function(event) {
+        if (filterDropdownWrapper && !filterDropdownWrapper.contains(event.target)) {
+            setFilterDropdownOpen(false);
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            setFilterDropdownOpen(false);
+            filterDropdownToggle?.focus();
+        }
+    });
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {

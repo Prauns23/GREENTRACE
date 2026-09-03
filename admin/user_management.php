@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../init_session.php';
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../pagination_helper.php';
+require_once __DIR__ . '/../helpers/pagination_helper.php';
 
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_admin'])) {
     header('Location: ../index.php');

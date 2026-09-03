@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 
 require_once '../init_session.php';
 require_once '../config.php';
-require_once '../notifications_helper.php';
+require_once __DIR__ . '/../helpers/notifications_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['error' => 'Method not allowed']);
