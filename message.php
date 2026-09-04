@@ -215,6 +215,51 @@ include 'header.php';
     <div class="chat-container">
         <!-- Left Sidebar -->
         <div class="chat-sidebar">
+            <div class="sidebar-loading-skeleton" id="sidebarLoadingSkeleton" aria-hidden="false">
+                <div class="sidebar-skeleton-card sidebar-skeleton-search-card">
+                    <div class="sidebar-skeleton-filter-row">
+                        <span class="skeleton-shape sidebar-skeleton-filter"></span>
+                        <span class="skeleton-shape sidebar-skeleton-filter"></span>
+                    </div>
+                    <span class="skeleton-shape sidebar-skeleton-search"></span>
+                    <div class="sidebar-skeleton-action-row">
+                        <span class="skeleton-shape sidebar-skeleton-action"></span>
+                        <span class="skeleton-shape sidebar-skeleton-action"></span>
+                    </div>
+                </div>
+
+                <div class="sidebar-skeleton-card sidebar-skeleton-channel-card">
+                    <span class="skeleton-shape sidebar-skeleton-heading"></span>
+                    <div class="sidebar-skeleton-list">
+                        <?php for ($sidebarSkeletonItem = 0; $sidebarSkeletonItem < 3; $sidebarSkeletonItem++): ?>
+                            <div class="sidebar-skeleton-item">
+                                <div class="sidebar-skeleton-item-copy">
+                                    <span class="skeleton-shape sidebar-skeleton-name"></span>
+                                    <span class="skeleton-shape sidebar-skeleton-preview"></span>
+                                </div>
+                                <span class="skeleton-shape sidebar-skeleton-time"></span>
+                            </div>
+                        <?php endfor; ?>
+                    </div>
+                </div>
+
+                <div class="sidebar-skeleton-card sidebar-skeleton-dm-card">
+                    <span class="skeleton-shape sidebar-skeleton-heading sidebar-skeleton-heading-wide"></span>
+                    <div class="sidebar-skeleton-list">
+                        <?php for ($sidebarSkeletonItem = 0; $sidebarSkeletonItem < 4; $sidebarSkeletonItem++): ?>
+                            <div class="sidebar-skeleton-item">
+                                <div class="sidebar-skeleton-item-copy">
+                                    <span class="skeleton-shape sidebar-skeleton-name"></span>
+                                    <span class="skeleton-shape sidebar-skeleton-preview"></span>
+                                </div>
+                                <span class="skeleton-shape sidebar-skeleton-time"></span>
+                            </div>
+                        <?php endfor; ?>
+                    </div>
+                </div>
+                <span class="sr-only" role="status">Loading conversations…</span>
+            </div>
+
             <!-- Search Bar -->
             <div class="sidebar-search-container">
                 <div class="conversation-filter" role="tablist" aria-label="Conversation filter">
@@ -411,6 +456,52 @@ include 'header.php';
 
             <!-- Actual chat window (hidden until a conversation is selected) -->
             <div id="chatWindow" class="chat-window" style="display: none;">
+                <div class="chat-loading-skeleton" id="chatLoadingSkeleton" aria-hidden="true" hidden>
+                    <div class="chat-skeleton-header">
+                        <div class="chat-skeleton-actions">
+                            <span class="skeleton-shape skeleton-circle"></span>
+                            <span class="skeleton-shape skeleton-circle"></span>
+                            <span class="skeleton-shape skeleton-circle"></span>
+                        </div>
+                        <div class="chat-skeleton-profile">
+                            <span class="skeleton-shape skeleton-avatar"></span>
+                            <span class="chat-skeleton-profile-lines">
+                                <span class="skeleton-shape skeleton-line skeleton-title"></span>
+                                <span class="skeleton-shape skeleton-line skeleton-subtitle"></span>
+                            </span>
+                            <span class="skeleton-shape skeleton-badge"></span>
+                        </div>
+                    </div>
+                    <div class="chat-skeleton-messages" aria-label="Loading conversation">
+                        <div class="chat-skeleton-message">
+                            <span class="skeleton-shape skeleton-avatar skeleton-avatar-small"></span>
+                            <span class="chat-skeleton-bubble">
+                                <span class="skeleton-shape skeleton-line skeleton-name"></span>
+                                <span class="skeleton-shape skeleton-line skeleton-message-line"></span>
+                                <span class="skeleton-shape skeleton-line skeleton-message-line short"></span>
+                            </span>
+                        </div>
+                        <div class="chat-skeleton-message self">
+                            <span class="skeleton-shape skeleton-avatar skeleton-avatar-small"></span>
+                            <span class="chat-skeleton-bubble">
+                                <span class="skeleton-shape skeleton-line skeleton-name"></span>
+                                <span class="skeleton-shape skeleton-line skeleton-message-line"></span>
+                            </span>
+                        </div>
+                        <div class="chat-skeleton-message">
+                            <span class="skeleton-shape skeleton-avatar skeleton-avatar-small"></span>
+                            <span class="chat-skeleton-bubble">
+                                <span class="skeleton-shape skeleton-line skeleton-name"></span>
+                                <span class="skeleton-shape skeleton-line skeleton-message-line"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="chat-skeleton-input">
+                        <span class="skeleton-shape skeleton-input-bar"></span>
+                        <span class="skeleton-shape skeleton-send"></span>
+                    </div>
+                    <span class="sr-only" role="status">Loading conversation…</span>
+                </div>
                 <!-- Chat Header -->
                 <div class="chat-header">
                     <div class="chat-header-top">

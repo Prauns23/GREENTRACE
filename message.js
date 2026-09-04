@@ -22,6 +22,7 @@ document.addEventListener("click", function (e) {
 let currentConversation = null; // { type: 'channel'|'dm', id: number }
 let currentPage = 0; // not used anymore, we use oldestTimestamp
 const MESSAGES_PER_PAGE = 6;
+const CHAT_SKELETON_MIN_DURATION_MS = 900; // Increase this to inspect the skeleton longer.
 let isLoading = false;
 let hasMoreMessages = true;
 let allMessages = [];
@@ -44,6 +45,8 @@ let chatSocketReconnectAttempt = 0;
 let chatSocketHeartbeat = null;
 let realtimeSidebarRefreshTimer = null;
 let realtimeMessageRefreshTimer = null;
+let chatSkeletonShownAt = 0;
+let chatSkeletonLoadId = 0;
 
 function scrollChatToBottom(container) {
   isProgrammaticChatScroll = true;
@@ -815,7 +818,7 @@ function fetchMessages(isInitial = false, isInitialLoad = isInitial) {
             container.scrollHeight <= container.clientHeight &&
             messages.length === MESSAGES_PER_PAGE
           ) {
-            fetchMessages(false, true);
+            return fetchMessages(false, true);
           } else {
             scrollChatToBottom(container);
 
@@ -853,6 +856,52 @@ function updateChatVisibility(isChatVisible) {
     chatPlaceholder.style.display = "flex";
     chatWindow.style.display = "none";
   }
+}
+
+function showChatLoadingSkeleton() {
+  const skeleton = document.getElementById("chatLoadingSkeleton");
+  const chatWindow = document.getElementById("chatWindow");
+  const loadId = ++chatSkeletonLoadId;
+
+  chatSkeletonShownAt = performance.now();
+  if (skeleton) {
+    skeleton.hidden = false;
+    skeleton.setAttribute("aria-hidden", "false");
+  }
+  chatWindow?.setAttribute("aria-busy", "true");
+
+  return loadId;
+}
+
+function hideChatLoadingSkeleton(loadId) {
+  const elapsed = performance.now() - chatSkeletonShownAt;
+  const remainingDelay = Math.max(0, CHAT_SKELETON_MIN_DURATION_MS - elapsed);
+
+  setTimeout(() => {
+    if (loadId !== chatSkeletonLoadId) return;
+
+    const skeleton = document.getElementById("chatLoadingSkeleton");
+    const chatWindow = document.getElementById("chatWindow");
+    if (skeleton) {
+      skeleton.hidden = true;
+      skeleton.setAttribute("aria-hidden", "true");
+    }
+    chatWindow?.removeAttribute("aria-busy");
+  }, remainingDelay);
+}
+
+function startSidebarLoadingSkeleton() {
+  const skeleton = document.getElementById("sidebarLoadingSkeleton");
+  const sidebar = document.querySelector(".chat-sidebar");
+
+  if (!skeleton) return;
+
+  sidebar?.setAttribute("aria-busy", "true");
+  setTimeout(() => {
+    skeleton.hidden = true;
+    skeleton.setAttribute("aria-hidden", "true");
+    sidebar?.removeAttribute("aria-busy");
+  }, CHAT_SKELETON_MIN_DURATION_MS);
 }
 
 function loadMoreMessages() {
@@ -1134,6 +1183,7 @@ function loadConversation(type, id) {
   }
 
   updateChatVisibility(true);
+  const skeletonLoadId = showChatLoadingSkeleton();
   document.querySelector(".chat-container")?.classList.add("mobile-chat-open");
   updateInputMuteState();
 
@@ -1232,7 +1282,7 @@ function loadConversation(type, id) {
   }
 
   // Load first batch
-  fetchMessages(true);
+  fetchMessages(true).finally(() => hideChatLoadingSkeleton(skeletonLoadId));
 
   startMessageRefresh();
 }
@@ -1364,6 +1414,8 @@ function sendMessage() {
 //
 
 document.addEventListener("DOMContentLoaded", function () {
+  startSidebarLoadingSkeleton();
+
   document.querySelectorAll(".conversation-filter-btn").forEach((button) => {
     button.addEventListener("click", function () {
       setConversationFilter(this.dataset.filter);

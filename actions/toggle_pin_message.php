@@ -61,20 +61,17 @@ if (!$updated) {
 }
 
 $conversationId = (int) $message['conversation_id'];
-if ($isPinned === 1) {
-    $actorStmt = $conn->prepare("SELECT CONCAT(fname, ' ', lname) AS full_name FROM users_tbl WHERE id = ?");
-    $actorStmt->bind_param('i', $user_id);
-    $actorStmt->execute();
-    $actor = $actorStmt->get_result()->fetch_assoc();
-    $actorStmt->close();
+$actorStmt = $conn->prepare("SELECT CONCAT(fname, ' ', lname) AS full_name FROM users_tbl WHERE id = ?");
+$actorStmt->bind_param('i', $user_id);
+$actorStmt->execute();
+$actor = $actorStmt->get_result()->fetch_assoc();
+$actorStmt->close();
 
-    $actorName = trim($actor['full_name'] ?? '') ?: 'A moderator';
-    insertSystemMessage($conn, $conversationId, "{$actorName} pinned a message.");
-} else {
-    publishConversationRealtimeEvent($conversationId, 'message.unpinned', [
-        'message_id' => $message_id,
-    ]);
-}
+$actorName = trim($actor['full_name'] ?? '') ?: 'Someone';
+$systemMessage = $isPinned === 1
+    ? "{$actorName} pinned a message."
+    : "{$actorName} unpinned a message.";
+insertSystemMessage($conn, $conversationId, $systemMessage);
 
 echo json_encode([
     'success' => true,
