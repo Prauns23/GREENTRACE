@@ -2,6 +2,7 @@
 error_reporting(0);
 require_once '../config.php';
 require_once '../init_session.php';
+require_once __DIR__ . '/../helpers/realtime.php';
 
 // Set PHP timezone (if not already set in config)
 date_default_timezone_set('Asia/Manila');
@@ -132,6 +133,10 @@ $user = $userStmt->get_result()->fetch_assoc();
 $userStmt->close();
 
 $sender_name = $user['fname'] . ' ' . $user['lname'];
+
+publishConversationRealtimeEvent($conversation_id, 'message.sent', [
+    'message_id' => (int) $message_id,
+]);
 
 echo json_encode([
     'success' => true,

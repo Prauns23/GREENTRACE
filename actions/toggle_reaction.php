@@ -5,6 +5,7 @@ ini_set('display_errors', 0);
 
 require_once '../init_session.php';
 require_once '../config.php';
+require_once __DIR__ . '/../helpers/realtime.php';
 
 header('Content-Type: application/json');
 
@@ -24,7 +25,7 @@ if (!$message_id || empty($reaction)) {
 
 // Check if message exists and user is a member of the conversation
 $msgCheck = $conn->prepare("
-    SELECT m.id
+    SELECT m.id, m.conversation_id
     FROM chat_messages m
     JOIN chat_conversation_members cm ON m.conversation_id = cm.conversation_id
     WHERE m.id = ? AND cm.user_id = ? AND cm.left_at IS NULL
@@ -64,6 +65,9 @@ if ($existing) {
     $delete->bind_param("i", $existing['id']);
     $deleted = $delete->execute();
     $delete->close();
+    publishConversationRealtimeEvent((int) $msg['conversation_id'], 'reaction.updated', [
+        'message_id' => $message_id,
+    ]);
     echo json_encode(['success' => true, 'action' => 'removed']);
 } else {
     // Add reaction
@@ -75,6 +79,9 @@ if ($existing) {
     $insert->bind_param("iis", $message_id, $user_id, $reaction);
     $inserted = $insert->execute();
     $insert->close();
+    publishConversationRealtimeEvent((int) $msg['conversation_id'], 'reaction.updated', [
+        'message_id' => $message_id,
+    ]);
     echo json_encode(['success' => true, 'action' => 'added']);
 }
 ?>

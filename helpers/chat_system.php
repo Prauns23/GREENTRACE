@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/notifications_helper.php';
+require_once __DIR__ . '/realtime.php';
 
 /**
  * Insert a system message into a conversation
@@ -17,6 +18,11 @@ function insertSystemMessage($conn, $conversation_id, $content)
     $stmt->bind_param("is", $conversation_id, $content);
     $success = $stmt->execute();
     $stmt->close();
+
+    if ($success) {
+        publishConversationRealtimeEvent((int) $conversation_id, 'system.message');
+    }
+
     return $success;
 }
 

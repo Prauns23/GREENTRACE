@@ -1,6 +1,7 @@
 <?php
 require_once '../init_session.php';
 require_once '../config.php';
+require_once __DIR__ . '/../helpers/realtime.php';
 
 header('Content-Type: application/json');
 
@@ -88,6 +89,8 @@ $stmt = $conn->prepare($sql);
 $types = str_repeat('ii', count($newMessageIds));
 $stmt->bind_param($types, ...$bindParams);
 $stmt->execute();
+
+publishConversationRealtimeEvent($conversation_id, 'receipt.updated');
 
 echo json_encode(['success' => true]);
 $stmt->close();

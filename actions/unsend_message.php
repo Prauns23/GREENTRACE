@@ -2,6 +2,7 @@
 error_reporting(0);
 require_once '../config.php';
 require_once '../init_session.php';
+require_once __DIR__ . '/../helpers/realtime.php';
 
 $conn->query("SET time_zone = '+08:00'");
 header('Content-Type: application/json');
@@ -64,6 +65,10 @@ $user = $userStmt->get_result()->fetch_assoc();
 $userStmt->close();
 
 $senderName = trim(($user['fname'] ?? '') . ' ' . ($user['lname'] ?? ''));
+
+publishConversationRealtimeEvent((int) $message['conversation_id'], 'message.unsent', [
+    'message_id' => $message_id,
+]);
 
 echo json_encode([
     'success' => true,

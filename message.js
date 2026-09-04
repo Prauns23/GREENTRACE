@@ -36,6 +36,14 @@ let editingMessageId = null;
 let activeConversationFilter = "chats";
 let pinnedMessagesRequestController = null;
 let pinnedModalPreviousFocus = null;
+let chatSocket = null;
+let chatSocketConnected = false;
+let chatSocketShouldReconnect = true;
+let chatSocketReconnectTimer = null;
+let chatSocketReconnectAttempt = 0;
+let chatSocketHeartbeat = null;
+let realtimeSidebarRefreshTimer = null;
+let realtimeMessageRefreshTimer = null;
 
 function scrollChatToBottom(container) {
   isProgrammaticChatScroll = true;
@@ -1482,6 +1490,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Start sidebar polling
   startSidebarPolling();
+  connectChatWebSocket();
 
   // Chat menu toggle
   const chatMenuBtn = document.getElementById("chatMenuBtn");
@@ -1594,14 +1603,150 @@ document.addEventListener("DOMContentLoaded", function () {
 // 9. Live updates for sidebar
 //
 
+function getChatWebSocketUrl() {
+  if (window.GREEN_TRACE_WEBSOCKET_URL) {
+    return window.GREEN_TRACE_WEBSOCKET_URL;
+  }
+
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${window.location.hostname}:8080/greentrace`;
+}
+
+function sendChatSocketMessage(message) {
+  if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) return false;
+  chatSocket.send(JSON.stringify(message));
+  return true;
+}
+
+function subscribeToCurrentConversation() {
+  if (!currentConversation) return;
+  sendChatSocketMessage({
+    type: "subscribe",
+    conversation_id: Number(currentConversation.id),
+  });
+}
+
+function scheduleRealtimeSidebarRefresh() {
+  clearTimeout(realtimeSidebarRefreshTimer);
+  realtimeSidebarRefreshTimer = setTimeout(() => {
+    fetchSidebarUpdates();
+    if (typeof window.updateChatBadgeCount === "function") {
+      window.updateChatBadgeCount();
+    }
+  }, 80);
+}
+
+function scheduleRealtimeMessageRefresh(event) {
+  const eventConversationId = String(event.conversation_id || "");
+  if (
+    !currentConversation ||
+    String(currentConversation.id) !== eventConversationId
+  ) {
+    return;
+  }
+
+  clearTimeout(realtimeMessageRefreshTimer);
+  realtimeMessageRefreshTimer = setTimeout(() => {
+    refreshMessages();
+    if (isPinnedMessagesModalOpen()) {
+      loadPinnedMessages();
+    }
+  }, 60);
+}
+
+function handleChatSocketEvent(event) {
+  if (!event || typeof event !== "object") return;
+
+  if (event.type === "ready") {
+    subscribeToCurrentConversation();
+    return;
+  }
+
+  if (event.type === "conversation.updated") {
+    scheduleRealtimeSidebarRefresh();
+    scheduleRealtimeMessageRefresh(event);
+    return;
+  }
+
+  if (event.type === "sidebar.updated") {
+    scheduleRealtimeSidebarRefresh();
+  }
+}
+
+function scheduleChatSocketReconnect() {
+  if (!chatSocketShouldReconnect || chatSocketReconnectTimer) return;
+
+  const delay = Math.min(30000, 1000 * 2 ** chatSocketReconnectAttempt);
+  chatSocketReconnectAttempt += 1;
+  chatSocketReconnectTimer = setTimeout(() => {
+    chatSocketReconnectTimer = null;
+    connectChatWebSocket();
+  }, delay);
+}
+
+function connectChatWebSocket() {
+  if (!("WebSocket" in window) || !chatSocketShouldReconnect) return;
+  if (
+    chatSocket &&
+    (chatSocket.readyState === WebSocket.OPEN ||
+      chatSocket.readyState === WebSocket.CONNECTING)
+  ) {
+    return;
+  }
+
+  try {
+    chatSocket = new WebSocket(getChatWebSocketUrl());
+  } catch (error) {
+    console.warn("Unable to start the chat WebSocket:", error);
+    scheduleChatSocketReconnect();
+    return;
+  }
+
+  chatSocket.addEventListener("open", () => {
+    chatSocketConnected = true;
+    chatSocketReconnectAttempt = 0;
+    startSidebarPolling();
+    startMessageRefresh();
+    subscribeToCurrentConversation();
+
+    clearInterval(chatSocketHeartbeat);
+    chatSocketHeartbeat = setInterval(() => {
+      sendChatSocketMessage({ type: "ping" });
+    }, 25000);
+  });
+
+  chatSocket.addEventListener("message", (messageEvent) => {
+    try {
+      handleChatSocketEvent(JSON.parse(messageEvent.data));
+    } catch (error) {
+      console.warn("Ignored an invalid chat WebSocket event", error);
+    }
+  });
+
+  chatSocket.addEventListener("close", () => {
+    chatSocketConnected = false;
+    chatSocket = null;
+    clearInterval(chatSocketHeartbeat);
+    chatSocketHeartbeat = null;
+    startSidebarPolling();
+    startMessageRefresh();
+    scheduleChatSocketReconnect();
+  });
+
+  chatSocket.addEventListener("error", () => {
+    chatSocket?.close();
+  });
+}
+
 let sidebarPollingInterval = null;
 
 function startSidebarPolling() {
   if (sidebarPollingInterval) {
     clearInterval(sidebarPollingInterval);
   }
-  // Poll every 5 seconds
-  sidebarPollingInterval = setInterval(fetchSidebarUpdates, 5000);
+  // WebSockets provide the fast path; a slower poll protects against missed events.
+  const refreshDelay = chatSocketConnected ? 30000 : 5000;
+  sidebarPollingInterval = setInterval(fetchSidebarUpdates, refreshDelay);
 }
 
 function stopSidebarPolling() {
@@ -1825,6 +1970,12 @@ function updateSidebarUnread(conversationId) {
 
 // Stop polling when navigating away (optional)
 window.addEventListener("beforeunload", function () {
+  chatSocketShouldReconnect = false;
+  clearTimeout(chatSocketReconnectTimer);
+  clearTimeout(realtimeSidebarRefreshTimer);
+  clearTimeout(realtimeMessageRefreshTimer);
+  clearInterval(chatSocketHeartbeat);
+  chatSocket?.close();
   stopSidebarPolling();
   stopMessageRefresh();
 });
@@ -2032,11 +2183,13 @@ function startMessageRefresh() {
     clearInterval(messageRefreshInterval);
   }
 
+  subscribeToCurrentConversation();
+  const refreshDelay = chatSocketConnected ? 30000 : 2000;
   messageRefreshInterval = setInterval(() => {
     if (currentConversation && !isLoading) {
       refreshMessages();
     }
-  }, 2000);
+  }, refreshDelay);
 }
 
 function stopMessageRefresh() {

@@ -2,6 +2,7 @@
 error_reporting(0);
 require_once '../config.php';
 require_once '../init_session.php';
+require_once __DIR__ . '/../helpers/realtime.php';
 
 $conn->query("SET time_zone = '+08:00'");
 header('Content-Type: application/json');
@@ -70,6 +71,10 @@ $resultStmt->bind_param('i', $message_id);
 $resultStmt->execute();
 $result = $resultStmt->get_result()->fetch_assoc();
 $resultStmt->close();
+
+publishConversationRealtimeEvent((int) $message['conversation_id'], 'message.edited', [
+    'message_id' => $message_id,
+]);
 
 echo json_encode([
     'success' => true,
