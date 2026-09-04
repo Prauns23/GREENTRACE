@@ -34,6 +34,8 @@ let currentMessageActionTarget = null;
 let currentUserRoleInConversation = null;
 let editingMessageId = null;
 let activeConversationFilter = "chats";
+let pinnedMessagesRequestController = null;
+let pinnedModalPreviousFocus = null;
 
 function scrollChatToBottom(container) {
   isProgrammaticChatScroll = true;
@@ -208,6 +210,7 @@ function showMessageActions(button, msgId) {
   const canEdit = isOwn && Number(msg.can_edit) === 1;
   const canUnsend =
     isOwn && Number(msg.archived) === 0 && msg.message_type === "text";
+  const canPin = Number(msg.can_pin) === 1;
   const canRemove = true;
 
   let buttonsHtml = "";
@@ -224,6 +227,14 @@ function showMessageActions(button, msgId) {
     buttonsHtml += `
       <button data-action="unsend" data-msg-id="${msgId}">
         Unsend
+      </button>
+    `;
+  }
+
+  if (canPin) {
+    buttonsHtml += `
+      <button data-action="pin" data-msg-id="${msgId}">
+        ${Number(msg.is_pinned) === 1 ? "Unpin" : "Pin"}
       </button>
     `;
   }
@@ -285,6 +296,9 @@ function handleMessageAction(action, msgId) {
       break;
     case "unsend":
       unsendMessage(msgId);
+      break;
+    case "pin":
+      togglePinMessage(msgId);
       break;
     case "remove":
       removeMessage(msgId);
@@ -396,6 +410,48 @@ function removeMessage(msgId) {
     .catch((error) => {
       console.error(error);
       showToast("Network error", 3000, "error");
+    });
+}
+
+function togglePinMessage(msgId) {
+  const formData = new URLSearchParams();
+  formData.append("message_id", msgId);
+
+  return fetch("actions/toggle_pin_message.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData.toString(),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (!data.success) {
+        showToast(data.error || "Failed to update pinned message", 3000, "error");
+        return false;
+      }
+
+      allMessages = allMessages.map((message) =>
+        String(message.id) === String(msgId)
+          ? { ...message, is_pinned: Number(data.is_pinned) }
+          : message,
+      );
+      renderMessages(allMessages);
+
+      if (isPinnedMessagesModalOpen()) {
+        loadPinnedMessages();
+      }
+
+      showToast(
+        Number(data.is_pinned) === 1 ? "Message pinned" : "Message unpinned",
+        3000,
+        "success",
+      );
+      return true;
+    })
+    .catch((error) => {
+      console.error(error);
+      showToast("Network error", 3000, "error");
+      return false;
     });
 }
 
@@ -631,7 +687,7 @@ function renderMessages(messages) {
     const messageStatuses = [];
     if (Number(msg.is_pinned) === 1 && !isUnsent) {
       messageStatuses.push(
-        '<span class="message-pinned"><span class="material-symbols-rounded">push_pin</span>Pinned</span>',
+        '<span class="message-pinned"><img src="components/icons/pin.png" alt="" aria-hidden="true">Pinned</span>',
       );
     }
     if (msg.edited_at && !isUnsent) {
@@ -642,6 +698,8 @@ function renderMessages(messages) {
       : "";
     const div = document.createElement("div");
     div.className = `message-item ${isSelf}${isUnsent ? " unsent" : ""}`;
+    div.dataset.messageId = String(msg.id);
+    div.tabIndex = -1;
     div.innerHTML = `
             <div class="message-avatar">${escapeHtml(avatar)}</div>
         <div class="message-body">
@@ -694,7 +752,9 @@ function renderMessages(messages) {
 //
 
 function fetchMessages(isInitial = false, isInitialLoad = isInitial) {
-  if (isLoading || !hasMoreMessages || !currentConversation) return;
+  if (isLoading || !hasMoreMessages || !currentConversation) {
+    return Promise.resolve(false);
+  }
   isLoading = true;
 
   const params = new URLSearchParams();
@@ -704,7 +764,7 @@ function fetchMessages(isInitial = false, isInitialLoad = isInitial) {
     params.append("before", oldestTimestamp);
   }
 
-  fetch("actions/get_messages.php?" + params.toString())
+  return fetch("actions/get_messages.php?" + params.toString())
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -722,7 +782,7 @@ function fetchMessages(isInitial = false, isInitialLoad = isInitial) {
             scrollChatToBottom(document.getElementById("chatMessages"));
             setTimeout(markMessageAsRead, 500);
           }
-          return;
+          return false;
         }
 
         // Update oldestTimestamp for next load
@@ -754,18 +814,21 @@ function fetchMessages(isInitial = false, isInitialLoad = isInitial) {
             // Mark messages as read after loading
             setTimeout(markMessageAsRead, 500);
           }
-          return;
+          return true;
         }
         isLoading = false;
+        return true;
       } else {
         alert(data.error || "Failed to load messages");
         isLoading = false;
+        return false;
       }
     })
     .catch((err) => {
       console.error(err);
       alert("Network error");
       isLoading = false;
+      return false;
     });
 }
 
@@ -785,7 +848,219 @@ function updateChatVisibility(isChatVisible) {
 }
 
 function loadMoreMessages() {
-  fetchMessages(false);
+  return fetchMessages(false);
+}
+
+function isPinnedMessagesModalOpen() {
+  return document
+    .getElementById("pinnedMessagesModal")
+    ?.classList.contains("is-open");
+}
+
+function formatPinnedDate(timestamp) {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const options = { month: "long", day: "numeric" };
+  if (date.getFullYear() !== new Date().getFullYear()) {
+    options.year = "numeric";
+  }
+  return date.toLocaleDateString("en-PH", options);
+}
+
+function closePinnedMessageMenus(exceptItem = null) {
+  document.querySelectorAll(".pinned-message-item.menu-open").forEach((item) => {
+    if (item === exceptItem) return;
+    item.classList.remove("menu-open");
+    item
+      .querySelector(".pinned-message-more")
+      ?.setAttribute("aria-expanded", "false");
+  });
+}
+
+function renderPinnedMessages(messages) {
+  const list = document.getElementById("pinnedMessagesList");
+  if (!list) return;
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    list.innerHTML = `
+      <div class="pinned-messages-empty">
+        <img src="components/icons/pin.png" alt="" aria-hidden="true">
+        <h3>No pinned messages</h3>
+        <p>Pin an important message to find it quickly later.</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = messages
+    .map((message) => {
+      const messageId = Number.parseInt(message.id, 10) || 0;
+      const senderName = message.sender_name || "Unknown user";
+      const senderLabel = message.is_self ? `${senderName} (You)` : senderName;
+      const editedLabel = message.edited_at
+        ? '<span class="pinned-message-edited">Edited</span>'
+        : "";
+      const unpinAction = message.can_unpin
+        ? `<button type="button" role="menuitem" data-pinned-action="unpin" data-msg-id="${messageId}">Unpin</button>`
+        : "";
+
+      return `
+        <article class="pinned-message-item" data-msg-id="${messageId}">
+          <time datetime="${escapeHtml(message.created_at)}">${escapeHtml(formatPinnedDate(message.created_at))}</time>
+          <div class="pinned-message-row">
+            <div class="pinned-message-avatar" aria-hidden="true">${escapeHtml(getInitials(senderName))}</div>
+            <div class="pinned-message-bubble">
+              <div class="pinned-message-sender">${escapeHtml(senderLabel)}</div>
+              <div class="pinned-message-text">${escapeHtml(message.content)}</div>
+              ${editedLabel}
+            </div>
+            <div class="pinned-message-action">
+              <button class="pinned-message-more" type="button" data-msg-id="${messageId}" aria-label="More actions for this pinned message" aria-haspopup="menu" aria-expanded="false">
+                <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
+              </button>
+              <div class="pinned-message-actions" role="menu">
+                <button type="button" role="menuitem" data-pinned-action="see" data-msg-id="${messageId}">See in chat</button>
+                ${unpinAction}
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+async function loadPinnedMessages() {
+  const list = document.getElementById("pinnedMessagesList");
+  if (!list || !currentConversation) return;
+
+  if (pinnedMessagesRequestController) {
+    pinnedMessagesRequestController.abort();
+  }
+  pinnedMessagesRequestController = new AbortController();
+  const requestedConversationId = currentConversation.id;
+
+  list.innerHTML = '<div class="pinned-messages-loading" role="status">Loading pinned messages…</div>';
+
+  try {
+    const params = new URLSearchParams({
+      conversation_id: String(requestedConversationId),
+    });
+    const response = await fetch(
+      "actions/get_pinned_messages.php?" + params.toString(),
+      {
+        credentials: "same-origin",
+        signal: pinnedMessagesRequestController.signal,
+      },
+    );
+    const data = await response.json();
+
+    if (
+      !isPinnedMessagesModalOpen() ||
+      String(currentConversation?.id) !== String(requestedConversationId)
+    ) {
+      return;
+    }
+
+    if (!data.success) {
+      throw new Error(data.error || "Unable to load pinned messages");
+    }
+    renderPinnedMessages(data.messages);
+  } catch (error) {
+    if (error.name === "AbortError") return;
+    console.error(error);
+    list.innerHTML = `
+      <div class="pinned-messages-empty is-error">
+        <h3>Pinned messages could not be loaded</h3>
+        <p>Please close this window and try again.</p>
+      </div>
+    `;
+  }
+}
+
+function openPinnedMessagesModal() {
+  if (!currentConversation) {
+    showToast("Select a conversation first", 3000, "error");
+    return;
+  }
+
+  const modal = document.getElementById("pinnedMessagesModal");
+  if (!modal) return;
+
+  pinnedModalPreviousFocus = document.activeElement;
+  hideMessageActions();
+  const chatDropdown = document.getElementById("chatMenuDropdown");
+  if (chatDropdown) chatDropdown.style.display = "none";
+
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document
+    .getElementById("pinnedMessagesBtn")
+    ?.setAttribute("aria-expanded", "true");
+  document.body.classList.add("pinned-modal-open");
+  document.getElementById("closePinnedMessagesBtn")?.focus();
+  loadPinnedMessages();
+}
+
+function closePinnedMessagesModal() {
+  const modal = document.getElementById("pinnedMessagesModal");
+  if (!modal || !modal.classList.contains("is-open")) return;
+
+  pinnedMessagesRequestController?.abort();
+  pinnedMessagesRequestController = null;
+  closePinnedMessageMenus();
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document
+    .getElementById("pinnedMessagesBtn")
+    ?.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("pinned-modal-open");
+  pinnedModalPreviousFocus?.focus?.();
+  pinnedModalPreviousFocus = null;
+}
+
+async function seePinnedMessageInChat(messageId) {
+  closePinnedMessagesModal();
+  hideMembersPanel();
+
+  const searchInput = document.getElementById("chatSearchInput");
+  if (searchInput && searchInput.value) {
+    searchInput.value = "";
+    searchMessages("");
+  }
+
+  let target = document.querySelector(
+    `.message-item[data-message-id="${CSS.escape(String(messageId))}"]`,
+  );
+  let attempts = 0;
+  stopMessageRefresh();
+
+  try {
+    while (!target && hasMoreMessages && attempts < 50) {
+      const loaded = await loadMoreMessages();
+      if (!loaded) break;
+      attempts += 1;
+      target = document.querySelector(
+        `.message-item[data-message-id="${CSS.escape(String(messageId))}"]`,
+      );
+    }
+  } finally {
+    startMessageRefresh();
+  }
+
+  if (!target) {
+    showToast("This message is no longer available in your chat", 3000, "error");
+    return;
+  }
+
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  target.classList.remove("message-focus-highlight");
+  requestAnimationFrame(() => {
+    target.classList.add("message-focus-highlight");
+    target.focus({ preventScroll: true });
+  });
+  setTimeout(() => target.classList.remove("message-focus-highlight"), 1600);
 }
 
 //
@@ -793,9 +1068,6 @@ function loadMoreMessages() {
 //
 
 function syncConversationMenuState(item) {
-  const muteBtn = document.querySelector(
-    '.chat-menu-dropdown button[data-action="mute"]',
-  );
   const archiveBtn = document.querySelector(
     '.chat-menu-dropdown button[data-action="archive"]',
   );
@@ -803,12 +1075,33 @@ function syncConversationMenuState(item) {
   const muted = item?.dataset.muted === "1";
   const archived = item?.dataset.archived === "1";
 
-  if (muteBtn) muteBtn.textContent = muted ? "Unmute" : "Mute";
+  syncMuteButton(muted);
   if (archiveBtn) archiveBtn.textContent = archived ? "Unarchive" : "Archive";
+}
+
+function syncMuteButton(muted) {
+  const muteBtn = document.getElementById("chatMuteBtn");
+  if (!muteBtn) return;
+
+  const label = muted ? "Unmute conversation" : "Mute conversation";
+  const icon = muteBtn.querySelector("img");
+  if (icon) {
+    icon.src = muted
+      ? "components/icons/bell-off.png"
+      : "components/icons/bell.png";
+  }
+  muteBtn.classList.toggle("is-muted", muted);
+  muteBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+  muteBtn.setAttribute("aria-label", label);
+  muteBtn.setAttribute("title", label);
+
+  const accessibleLabel = muteBtn.querySelector(".sr-only");
+  if (accessibleLabel) accessibleLabel.textContent = label;
 }
 
 function loadConversation(type, id) {
   // Hide members panel if open
+  closePinnedMessagesModal();
   hideMembersPanel();
   cancelReply();
 
@@ -1007,6 +1300,7 @@ function sendMessage() {
             is_pinned: 0,
             edited_at: null,
             can_edit: 1,
+            can_pin: 1,
             is_self: true,
           });
         }
@@ -1195,6 +1489,45 @@ document.addEventListener("DOMContentLoaded", function () {
     chatMenuBtn.addEventListener("click", toggleChatMenu);
   }
 
+  document.getElementById("chatMuteBtn")?.addEventListener("click", toggleMute);
+  document
+    .getElementById("pinnedMessagesBtn")
+    ?.addEventListener("click", openPinnedMessagesModal);
+  document
+    .getElementById("closePinnedMessagesBtn")
+    ?.addEventListener("click", closePinnedMessagesModal);
+
+  const pinnedModal = document.getElementById("pinnedMessagesModal");
+  pinnedModal?.addEventListener("click", function (event) {
+    if (event.target === pinnedModal) closePinnedMessagesModal();
+  });
+
+  document
+    .getElementById("pinnedMessagesList")
+    ?.addEventListener("click", function (event) {
+      const moreButton = event.target.closest(".pinned-message-more");
+      if (moreButton) {
+        event.stopPropagation();
+        const item = moreButton.closest(".pinned-message-item");
+        const willOpen = !item.classList.contains("menu-open");
+        closePinnedMessageMenus(item);
+        item.classList.toggle("menu-open", willOpen);
+        moreButton.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        return;
+      }
+
+      const actionButton = event.target.closest("[data-pinned-action]");
+      if (!actionButton) return;
+
+      event.stopPropagation();
+      const messageId = actionButton.dataset.msgId;
+      if (actionButton.dataset.pinnedAction === "see") {
+        seePinnedMessageInChat(messageId);
+      } else if (actionButton.dataset.pinnedAction === "unpin") {
+        togglePinMessage(messageId);
+      }
+    });
+
   // Chat search input events
 
   const chatSearchInput = document.getElementById("chatSearchInput");
@@ -1230,9 +1563,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         switch (action) {
-          case "mute":
-            toggleMute();
-            break;
           case "leave":
             leaveChannel();
             break;
@@ -1655,6 +1985,7 @@ function refreshMessages() {
           existing.edited_at !== incoming.edited_at ||
           Number(existing.is_pinned) !== Number(incoming.is_pinned) ||
           Number(existing.can_edit) !== Number(incoming.can_edit) ||
+          Number(existing.can_pin) !== Number(incoming.can_pin) ||
           Number(existing.archived) !== Number(incoming.archived) ||
           Number(existing.is_read) !== Number(incoming.is_read) ||
           Number(existing.read_count) !== Number(incoming.read_count) ||
@@ -1729,6 +2060,10 @@ function toggleChatMenu(event) {
 
 // Close dropdown when clicking outside
 document.addEventListener("click", function (e) {
+  if (!e.target.closest(".pinned-message-action")) {
+    closePinnedMessageMenus();
+  }
+
   const wrapper = document.querySelector(".chat-menu-wrapper");
   const dropdown = document.getElementById("chatMenuDropdown");
   if (!wrapper || !dropdown) return;
@@ -1740,6 +2075,10 @@ document.addEventListener("click", function (e) {
 // Close dropdown on escape key
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
+    if (isPinnedMessagesModalOpen()) {
+      closePinnedMessagesModal();
+      return;
+    }
     const dropdown = document.getElementById("chatMenuDropdown");
     if (dropdown) dropdown.style.display = "none";
   }
@@ -1896,14 +2235,7 @@ function toggleMute() {
     .then((data) => {
       if (data.success) {
         showToast(data.message, 3000, "success");
-
-        // Update dropdown button
-        const muteBtn = document.querySelector(
-          '.chat-menu-dropdown button[data-action="mute"]',
-        );
-        if (muteBtn) {
-          muteBtn.textContent = data.muted ? "Unmute" : "Mute";
-        }
+        syncMuteButton(Boolean(data.muted));
 
         // Update the sidebar item
         const selector =
@@ -2221,6 +2553,7 @@ function loadChannelMembers(conversationId) {
         );
         const isCurrentUser = member.is_current_user;
         const isCreator = member.role === "owner";
+        const isModerator = member.role === "admin";
         const isMutedByAdmin = member.is_muted_by_admin === 1;
         const muteButtonText = isMutedByAdmin ? "Unmute" : "Mute";
         const mutedClass = isMutedByAdmin ? "muted-member" : "";
@@ -2233,9 +2566,14 @@ function loadChannelMembers(conversationId) {
         // Build "Added by" text
         let addedByText = "";
         if (isCreator) {
-          addedByText = `<span class="creator-text">Group creator : ${safeEmail}</span>`;
+          addedByText = `<span class="creator-text">Group creator • ${safeEmail}</span>`;
+        } else if (isModerator) {
+          const moderatorEmail = safeEmail
+            ? `@${safeEmail.replace(/^@/, "")}`
+            : "";
+          addedByText = `Moderator • ${moderatorEmail}`;
         } else {
-          addedByText = `Added by ${safeAdderName} : ${safeEmail}`;
+          addedByText = `Added by ${safeAdderName} • ${safeEmail}`;
         }
 
         // Determine dropdown actions based on role and current user

@@ -414,14 +414,20 @@ include 'header.php';
                 <!-- Chat Header -->
                 <div class="chat-header">
                     <div class="chat-header-top">
+                        <button class="chat-header-icon-btn" id="chatMuteBtn" type="button" title="Mute conversation" aria-label="Mute conversation" aria-pressed="false">
+                            <img src="components/icons/bell.png" alt="" aria-hidden="true">
+                            <span class="sr-only">Mute conversation</span>
+                        </button>
+                        <button class="chat-header-icon-btn" id="pinnedMessagesBtn" type="button" title="View pinned messages" aria-label="View pinned messages" aria-haspopup="dialog" aria-controls="pinnedMessagesModal" aria-expanded="false">
+                            <img src="components/icons/pin.png" alt="" aria-hidden="true">
+                        </button>
                         <div class="chat-menu-wrapper">
-                            <button class="chat-menu-btn" id="chatMenuBtn" title="More options">
+                            <button class="chat-menu-btn" id="chatMenuBtn" type="button" title="More options">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                             <div class="chat-menu-dropdown" id="chatMenuDropdown" style="display: none;">
                                 <!-- Only show Members List for channels -->
                                 <button data-action="add-people" id="membersListBtn" style="display: none;">Members List</button>
-                                <button data-action="mute">Mute</button>
                                 <button data-action="archive">Archive</button>
                                 <button data-action="leave">Leave</button>
                             </div>
@@ -508,6 +514,8 @@ include 'header.php';
             </div>
         </div>
     </div>
+
+    <?php include __DIR__ . '/modals/pinned_messages.php'; ?>
 
     <script src="message.js"></script>
     <script>

@@ -23,14 +23,16 @@ if (!$conversation_id) {
 }
 
 // Verify user is a member
-$check = $conn->prepare("SELECT id FROM chat_conversation_members WHERE conversation_id = ? AND user_id = ? AND left_at IS NULL");
+$check = $conn->prepare("SELECT id, member_role FROM chat_conversation_members WHERE conversation_id = ? AND user_id = ? AND left_at IS NULL");
 $check->bind_param("ii", $conversation_id, $user_id);
 $check->execute();
-if ($check->get_result()->num_rows === 0) {
+$member = $check->get_result()->fetch_assoc();
+if (!$member) {
     echo json_encode(['error' => 'Access denied']);
     exit;
 }
 $check->close();
+$canModeratePins = in_array($member['member_role'], ['owner', 'admin'], true);
 
 // Build query with correct read status logic
 $sql = "SELECT 
@@ -110,6 +112,11 @@ while ($row = $result->fetch_assoc()) {
             : $row['sender_name'] . ' has unsent a message';
         $row['can_edit'] = 0;
     }
+    $row['can_pin'] = (
+        (int) $row['archived'] === 0
+        && $row['message_type'] === 'text'
+        && ((int) $row['sender_id'] === (int) $user_id || $canModeratePins)
+    ) ? 1 : 0;
     $messages[] = $row;
 }
 $stmt->close();

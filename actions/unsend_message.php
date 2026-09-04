@@ -44,7 +44,7 @@ if (!$message) {
 
 $updateStmt = $conn->prepare("
     UPDATE chat_messages
-    SET archived = 1, archived_at = NOW()
+    SET archived = 1, archived_at = NOW(), is_pinned = 0
     WHERE id = ? AND sender_id = ? AND archived = 0
 ");
 $updateStmt->bind_param('ii', $message_id, $user_id);
@@ -73,6 +73,7 @@ echo json_encode([
         'sender_name' => $senderName,
         'archived' => 1,
         'archived_at' => date('Y-m-d H:i:s'),
+        'is_pinned' => 0,
         'can_edit' => 0,
         'reactions' => []
     ]

@@ -907,19 +907,20 @@ body.sidebar-open {
   font-weight: 600;
   background-color: #fff;
   color: #494949d3;
-  transition: ease 0.2s;
+  transition: transform ease 0.2s;
   font-family: "Inter", sans-serif;
 }
 
 .joinBtn:hover {
-  padding: 0.4rem 1.2rem;
+  transform: scale(1.04);
 }
 
-.joinBtn img {
-  width: 2rem;
-  height: 2rem;
+.joinBtn span {
+  padding: 4px 8px;
+  font-size: 1.2rem;
   background-color: #494949c9;
   padding: 0.3rem;
+  color: #ffff;
   border-radius: 4px;
 }
 
