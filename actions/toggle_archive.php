@@ -17,8 +17,16 @@ if (!$conversation_id) {
     exit;
 }
 
-// Check if user is a member
-$check = $conn->prepare("SELECT id, is_archived FROM chat_conversation_members WHERE conversation_id = ? AND user_id = ? AND left_at IS NULL");
+// Check if the conversation is active and the user is still a member.
+$check = $conn->prepare("
+    SELECT cm.id, cm.is_archived
+    FROM chat_conversation_members cm
+    JOIN chat_conversations c ON c.id = cm.conversation_id
+    WHERE cm.conversation_id = ?
+      AND cm.user_id = ?
+      AND cm.left_at IS NULL
+      AND c.archived = 0
+");
 $check->bind_param("ii", $conversation_id, $user_id);
 $check->execute();
 $member = $check->get_result()->fetch_assoc();

@@ -29,6 +29,8 @@ $channelStmt = $conn->prepare("
         c.slug, 
         c.description,
         c.category,
+        c.visibility,
+        cm.member_role,
         cm.is_archived,
         cm.is_muted,
         (
@@ -270,6 +272,7 @@ include 'header.php';
                         <span class="filter-label">Archived</span>
                     </button>
                 </div>
+                <!-- Search -->
                 <div class="sidebar-search">
                     <i class="fas fa-search"></i>
                     <input type="text" id="sidebarSearchInput" placeholder="Search Chats, Channels" oninput="filterSidebar(this.value)">
@@ -278,16 +281,16 @@ include 'header.php';
                 <div class="sidebar-actions">
                     <?php if (isset($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'])): ?>
                         <button class="btn-new-channel" onclick="showCreateChannelModal()">
-                            <i class="fa-solid fa-plus"></i>
+                            <!-- <i class="fa-solid fa-plus"></i> -->
                             Add Channels
                         </button>
                         <button class="btn-new-message" onclick="showAddMessageModal()">
-                            <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon">
+                            <!-- <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon"> -->
                             Add Contacts
                         </button>
                     <?php else: ?>
                         <button class="btn-new-message full-width" onclick="showAddMessageModal()">
-                            <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon">
+                            <!-- <img src="components\icons\message-circle-more.png" alt="" class="newMessage-icon"> -->
                             Add Contacts
                         </button>
                     <?php endif; ?>
@@ -334,8 +337,10 @@ include 'header.php';
                                 <?= $isArchived ? 'hidden' : '' ?>
                                 data-type="channel"
                                 data-id="<?= $channel['id'] ?>"
-                                data-description="<?= htmlspecialchars($channel['description'] ?? 'Public') ?>"
+                                data-description="<?= htmlspecialchars($channel['description'] ?? '') ?>"
                                 data-category="<?= htmlspecialchars($channel['category'] ?? 'general') ?>"
+                                data-visibility="<?= htmlspecialchars($channel['visibility'] ?? 'public') ?>"
+                                data-member-role="<?= htmlspecialchars($channel['member_role'] ?? 'member') ?>"
                                 data-archived="<?= $channel['is_archived'] ?>"
                                 data-muted="<?= $isMuted ? '1' : '0' ?>"
                                 data-unread="<?= $unreadCount ?>">
@@ -520,7 +525,9 @@ include 'header.php';
                                 <!-- Only show Members List for channels -->
                                 <button data-action="add-people" id="membersListBtn" style="display: none;">Members List</button>
                                 <button data-action="archive">Archive</button>
-                                <button data-action="leave">Leave</button>
+                                <button data-action="leave" id="leaveChannelBtn" style="display: none;">Leave</button>
+                                <button data-action="delete-dm" id="deleteConversationBtn" style="display: none;">Delete</button>
+                                <button data-action="delete-channel" id="deleteChannelBtn" style="display: none;">Delete Channel</button>
                             </div>
                         </div>
                     </div>

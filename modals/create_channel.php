@@ -42,10 +42,10 @@ if (!isset($_SESSION['user_id'])) {
                 </select>
             </div>
 
-            <!-- Description -->
+            <!-- Short Description -->
             <div class="form-group">
-                <label for="channelDescription">Description</label>
-                <textarea id="channelDescription" class="channel-description-input" placeholder="Write your channel description here"></textarea>
+                <label for="channelDescription">Short Description</label>
+                <textarea id="channelDescription" class="channel-description-input" placeholder="Write a short channel description"></textarea>
             </div>
 
             <!-- Guidance text -->

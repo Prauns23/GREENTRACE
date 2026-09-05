@@ -253,7 +253,7 @@ body {
   border-radius: 999px;
   background: transparent;
   color: #737373;
-  font: 500 1rem "Inter", sans-serif;
+  font: 500 0.9rem "Inter", sans-serif;
   cursor: pointer;
   transition: color 0.2s ease;
 }
@@ -1010,6 +1010,10 @@ body {
   border-bottom: 1px solid #f1f5f9;
 }
 
+.chat-menu-dropdown #deleteConversationBtn {
+  border-bottom: none;
+}
+
 .chat-menu-dropdown button:active {
   background: #edf2f7;
 }
@@ -1072,6 +1076,13 @@ body {
   font-size: 0.8rem;
   font-weight: 500;
   display: inline-block;
+}
+
+.badge-channel-description {
+  max-width: min(260px, 30vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .badge-volunteer {

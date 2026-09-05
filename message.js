@@ -1130,12 +1130,27 @@ function syncConversationMenuState(item) {
   const archiveBtn = document.querySelector(
     '.chat-menu-dropdown button[data-action="archive"]',
   );
+  const leaveChannelBtn = document.getElementById("leaveChannelBtn");
+  const deleteConversationBtn = document.getElementById("deleteConversationBtn");
+  const deleteChannelBtn = document.getElementById("deleteChannelBtn");
 
   const muted = item?.dataset.muted === "1";
   const archived = item?.dataset.archived === "1";
+  const conversationType = item?.dataset.type || currentConversation?.type;
 
   syncMuteButton(muted);
   if (archiveBtn) archiveBtn.textContent = archived ? "Unarchive" : "Archive";
+  if (leaveChannelBtn) {
+    leaveChannelBtn.style.display = conversationType === "channel" ? "block" : "none";
+  }
+  if (deleteConversationBtn) {
+    deleteConversationBtn.style.display = conversationType === "dm" ? "block" : "none";
+  }
+  if (deleteChannelBtn) {
+    const canDeleteChannel =
+      conversationType === "channel" && currentUserRoleInConversation === "owner";
+    deleteChannelBtn.style.display = canDeleteChannel ? "block" : "none";
+  }
 }
 
 function syncMuteButton(muted) {
@@ -1202,6 +1217,9 @@ function loadConversation(type, id) {
   // Get the clicked item to read data attributes
   const selector = type === "channel" ? ".channel-item" : ".dm-item";
   const item = document.querySelector(`${selector}[data-id="${id}"]`);
+  if (type === "channel") {
+    currentUserRoleInConversation = item?.dataset.memberRole || "member";
+  }
   syncConversationMenuState(item);
 
   if (type === "channel") {
@@ -1209,24 +1227,27 @@ function loadConversation(type, id) {
     const displayName = item
       ? item.querySelector(".channel-name").textContent
       : "Channel";
-    const description = item ? item.dataset.description || "Public" : "Public";
-    const category = item ? item.dataset.category || "" : "";
+    const description = item ? item.dataset.description?.trim() || "" : "";
+    const category = item ? item.dataset.category || "general" : "general";
+    const visibility = item ? item.dataset.visibility || "public" : "public";
 
     chatTitle.textContent = displayName;
-    chatAddress.textContent = description;
+    chatAddress.textContent = `${category.toLowerCase()} · ${visibility.toLowerCase()}`;
     chatAvatarIcon.textContent = "group";
 
-    if (category) {
-      chatRoleBadge.textContent =
-        category.charAt(0).toUpperCase() + category.slice(1);
-      chatRoleBadge.className = "role-badge badge-category";
+    if (description) {
+      chatRoleBadge.textContent = description;
+      chatRoleBadge.title = description;
+      chatRoleBadge.className = "role-badge badge-channel-description";
       chatRoleBadge.style.display = "inline-block";
     } else {
+      chatRoleBadge.removeAttribute("title");
       chatRoleBadge.style.display = "none";
     }
 
   } else {
     // DM
+    chatRoleBadge.removeAttribute("title");
     if (item) {
       const name = item.querySelector(".dm-name").textContent;
       const address = item.dataset.address || "";
@@ -1265,22 +1286,8 @@ function loadConversation(type, id) {
     chatAvatarIcon.textContent = "person";
   }
 
-  const leaveBtn = document.querySelector(
-    '.chat-menu-dropdown button[data-action="leave"]',
-  );
-
-  if (type === "channel") {
-    if (membersListBtn) membersListBtn.style.display = "block";
-    if (leaveBtn) {
-      leaveBtn.textContent = "Leave";
-      leaveBtn.dataset.action = "leave";
-    }
-  } else {
-    if (membersListBtn) membersListBtn.style.display = "none";
-    if (leaveBtn) {
-      leaveBtn.textContent = "Delete";
-      leaveBtn.dataset.action = "delete";
-    }
+  if (membersListBtn) {
+    membersListBtn.style.display = type === "channel" ? "block" : "none";
   }
 
   // Load first batch
@@ -1632,8 +1639,11 @@ document.addEventListener("DOMContentLoaded", function () {
           case "archive":
             toggleArchive();
             break;
-          case "delete":
+          case "delete-dm":
             deleteConversation();
+            break;
+          case "delete-channel":
+            deleteChannel();
             break;
           case "add-people":
             if (currentConversation && currentConversation.type === "channel") {
@@ -1717,6 +1727,29 @@ function handleChatSocketEvent(event) {
   }
 
   if (event.type === "conversation.updated") {
+    if (event.reason === "channel_deleted") {
+      const deletedConversationId = String(event.conversation_id || "");
+      document
+        .querySelector(`.channel-item[data-id="${deletedConversationId}"]`)
+        ?.remove();
+
+      if (
+        currentConversation?.type === "channel" &&
+        String(currentConversation.id) === deletedConversationId
+      ) {
+        document.querySelector(".chat-container")?.classList.remove("mobile-chat-open");
+        updateChatVisibility(false);
+        currentConversation = null;
+        currentUserRoleInConversation = null;
+        stopMessageRefresh();
+        showToast("This channel was deleted by its owner", 3000, "info");
+      }
+
+      filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
+      scheduleRealtimeSidebarRefresh();
+      return;
+    }
+
     scheduleRealtimeSidebarRefresh();
     scheduleRealtimeMessageRefresh(event);
     return;
@@ -1828,6 +1861,11 @@ function updateChannelList(channels) {
     const id = item.dataset.id;
     const channelData = channels.find((c) => c.id == id);
     if (channelData) {
+      item.dataset.description = channelData.description || "";
+      item.dataset.category = channelData.category || "general";
+      item.dataset.visibility = channelData.visibility || "public";
+      item.dataset.memberRole = channelData.member_role || "member";
+
       // Update last message
       const lastMsgSpan = item.querySelector(".channel-last-msg");
       const timeSpan = item.querySelector(".channel-time");
@@ -2631,6 +2669,45 @@ function deleteConversation() {
     .catch((err) => console.error(err));
 }
 
+function deleteChannel() {
+  if (!currentConversation || currentConversation.type !== "channel") return;
+  if (currentUserRoleInConversation !== "owner") {
+    showToast("Only the channel owner can delete this channel", 3000, "error");
+    return;
+  }
+  if (!confirm("Delete this channel for every member?")) return;
+
+  const conversation = { ...currentConversation };
+  const formData = new URLSearchParams();
+  formData.append("conversation_id", conversation.id);
+
+  fetch("actions/delete_channel.php", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (!data.success) {
+        showToast(data.error || "Unable to delete channel", 3000, "error");
+        return;
+      }
+
+      showToast(data.message, 3000, "success");
+      document.querySelector(`.channel-item[data-id="${conversation.id}"]`)?.remove();
+      document.querySelector(".chat-container")?.classList.remove("mobile-chat-open");
+      updateChatVisibility(false);
+      currentConversation = null;
+      currentUserRoleInConversation = null;
+      stopMessageRefresh();
+      filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
+      fetchSidebarUpdates();
+      if (typeof window.updateChatBadgeCount === "function") {
+        window.updateChatBadgeCount();
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
 //
 // 16. Members Panel
 //
@@ -2769,16 +2846,22 @@ function loadChannelMembers(conversationId) {
         membersCount.textContent = data.total + " USERS";
       }
 
-      // ----- Update current user's mute state and role -----
-      const currentUserData = data.members.find((m) => m.is_current_user);
-      if (currentUserData) {
-        currentUserMuted = currentUserData.is_muted_by_admin === 1;
-        updateInputMuteState();
-      }
+      // ----- Update current user's mute state, role, and menu permissions -----
+      const isCurrentChannel =
+        currentConversation?.type === "channel" &&
+        String(currentConversation.id) === String(conversationId);
+      if (isCurrentChannel) {
+        const currentUserData = data.members.find((m) => m.is_current_user);
+        if (currentUserData) {
+          currentUserMuted = currentUserData.is_muted_by_admin === 1;
+          updateInputMuteState();
+        }
 
-      // Set the global role for permission checks
-      if (data.current_user_role) {
-        currentUserRoleInConversation = data.current_user_role;
+        currentUserRoleInConversation = data.current_user_role || "member";
+        const activeChannelItem = document.querySelector(
+          `.channel-item[data-id="${conversationId}"]`,
+        );
+        syncConversationMenuState(activeChannelItem);
       }
 
       // ----- Render members -----

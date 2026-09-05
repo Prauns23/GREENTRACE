@@ -23,6 +23,10 @@ $channelQuery = "
     SELECT 
         c.id, 
         c.name,
+        c.description,
+        c.category,
+        c.visibility,
+        cm.member_role,
         cm.is_archived,
         cm.is_muted,
         (
