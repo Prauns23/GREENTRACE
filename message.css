@@ -210,37 +210,61 @@ body {
 }
 
 .conversation-filter {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  padding: 2px;
+  border: 1px solid #b9b9b9;
+  border-radius: 25px;
+  background: #eeeeee93;
+  isolation: isolate;
+}
+
+.conversation-filter::before {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  box-sizing: border-box;
+  content: "";
+  border: 1px solid #81c784;
+  border-radius: 999px;
+  background: #d8efd9;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.conversation-filter[data-active="archived"]::before {
+  transform: translateX(100%);
 }
 
 .conversation-filter-btn {
+  position: relative;
+  z-index: 1;
   min-width: 0;
-  height: 34px;
+  height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   padding: 0 14px;
-  border: 1px solid #cbd5e1;
+  border: 0;
   border-radius: 999px;
-  background: #fff;
-  color: #64748b;
-  font: 500 0.82rem "Inter", sans-serif;
+  background: transparent;
+  color: #737373;
+  font: 500 1rem "Inter", sans-serif;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .conversation-filter-btn:hover {
-  border-color: #81c784;
   color: #2e7d32;
 }
 
 .conversation-filter-btn.active {
-  border-color: #81c784;
-  background: #dcf5dd;
   color: #2e7d32;
+  font-weight: 600;
 }
 
 .conversation-filter-btn:focus-visible {
@@ -319,6 +343,21 @@ body {
 .sidebar-section {
   padding-top: 0;
   margin-top: 0;
+  transition: opacity 0.14s ease;
+}
+
+.chat-sidebar.is-filter-fading > .sidebar-section {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chat-sidebar.is-filter-fading {
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.chat-sidebar.is-filter-fading::-webkit-scrollbar {
+  display: none;
 }
 
 .channel-item[hidden],
@@ -834,6 +873,11 @@ body {
   .skeleton-shape::after,
   .chat-skeleton-bubble::after {
     animation: none;
+  }
+
+  .conversation-filter::before,
+  .sidebar-section {
+    transition: none;
   }
 }
 

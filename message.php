@@ -262,7 +262,7 @@ include 'header.php';
 
             <!-- Search Bar -->
             <div class="sidebar-search-container">
-                <div class="conversation-filter" role="tablist" aria-label="Conversation filter">
+                <div class="conversation-filter" role="tablist" aria-label="Conversation filter" data-active="chats">
                     <button type="button" class="conversation-filter-btn active" data-filter="chats" role="tab" aria-selected="true" aria-label="Show chats" title="Chats">
                         <span class="filter-label">Chats</span>
                     </button>

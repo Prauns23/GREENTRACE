@@ -35,6 +35,8 @@ let currentMessageActionTarget = null;
 let currentUserRoleInConversation = null;
 let editingMessageId = null;
 let activeConversationFilter = "chats";
+let conversationFilterTransitionTimer = null;
+let conversationFilterTransitionId = 0;
 let pinnedMessagesRequestController = null;
 let pinnedModalPreviousFocus = null;
 let chatSocket = null;
@@ -2091,15 +2093,48 @@ function markMessageAsRead() {
 //
 
 function setConversationFilter(filter) {
-  activeConversationFilter = filter === "archived" ? "archived" : "chats";
+  const nextFilter = filter === "archived" ? "archived" : "chats";
+  const filterControl = document.querySelector(".conversation-filter");
+  const sidebar = document.querySelector(".chat-sidebar");
+  const visualFilter = filterControl?.dataset.active || activeConversationFilter;
+
+  if (nextFilter === visualFilter) return;
+
+  if (filterControl) filterControl.dataset.active = nextFilter;
 
   document.querySelectorAll(".conversation-filter-btn").forEach((button) => {
-    const isActive = button.dataset.filter === activeConversationFilter;
+    const isActive = button.dataset.filter === nextFilter;
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-selected", isActive ? "true" : "false");
   });
 
-  filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
+  const applyFilter = () => {
+    activeConversationFilter = nextFilter;
+    filterSidebar(document.getElementById("sidebarSearchInput")?.value || "");
+  };
+
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (!sidebar || reduceMotion) {
+    clearTimeout(conversationFilterTransitionTimer);
+    conversationFilterTransitionTimer = null;
+    sidebar?.classList.remove("is-filter-fading");
+    applyFilter();
+    return;
+  }
+
+  const transitionId = ++conversationFilterTransitionId;
+  clearTimeout(conversationFilterTransitionTimer);
+  sidebar.classList.add("is-filter-fading");
+
+  conversationFilterTransitionTimer = setTimeout(() => {
+    if (transitionId !== conversationFilterTransitionId) return;
+
+    applyFilter();
+    requestAnimationFrame(() => {
+      sidebar.classList.remove("is-filter-fading");
+    });
+    conversationFilterTransitionTimer = null;
+  }, 140);
 }
 
 function filterSidebar(term) {
