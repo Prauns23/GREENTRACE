@@ -50,6 +50,7 @@
 }
 
 /* Filter and bulk-action controls */
+
 .filter-buttons {
   display: flex;
   justify-content: flex-start;

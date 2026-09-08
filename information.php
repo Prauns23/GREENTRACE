@@ -88,8 +88,15 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
-    </div>
 
+        <!-- Let's introduce the watering page here; we can reuse the tree species for each trees that need to be watered or to choose from -->
+
+        <!-- Quiz part -->
+
+        
+
+    </div>
+    <!-- We shall create separated script file for this page since this will have a larger scope -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');

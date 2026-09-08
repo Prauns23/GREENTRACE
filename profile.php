@@ -196,6 +196,7 @@ include 'header.php';
             </div>
         <?php endif; ?>
     </div>
+    <!-- This is where we put the Achievements/Badges for every user which will be poputed by scripts -->
 </div>
 
 <script>
