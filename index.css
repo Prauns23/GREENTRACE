@@ -183,7 +183,7 @@ body.modal-scroll-locked {
 #floatingAddActivityContainer .floating-iframe {
   width: 750px;
   height: 100%;
-  max-height: 765px;
+  max-height: 900px;
   border-radius: 24px;
 }
 
@@ -225,8 +225,8 @@ body.modal-scroll-locked {
 
 #floatingSpeciesEditorContainer .floating-iframe {
   width: 750px;
-  height: 90xh;
-  max-height: 680px;
+  height: 780px;
+  max-height: 100%;
   border-radius: 24px;
   font-family: "Inter", sans-serif;
 }

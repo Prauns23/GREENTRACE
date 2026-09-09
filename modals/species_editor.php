@@ -88,7 +88,7 @@ if ($id > 0) {
 
             <div class="form-group">
                 <label for="species-importance">Importance <span class="required">*</span></label>
-                <textarea id="species-importance" name="importance" rows="3" maxlength="10000" placeholder="One benefit per line" required><?= htmlspecialchars($species['importance'] ?? '') ?></textarea>
+                <textarea id="species-importance" name="importance" rows="3" maxlength="10000" placeholder="E.g., Boosts urban shade and air quality (Press enter to add another)" required><?= htmlspecialchars($species['importance'] ?? '') ?></textarea>
             </div>
 
             <div class="form-group">
@@ -105,7 +105,7 @@ if ($id > 0) {
         </div>
     </div>
 
-    <script src="../species_editor.js"></script>
+    <script src="species_editor.js"></script>
 </body>
 
 </html>

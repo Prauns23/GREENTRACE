@@ -8,8 +8,64 @@
   const uploadIcon = document.getElementById("upload-icon");
   const uploadArea = document.getElementById("upload-area");
   const errorEl = document.getElementById("form-error");
+  const importanceInput = document.getElementById("species-importance");
 
   if (!form) return;
+
+  function withoutBullets(value) {
+    return value
+      .split(/\r?\n/)
+      .map((line) => line.replace(/^\s*[•*-]\s?/, "").trim())
+      .join("\n")
+      .trim();
+  }
+
+  function withBullets(value) {
+    return withoutBullets(value)
+      .split("\n")
+      .map((line) => (line ? `• ${line}` : ""))
+      .join("\n");
+  }
+
+  if (importanceInput) {
+    if (importanceInput.value.trim() !== "") {
+      importanceInput.value = withBullets(importanceInput.value);
+    }
+
+    importanceInput.addEventListener("focus", function () {
+      if (this.value.trim() === "") {
+        this.value = "• ";
+        this.setSelectionRange(this.value.length, this.value.length);
+      }
+    });
+
+    importanceInput.addEventListener("blur", function () {
+      if (withoutBullets(this.value) === "") {
+        this.value = "";
+      }
+    });
+
+    importanceInput.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter") return;
+
+      const start = this.selectionStart;
+      const lineStart = this.value.lastIndexOf("\n", start - 1) + 1;
+      const lineEnd = this.value.indexOf("\n", start);
+      const currentLine = this.value.slice(
+        lineStart,
+        lineEnd === -1 ? this.value.length : lineEnd,
+      );
+
+      if (currentLine.trim() === "•") {
+        event.preventDefault();
+        this.setRangeText("", lineStart, lineEnd === -1 ? this.value.length : lineEnd + 1, "start");
+        return;
+      }
+
+      event.preventDefault();
+      this.setRangeText("\n• ", start, this.selectionEnd, "end");
+    });
+  }
 
   // ----- File selection & preview -----
   function selectFile(file) {
@@ -77,6 +133,9 @@
 
     try {
       const data = new FormData(this);
+      if (importanceInput) {
+        data.set("importance", withoutBullets(importanceInput.value));
+      }
       const response = await fetch(this.action, {
         method: "POST",
         body: data,

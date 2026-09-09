@@ -41,7 +41,7 @@ try {
         $scientific = speciesText('scientific_name', 150);
         $category = speciesText('category', 20);
         $description = speciesText('description', 10000);
-        $importance = speciesText('importance', 10000);
+        $importance = preg_replace('/^\s*•\s?/m', '', speciesText('importance', 10000));
         $fact = speciesText('fun_fact', 2000, false);
         if (!in_array($category, ['native', 'introduced'], true)) speciesReply(422, ['error' => 'Choose Native or Introduced.']);
         if (isset($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
