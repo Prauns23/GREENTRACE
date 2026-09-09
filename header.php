@@ -154,6 +154,16 @@ if (isset($_SESSION['user_id'])) {
         <iframe src="<?php echo $basePath; ?>modals/add_channel_members.php" class="floating-iframe" id="addChannelMembersFrame"></iframe>
     </div>
 
+    <!-- Species Editor Modal -->
+    <div class="floating-container" id="floatingSpeciesEditorContainer">
+        <iframe src="<?php echo $basePath; ?>modals/species_editor.php" class="floating-iframe" id="speciesEditorFrame"></iframe>
+    </div>
+
+    <!-- Species Confirm Modal -->
+    <div class="floating-container" id="floatingSpeciesConfirmContainer">
+        <iframe src="<?php echo $basePath; ?>modals/species_confirm.php" class="floating-iframe" id="speciesConfirmFrame"></iframe>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">

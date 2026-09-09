@@ -452,6 +452,36 @@ function showAddChannelMembersModal(conversationId) {
     }
 }
 
+function showSpeciesEditor(speciesId = null) {
+    closeAllFloating();
+    const container = document.getElementById('floatingSpeciesEditorContainer');
+    const iframe = document.getElementById('speciesEditorFrame');
+    let url = (window.basePath || '') + 'modals/species_editor.php';
+    if (speciesId) {
+        url += '?id=' + speciesId;
+    }
+    iframe.src = url;
+    container.classList.add('active');
+    overlay.classList.add('active');
+    body.classList.add('login-active');
+    activeContainer = container;
+}
+
+function showSpeciesConfirm(speciesId, action) {
+    closeAllFloating();
+    const container = document.getElementById('floatingSpeciesConfirmContainer');
+    const iframe = document.getElementById('speciesConfirmFrame');
+    iframe.src = (window.basePath || '') + 'modals/species_confirm.php?id=' + speciesId + '&action=' + action;
+    container.classList.add('active');
+    overlay.classList.add('active');
+    body.classList.add('login-active');
+    activeContainer = container;
+}
+
+
+
+window.showSpeciesEditor = showSpeciesEditor;
+window.showSpeciesConfirm = showSpeciesConfirm;
 window.showAddChannelMembersModal = showAddChannelMembersModal;
 window.showCreateChannelModal = showCreateChannelModal;
 window.showAddMessageModal = showAddMessageModal;

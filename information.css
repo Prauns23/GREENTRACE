@@ -40,6 +40,18 @@ body {
   margin-bottom: 2rem;
 }
 
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #888888c0;
+  border-radius: 8px;
+  padding: 4px 18px;
+  gap: 12px;
+  flex: 1;
+  max-width: 320px;
+}
+
 .search-bar form {
   display: flex;
   gap: 0.5rem;
@@ -48,7 +60,6 @@ body {
 
 .search-bar input {
   padding: 10px 15px;
-  border-radius: 8px;
   width: 250px;
   font-size: 0.9rem;
 }
@@ -62,7 +73,27 @@ body {
   background: #fff;
   color: #333;
   cursor: pointer;
-  font: 500 14px "Inter", sans-serif;
+  appearance: none;
+  font:
+    500 14px "Inter",
+    sans-serif;
+}
+
+.category-filter {
+  position: relative;
+}
+
+.category-filter::after {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid #7b8794;
+  border-bottom: 1.5px solid #7b8794;
+  content: "";
+  pointer-events: none;
+  transform: translateY(-65%) rotate(45deg);
 }
 
 .visually-hidden {
@@ -153,8 +184,8 @@ body {
 .card-header .category-badge {
   margin-left: auto;
   flex-shrink: 0;
-  padding: 5px 10px;
-  font-size: 10px;
+  padding: 8px 12px;
+  font-size: 0.7rem;
   border-radius: 20px;
   font-weight: 500;
 }
@@ -178,6 +209,10 @@ body {
   min-height: 400px;
   width: 100%;
   grid-column: 1 / -1;
+}
+
+.species-grid > [hidden] {
+  display: none !important;
 }
 
 .no-results h3 {
@@ -230,33 +265,69 @@ body {
 }
 
 .species-status-filter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 2px;
+  border: 1px solid #b9b9b9;
+  border-radius: 25px;
+  background: #eeeeee93;
   margin-left: auto;
+  isolation: isolate;
+}
+
+.species-status-filter::before {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  box-sizing: border-box;
+  content: "";
+  border: 1px solid #81c784;
+  border-radius: 999px;
+  background: #d8efd9;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.species-status-filter[data-active="archived"]::before {
+  transform: translateX(100%);
 }
 
 .species-status-filter a {
+  position: relative;
+  z-index: 1;
   min-width: 96px;
-  padding: 7px 18px;
-  border: 1px solid #bfc3bf;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 0;
   border-radius: 999px;
-  background: #fff;
-  color: #666;
+  background: transparent;
+  color: #737373;
   text-align: center;
   text-decoration: none;
-  font: 500 13px "Inter", sans-serif;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  font:
+    500 13px "Inter",
+    sans-serif;
+  transition: color 0.2s ease;
 }
 
 .species-status-filter a.active {
-  border-color: #83ba81;
-  background: #eef9eb;
   color: #3f7c42;
+  font-weight: 600;
 }
 
 .species-status-filter a:hover {
-  border-color: #3f7c42;
+  color: #2e7d32;
+}
+
+.species-status-filter a:focus-visible {
+  outline: 3px solid rgba(46, 125, 50, 0.2);
+  outline-offset: 2px;
 }
 
 .species-page-status {
@@ -281,7 +352,9 @@ body {
   background: #f8f9f7;
   color: #727772;
   cursor: pointer;
-  font: 500 14px "Inter", sans-serif;
+  font:
+    500 14px "Inter",
+    sans-serif;
 }
 
 .species-add-card i {
@@ -296,25 +369,34 @@ body {
 
 .species-actions {
   position: absolute;
-  right: 12px;
-  top: 12px;
+  right: 10px;
+  top: 10px;
   z-index: 2;
 }
 
 .species-menu-trigger {
-  width: 36px;
-  height: 36px;
+  background: rgba(0, 0, 0, 0.486);
+  color: white;
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
   border-radius: 50%;
-  border: 1px solid #ddd;
-  background: white;
-  color: #3f3f3f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.species-menu-trigger:hover {
+  background: rgba(0, 0, 0, 0.8);
 }
 
 .species-menu {
   position: absolute;
   right: 0;
-  top: 42px;
+  top: 35px;
   width: 125px;
   padding: 5px;
   background: white;
@@ -328,7 +410,9 @@ body {
   width: 100%;
   padding: 10px;
   text-align: left;
-  font: 13px "Inter", sans-serif;
+  font:
+    13px "Inter",
+    sans-serif;
   border: 0;
   border-radius: 4px;
   background: white;
@@ -378,7 +462,9 @@ body.species-modal-open {
 }
 
 .species-dialog h2 {
-  font: 600 25px "Inter", sans-serif;
+  font:
+    600 25px "Inter",
+    sans-serif;
   margin: 0 0 8px;
 }
 
@@ -410,11 +496,13 @@ body.species-modal-open {
 .species-form-body select {
   width: 100%;
   border: 1px solid #bfc3bf;
-  border-radius: 8px;
+  border-radius: 25px;
   padding: 10px 12px;
   color: #3f3f3f;
   background: white;
-  font: 14px "Inter", sans-serif;
+  font:
+    14px "Inter",
+    sans-serif;
 }
 
 .species-form-body textarea {
@@ -499,7 +587,9 @@ body.species-modal-open {
   background: #f3f3f3;
   color: #555;
   cursor: pointer;
-  font: 600 14px "Inter", sans-serif;
+  font:
+    600 14px "Inter",
+    sans-serif;
 }
 
 .species-dialog-footer .species-save {
@@ -536,7 +626,6 @@ body.species-modal-open {
 .species-menu[hidden] {
   display: none !important;
 }
-
 
 @media (max-width: 900px) {
   .information-page .species-grid {
