@@ -190,8 +190,7 @@
                 and collective action.</p>
             <div class="contact-info">
                 <div class="contact-item"><img src="components/icons/location-white.svg" alt="Location"><span>Morong, Bataan, Philippines</span></div>
-                <div class="contact-item"><img src="components/icons/mail.svg" alt="Email"><span>greentraceph@gmail.com</span></div>
-                <div class="contact-item"><img src="components/icons/phone.svg" alt="Phone"><span>+6391 763 67803</span></div>
+                <div class="contact-item"><img src="components/icons/mail.svg" alt="Email"><span>greentrace2026@gmail.com</span></div>
             </div>
         </div>
         <div class="footer-right">

@@ -515,7 +515,7 @@ body.overlay-active .footer {
 
 .page-content {
   padding-top: 40px;
-  padding-bottom: 42px;
+  padding-bottom: 0;
   background-color: #ffff;
 }
 
