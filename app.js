@@ -224,6 +224,7 @@ function showSpeciesDetail(id) {
   closeAllFloating();
   const speciesContainer = document.getElementById("floatingSpeciesContainer");
   const iframe = document.getElementById("speciesFrame");
+  speciesContainer.classList.add("species-detail-active");
   iframe.src = "modals/species_detail.php?id=" + id;
   speciesContainer.classList.add("active");
   overlay.classList.add("active");
@@ -456,6 +457,7 @@ function showSpeciesEditor(speciesId = null) {
     closeAllFloating();
     const container = document.getElementById('floatingSpeciesEditorContainer');
     const iframe = document.getElementById('speciesEditorFrame');
+  document.getElementById('floatingSpeciesContainer')?.classList.remove('species-detail-active');
     let url = (window.basePath || '') + 'modals/species_editor.php';
     if (speciesId) {
         url += '?id=' + speciesId;

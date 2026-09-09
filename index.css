@@ -132,7 +132,7 @@ body.modal-scroll-locked {
 }
 
 #floatingSpeciesContainer .floating-iframe {
-  width: 800px;
+  width: 700px;
   height: 815px;
   border-radius: 16px;
 }
@@ -228,12 +228,14 @@ body.modal-scroll-locked {
   height: 90xh;
   max-height: 680px;
   border-radius: 24px;
+  font-family: "Inter", sans-serif;
 }
 
 #floatingSpeciesConfirmContainer .floating-iframe {
   width: 550px;
   height: 380px;
   border-radius: 24px;
+  font-family: "Inter", sans-serif;
 }
 
 @keyframes slideInRight {

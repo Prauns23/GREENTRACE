@@ -44,9 +44,9 @@ body {
   display: flex;
   align-items: center;
   background: white;
-  border: 1px solid #888888c0;
+  border: 1px solid #bfc3bf;
   border-radius: 8px;
-  padding: 4px 18px;
+  padding: 2.5px 15px;
   gap: 12px;
   flex: 1;
   max-width: 320px;

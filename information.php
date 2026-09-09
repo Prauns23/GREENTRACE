@@ -184,7 +184,8 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
                 });
 
                 const addCard = grid.querySelector('.species-add-card');
-                if (addCard) addCard.hidden = status === 'archived';
+                const hasSearch = document.getElementById('searchInput')?.value.trim() !== '';
+                if (addCard) addCard.hidden = status === 'archived' || hasSearch || visibleCards === 0;
 
                 let emptyState = grid.querySelector('[data-species-empty]');
                 if (!emptyState) {
