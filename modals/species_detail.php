@@ -1,10 +1,11 @@
 <?php
-require_once 'init_session.php';
-require_once 'config.php';
+require_once __DIR__ . '/../init_session.php';
+require_once __DIR__ . '/../config.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-$stmt = $conn->prepare("SELECT * FROM tree_species WHERE id = ?");
+$canManageSpecies = isset($_SESSION['user_id']) && in_array($_SESSION['role'] ?? '', ['admin', 'super_admin'], true);
+$stmt = $conn->prepare('SELECT * FROM tree_species WHERE id = ?' . ($canManageSpecies ? '' : ' AND archived = 0'));
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -32,7 +33,7 @@ if (!$species) {
     <div>
         <?php if (!empty($species['image_url'])): ?>
             <div class="image-container">
-                <img src="<?php echo htmlspecialchars($species['image_url']); ?>" alt="<?php echo htmlspecialchars($species['name']); ?>">
+                <img src="../<?php echo htmlspecialchars(str_replace('\\', '/', $species['image_url'])); ?>" alt="<?php echo htmlspecialchars($species['name']); ?>">
             </div>
         <?php endif; ?>
 

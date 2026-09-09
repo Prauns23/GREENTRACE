@@ -60,6 +60,26 @@ const reportContainer = document.getElementById("floatingReportContainer");
 const logoutContainer = document.getElementById("floatingLogoutContainer");
 
 let activeContainer = null;
+const modalInertElements = new Set();
+
+function lockModalBackground(container) {
+  document.documentElement.classList.add("modal-scroll-locked");
+  body.classList.add("modal-scroll-locked");
+  Array.from(body.children).forEach((element) => {
+    if (element === container || element === overlay || element.tagName === "SCRIPT") return;
+    if (!element.inert) {
+      element.inert = true;
+      modalInertElements.add(element);
+    }
+  });
+}
+
+function unlockModalBackground() {
+  document.documentElement.classList.remove("modal-scroll-locked");
+  body.classList.remove("modal-scroll-locked");
+  modalInertElements.forEach((element) => { element.inert = false; });
+  modalInertElements.clear();
+}
 
 function resetFormFields(iframeId) {
   const iframe = document.getElementById(iframeId);
@@ -134,6 +154,7 @@ function hideFloating() {
   }
   overlay.classList.remove("active");
   body.classList.remove("login-active");
+  unlockModalBackground();
   activeContainer = null;
 }
 
@@ -203,11 +224,12 @@ function showSpeciesDetail(id) {
   closeAllFloating();
   const speciesContainer = document.getElementById("floatingSpeciesContainer");
   const iframe = document.getElementById("speciesFrame");
-  iframe.src = "species_detail.php?id=" + id;
+  iframe.src = "modals/species_detail.php?id=" + id;
   speciesContainer.classList.add("active");
   overlay.classList.add("active");
   body.classList.add("login-active");
   activeContainer = speciesContainer;
+  lockModalBackground(speciesContainer);
 }
 
 function showActivityDetails(activityId) {

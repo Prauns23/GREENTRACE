@@ -3,7 +3,7 @@ require_once 'init_session.php';
 require_once 'config.php';
 
 // Fetch all tree species with the new AR columns
-$stmt = $conn->prepare("SELECT id, name, scientific_name, mature_height, trunk_diameter, canopy_diameter, leaf_color, trunk_color, planting_spacing, image_url FROM tree_species ORDER BY name ASC");
+$stmt = $conn->prepare("SELECT id, name, scientific_name, mature_height, trunk_diameter, canopy_diameter, leaf_color, trunk_color, planting_spacing, image_url FROM tree_species WHERE archived = 0 ORDER BY name ASC");
 $stmt->execute();
 $trees = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();

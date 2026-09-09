@@ -64,6 +64,11 @@ body {
 body.login-active {
   overflow: hidden;
 }
+html.modal-scroll-locked,
+body.modal-scroll-locked {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 .floating-container {
   position: fixed;
   top: 0;

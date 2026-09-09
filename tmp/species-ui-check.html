@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head><base href="http://127.0.0.1:8789/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link rel="stylesheet" href="pagination.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="volunteer.css">
+    <link rel="stylesheet" href="information.css">
+    <link rel="stylesheet" href="activities.css">
+
+
+    <script>
+        window.basePath = '';
+    </script>
+
+    <!-- Three.js and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <meta name="csrf-token" content="d666b576744feb97a331218dae560b2cb428524ed635c9e801b0414cbfe87659">
+    <script src="security.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Trace</title>
+</head>
+
+<body>
+
+    <!-- floating overlays -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Sign up Popup -->
+    <div class="floating-container" id="floatingSignUpContainer">
+        <iframe src="pages/sign-up.php" class="floating-iframe" id="signupFrame"></iframe>
+    </div>
+    <!-- Login Popup -->
+    <div class="floating-container" id="floatingSignInContainer">
+        <iframe src="pages/sign-in.php" class="floating-iframe" id="signInFrame"></iframe>
+    </div>
+    <!-- Report popup -->
+    <div class="floating-container" id="floatingReportContainer">
+        <iframe src="pages/report.php" class="floating-iframe" id="reportFrame"></iframe>
+    </div>
+    <!-- Logout -->
+    <div class="floating-container" id="floatingLogoutContainer">
+        <iframe src="pages/logout.php" class="floating-iframe" id="logoutFrame"></iframe>
+    </div>
+    <!-- Tree Species Popup -->
+    <div class="floating-container" id="floatingSpeciesContainer">
+        <iframe src="" class="floating-iframe" id="speciesFrame"></iframe>
+    </div>
+    <!-- Activity Details Modal -->
+    <div class="floating-container" id="floatingActivityContainer">
+        <iframe src="pages/activity_details.php" class="floating-iframe" id="activityFrame"></iframe>
+    </div>
+    <!-- Add Marker Modal -->
+    <div class="floating-container" id="floatingAddMarkerContainer">
+        <iframe src="modals/add_marker_modal.php" class="floating-iframe" id="addMarkerFrame"></iframe>
+    </div>
+    <!-- Edit Forest Marker -->
+    <div class="floating-container" id="floatingEditForestContainer">
+        <div class="floating-overlay" onclick="hideFloating()"></div>
+        <div class="floating-content">
+            <iframe id="editForestFrame" class="floating-iframe" src="" frameborder="0"></iframe>
+        </div>
+    </div>
+    <!-- Report Detail Modal -->
+    <div class="floating-container" id="floatingReportDetailsContainer">
+        <div class="floating-overlay" onclick="hideFloating()"></div>
+        <div class="floating-content">
+            <iframe id="reportDetailsFrame" class="floating-iframe" src="" frameborder="0"></iframe>
+        </div>
+    </div>
+    <!-- Forest Detail Modal -->
+    <div class="floating-container" id="floatingForestDetailsContainer">
+        <div class="floating-overlay" onclick="hideFloating()"></div>
+        <div class="floating-content">
+            <iframe id="forestDetailsFrame" class="floating-iframe" src="" frameborder="0"></iframe>
+        </div>
+    </div>
+    <!-- Volunteer Modal -->
+    <div class="floating-container" id="floatingVolunteerContainer">
+        <div class="floating-overlay" onclick="hideFloating()"></div>
+        <div class="floating-content">
+            <iframe src="" frameborder="0" id="volunteerFrame" class="floating-iframe" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <!-- Confirm Archive -->
+    <div class="floating-container" id="floatingArchiveContainer">
+        <iframe src="modals/confirm_archive.php" class="floating-iframe" id="confirmArchiveFrame"></iframe>
+    </div>
+
+    <!-- Confirm Restore -->
+    <div class="floating-container" id="floatingRestoreContainer">
+        <iframe src="modals/confirm_restore.php" class="floating-iframe" id="confirmRestoreFrame"></iframe>
+    </div>
+
+    <!-- Confirm Delete -->
+    <div class="floating-container" id="floatingDeleteContainer">
+        <iframe src="modals/confirm_delete.php" class="floating-iframe" id="confirmDeleteFrame"></iframe>
+    </div>
+
+    <!-- Edit Activity Modal -->
+    <div class="floating-container" id="floatingEditActivityContainer">
+        <iframe src="modals/edit_activity.php" class="floating-iframe" id="editActivityFrame"></iframe>
+    </div>
+
+    <!-- Add Activity Modal -->
+
+    <div class="floating-container" id="floatingAddActivityContainer">
+        <iframe src="modals/add_activity.php" class="floating-iframe" id="addActivityFrame"></iframe>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="floating-container" id="floatingEditProfileContainer">
+        <iframe src="modals/edit_profile.php" class="floating-iframe" id="editProfileFrame"></iframe>
+    </div>
+
+    <!-- Add Message Modal -->
+    <div class="floating-container" id="floatingAddMessageContainer">
+        <iframe src="modals/add_message.php" class="floating-iframe" id="addMessageFrame"></iframe>
+    </div>
+
+    <!-- Create Channel Modal -->
+    <div class="floating-container" id="floatingCreateChannelContainer">
+        <iframe src="modals/create_channel.php" frameborder="0" class="floating-iframe" id="createChannelFrame"></iframe>
+    </div>
+
+    <!-- Add Members Modal -->
+    <div class="floating-container" id="floatingAddChannelMembersContainer">
+        <iframe src="modals/add_channel_members.php" class="floating-iframe" id="addChannelMembersFrame"></iframe>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="navigation">
+        <nav class="navbar" aria-label="Main navigation">
+            <div class="nav-left">
+                <img src="components/icons/menu.svg" alt="" class="menu" id="menuIcon">
+            </div>
+            <div class="nav-middle">
+                <ul class="nav-links">
+                    <li><a href="index.php#about-section">About</a></li>
+                    <li><a href="index.php#feature-section">Features</a></li>
+                    <li><a href="index.php#volunteer-section">Volunteer</a></li>
+                </ul>
+            </div>
+            <div class="nav-right">
+                                <img src="components/icons/person.svg" alt="" class="profile"
+                    onclick="showLogin()">
+            </div>
+        </nav>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="components/icons/menu.svg" alt="Menu" class="sidebar-menu-icon" id="sidebarToggle">
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="">
+                    <a href="index.php"><i class="fa-solid fa-house"></i><span class="label">Home</span></a>
+                </li>
+                <li class=""><a href="ar-camera.php"><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
+                <li class="active"><a href="information.php"> <i class="fa-solid fa-tree"></i><span class="label">Explore</span></a></li>
+                <li class="">
+                    <a href="activities.php"><i class="fa-solid fa-hand-holding-heart"></i><span class="label">Volunteer</span></a>
+                </li>
+            </ul>
+        </nav>
+                    <nav class="sidebar-admin">
+                <ul>
+                    <li class="">
+                        <a href="admin/application_activity.php">
+                            <i class="fa-solid fa-address-book"></i>
+                            <span class="label">Volunteer Applicants</span>
+                        </a>
+                    </li>
+                    <li class="">
+                        <a href="forestmap.php">
+                            <i class="fa-solid fa-map"></i><span class="label">Forest Map</span>
+                        </a>
+                    </li>
+                    <li class="">
+                        <a href="admin/user_management.php">
+                            <i class="fa-solid fa-user-group"></i><span class="label">Users</span>
+                        </a>
+                    </li>
+                    <li class="">
+                        <a href="admin/activities_manage.php">
+                            <i class="fa-solid fa-calendar-days"></i><span>Manage Activities</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+                <div class="sidebar-report">
+            <button class="report-activity"
+                onclick="showSignUp()">
+                <span class="material-symbols-rounded">release_alert</span>
+                <span class="label">Report an activity</span>
+            </button>
+        </div>
+        <div class="sidebar-profile" onclick="showLogin()">
+            <div class="profile-avatar">
+                <img src="components/icons/person.svg" alt="Profile">
+            </div>
+            <div class="profile-info">
+                <h3>Login Account</h3>
+                <span>Sign in</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden">
+        <span id="toast-message"></span>
+        <button class="toast-close" onclick="hideToast()">x</button>
+    </div>
+
+    <!-- Page content starts here -->
+    <div class="page-content">
+
+<link rel="stylesheet" href="information.css">
+<link rel="stylesheet" href="species-management.css">
+
+<body>
+    <div class="information-page">
+        <div class="species-header">
+            <h1>Tree Species</h1>
+            <p>Explore the tree species used in our reforestation efforts, including their characteristics, ecological benefits, and planting requirements.</p>
+        </div>
+
+        <div class="filters">
+            <div class="search-bar">
+                <form method="get" action="" id="searchForm">
+                    <input type="hidden" name="category" value="all">
+                                        <input type="text" name="search" id="searchInput" placeholder="Search species" value="" autocomplete="off">
+                </form>
+            </div>
+            <div class="category-buttons">
+                <a href="?category=all" class="category-btn active">All</a>
+                <a href="?category=native" class="category-btn ">Native</a>
+                <a href="?category=introduced" class="category-btn ">Introduced</a>
+            </div>
+            <a class="species-archive-link" href="?category=all&amp;search=&amp;archived=1">View archived species</a>        </div>
+        <p id="species-page-status" class="species-page-status" role="status"></p>
+
+        <div class="species-grid">
+                                                <div class="species-card" data-id="5">
+                                                    <div class="species-actions">
+                                <button type="button" class="species-menu-trigger" aria-label="Actions for Apitong" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
+                                <div class="species-menu" hidden>
+                                                                            <button type="button" data-species-action="edit" data-id="5">Edit</button>
+                                        <button type="button" data-species-action="archive" data-id="5">Archive</button>
+                                                                    </div>
+                            </div>
+                                                                            <img src="components\Apitong02.jpg" alt="Apitong">
+                                                <div class="card-content">
+                            <div class="card-header">
+                                <h3><button type="button" class="species-detail-trigger" data-id="5">Apitong</button></h3>
+                                <span class="category-badge native">
+                                    Native                                </span>
+                            </div>
+                            <p class="scientific">Dipterocarpus grandiflorus</p>
+                            <p class="description">Apitong is a large tropical hardwood tree found in lowland forests. It has a tall, straight trunk and is valued for its durable wood.</p>
+                        </div>
+                    </div>
+                                    <div class="species-card" data-id="3">
+                                                    <div class="species-actions">
+                                <button type="button" class="species-menu-trigger" aria-label="Actions for Fire Tree" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
+                                <div class="species-menu" hidden>
+                                                                            <button type="button" data-species-action="edit" data-id="3">Edit</button>
+                                        <button type="button" data-species-action="archive" data-id="3">Archive</button>
+                                                                    </div>
+                            </div>
+                                                                            <img src="components\Fire-tree01.jpg" alt="Fire Tree">
+                                                <div class="card-content">
+                            <div class="card-header">
+                                <h3><button type="button" class="species-detail-trigger" data-id="3">Fire Tree</button></h3>
+                                <span class="category-badge introduced">
+                                    Introduced                                </span>
+                            </div>
+                            <p class="scientific">Delonix regia</p>
+                            <p class="description">Also known as Royal Poinciana, this ornamental tree is known for its bright red-orange flowers. It is often planted along streets and in parks.</p>
+                        </div>
+                    </div>
+                                    <div class="species-card" data-id="4">
+                                                    <div class="species-actions">
+                                <button type="button" class="species-menu-trigger" aria-label="Actions for Lauan" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
+                                <div class="species-menu" hidden>
+                                                                            <button type="button" data-species-action="edit" data-id="4">Edit</button>
+                                        <button type="button" data-species-action="archive" data-id="4">Archive</button>
+                                                                    </div>
+                            </div>
+                                                                            <img src="components\lauan02.jpg" alt="Lauan">
+                                                <div class="card-content">
+                            <div class="card-header">
+                                <h3><button type="button" class="species-detail-trigger" data-id="4">Lauan</button></h3>
+                                <span class="category-badge native">
+                                    Native                                </span>
+                            </div>
+                            <p class="scientific">Shorea spp.</p>
+                            <p class="description">Lauan refers to several Shorea species that are dominant in Philippine tropical forests. They are important for timber and forest ecosystems.</p>
+                        </div>
+                    </div>
+                                    <div class="species-card" data-id="2">
+                                                    <div class="species-actions">
+                                <button type="button" class="species-menu-trigger" aria-label="Actions for Mahogany" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
+                                <div class="species-menu" hidden>
+                                                                            <button type="button" data-species-action="edit" data-id="2">Edit</button>
+                                        <button type="button" data-species-action="archive" data-id="2">Archive</button>
+                                                                    </div>
+                            </div>
+                                                                            <img src="components\Mahogany02.jpg" alt="Mahogany">
+                                                <div class="card-content">
+                            <div class="card-header">
+                                <h3><button type="button" class="species-detail-trigger" data-id="2">Mahogany</button></h3>
+                                <span class="category-badge introduced">
+                                    Introduced                                </span>
+                            </div>
+                            <p class="scientific">Swietenia macrophylla</p>
+                            <p class="description">Mahogany is a fast-growing tree with a straight trunk and dense wood. It is commonly used in reforestation projects but is considered introduced to the Philippines.</p>
+                        </div>
+                    </div>
+                                    <div class="species-card" data-id="1">
+                                                    <div class="species-actions">
+                                <button type="button" class="species-menu-trigger" aria-label="Actions for Narra" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
+                                <div class="species-menu" hidden>
+                                                                            <button type="button" data-species-action="edit" data-id="1">Edit</button>
+                                        <button type="button" data-species-action="archive" data-id="1">Archive</button>
+                                                                    </div>
+                            </div>
+                                                                            <img src="components\Narra02.webp" alt="Narra">
+                                                <div class="card-content">
+                            <div class="card-header">
+                                <h3><button type="button" class="species-detail-trigger" data-id="1">Narra</button></h3>
+                                <span class="category-badge native">
+                                    Native                                </span>
+                            </div>
+                            <p class="scientific">Pterocarpus indicus</p>
+                            <p class="description">Narra is a large hardwood tree that can grow up to 30–40 meters tall. It has a broad canopy and produces small yellow flowers. Its reddish wood is highly valued for furniture and construction.</p>
+                        </div>
+                    </div>
+                                                        <button type="button" class="species-add-card" id="species-add"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Click to add a species</span></button>
+                    </div>
+
+                <dialog class="species-dialog" id="species-editor" aria-labelledby="species-editor-title">
+            <form id="species-form" enctype="multipart/form-data">
+                <header class="species-dialog-header"><h2 id="species-editor-title">Add Tree Species</h2><p>Add another tree species in the list for our community to learn from!</p></header>
+                <div class="species-form-body">
+                    <input type="hidden" name="csrf_token" value="d666b576744feb97a331218dae560b2cb428524ed635c9e801b0414cbfe87659">                    <input type="hidden" name="action" value="add"><input type="hidden" name="id" value="">
+                    <label class="species-upload" id="species-upload" for="species-image">
+                        <span class="species-image-preview"><img id="species-image-preview" alt="Selected species image preview" hidden><i class="fas fa-cloud-upload-alt" id="species-upload-icon" aria-hidden="true"></i></span>
+                        <span>Click to upload the image or drag and drop<br><small>PNG, JPG up to 10 MB · optional</small></span>
+                        <input type="file" name="image" id="species-image" accept="image/jpeg,image/png">
+                    </label>
+                    <label for="species-name">Tree species name <span>*</span></label><input id="species-name" name="name" maxlength="100" placeholder="E.g., Fire Tree" required>
+                    <div class="species-form-row"><div><label for="species-scientific">Scientific Name <span>*</span></label><input id="species-scientific" name="scientific_name" maxlength="150" placeholder="E.g., Delonix regia" required></div><div><label for="species-category">Category <span>*</span></label><select id="species-category" name="category" required><option value="">Select Here</option><option value="native">Native</option><option value="introduced">Introduced</option></select></div></div>
+                    <label for="species-description">Description <span>*</span></label><textarea id="species-description" name="description" rows="4" maxlength="10000" placeholder="Enter a short description …" required></textarea>
+                    <label for="species-importance">Importance <span>*</span></label><textarea id="species-importance" name="importance" rows="3" maxlength="10000" placeholder="E.g., Provides shade and wildlife habitat (one benefit per line)" required></textarea>
+                    <label for="species-fact">Add fun fact</label><textarea id="species-fact" name="fun_fact" rows="2" maxlength="2000" placeholder="Add an interesting fact about this tree"></textarea>
+                    <p class="species-form-error" id="species-form-error" role="alert"></p>
+                </div>
+                <footer class="species-dialog-footer"><button type="button" data-close-species>Cancel</button><button type="submit" class="species-save" id="species-save">Add</button></footer>
+            </form>
+        </dialog>
+        <dialog class="species-dialog species-confirm" id="species-confirm" aria-labelledby="species-confirm-title"><form id="species-confirm-form"><div class="species-form-body"><h2 id="species-confirm-title">Archive species?</h2><p id="species-confirm-copy"></p><p class="species-form-error" id="species-confirm-error" role="alert"></p></div><footer class="species-dialog-footer"><button type="button" data-close-species>Cancel</button><button class="species-save" id="species-confirm-submit" type="submit">Archive</button></footer></form></dialog>
+        <script id="species-edit-data" type="application/json">[{"id":5,"name":"Apitong","scientific_name":"Dipterocarpus grandiflorus","description":"Apitong is a large tropical hardwood tree found in lowland forests. It has a tall, straight trunk and is valued for its durable wood.","importance":"Prevents slope erosion\r\nThreatened by logging\r\nImproves soil via leaf litter","fun_fact":"Fruits have five winglike projections for wind dispersal; resin tapped pre-colonially for torches","category":"native","image_url":"components\\Apitong02.jpg","updated_at":"2026-06-28 22:12:16","trunk_diameter":1.5,"canopy_diameter":12,"mature_height":43,"leaf_color":"#2e7d32","trunk_color":"#8d6e63","planting_spacing":5,"archived":0,"archived_at":null},{"id":3,"name":"Fire Tree","scientific_name":"Delonix regia","description":"Also known as Royal Poinciana, this ornamental tree is known for its bright red-orange flowers. It is often planted along streets and in parks.","importance":"Boosts urban shade and air quality\r\nShallow roots risk erosion\r\nThrives as introduced species","fun_fact":"Imported by Z\u00f3bel de Zangr\u00f3niz family; has 4 petals plus a spotted larger one, nicknamed \u0022Flamboyant Tree.\u0022","category":"introduced","image_url":"components\\Fire-tree01.jpg","updated_at":"2026-06-28 22:21:10","trunk_diameter":0.6,"canopy_diameter":18,"mature_height":14,"leaf_color":"#E2583E","trunk_color":"#8d6e63","planting_spacing":4,"archived":0,"archived_at":null},{"id":4,"name":"Lauan","scientific_name":"Shorea spp.","description":"Lauan refers to several Shorea species that are dominant in Philippine tropical forests. They are important for timber and forest ecosystems.","importance":"Key to biodiversity hotspots up to 700m\r\n\r\nLogging depletes carbon storage\r\n\r\nHistorical timber export like \u0022light red meranti\u0022","fun_fact":"Old trees reach 50m with massive buttresses; \u0022Philippine mahogany\u0022 label fueled Southeast Asia trade.","category":"native","image_url":"components\\lauan02.jpg","updated_at":"2026-06-28 22:12:16","trunk_diameter":1.5,"canopy_diameter":10,"mature_height":45,"leaf_color":"#2e7d32","trunk_color":"#8d6e63","planting_spacing":6,"archived":0,"archived_at":null},{"id":2,"name":"Mahogany","scientific_name":"Swietenia macrophylla","description":"Mahogany is a fast-growing tree with a straight trunk and dense wood. It is commonly used in reforestation projects but is considered introduced to the Philippines.","importance":"Inhibits native tree growth via leaf litter\r\nValuable wood risks overexploitation\r\nWidely planted despite ecological issues","fun_fact":" Introduced to Manila parks in 1907, it grows so fast it\u0027s used for shade but creates \u0022silent forests\u0022 lacking native wildlife","category":"introduced","image_url":"components\\Mahogany02.jpg","updated_at":"2026-06-28 22:12:16","trunk_diameter":1.2,"canopy_diameter":15,"mature_height":35,"leaf_color":"#2e7d32","trunk_color":"#8d6e63","planting_spacing":6,"archived":0,"archived_at":null},{"id":1,"name":"Narra","scientific_name":"Pterocarpus indicus","description":"Narra is a large hardwood tree that can grow up to 30\u201340 meters tall. It has a broad canopy and produces small yellow flowers. Its reddish wood is highly valued for furniture and construction.","importance":"Supports local biodiversity\r\nWell-adapted to the Philippine climate\r\nRecognized as the National Tree of the Philippines","fun_fact":"Narra trees can live for more than 100 years and are considered a symbol of strength and resilience.","category":"native","image_url":"components\\Narra02.webp","updated_at":"2026-06-28 22:12:16","trunk_diameter":1,"canopy_diameter":12,"mature_height":30,"leaf_color":"#2e7d32","trunk_color":"#8d6e63","planting_spacing":5,"archived":0,"archived_at":null}]</script>
+        
+        <!-- Let's introduce the watering page here; we can reuse the tree species for each trees that need to be watered or to choose from -->
+
+        <!-- Quiz part -->
+
+        
+
+    </div>
+    <!-- We shall create separated script file for this page since this will have a larger scope -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const searchForm = document.getElementById('searchForm');
+            let debounceTimer;
+
+            if (searchInput && searchForm) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        searchForm.submit();
+                    }, 400);
+                });
+            }
+        });
+    </script>
+
+    <script>
+        document.querySelectorAll('.species-card').forEach(card => {
+            card.addEventListener('click', (event) => {
+                if (event.target.closest('.species-actions')) return;
+                const id = card.dataset.id;
+                if (id && window.showSpeciesDetail) showSpeciesDetail(id);
+            });
+        });
+    </script>
+    <script src="species-management.js" defer></script>
+
+    </div> <!-- close .page-content -->
+
+<script src="app.js"></script>
+<script src="nav.js"></script>
+
+<script>
+    // Check URL for toast parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const toastMsg = urlParams.get('toast');
+    const toastType = urlParams.get('type') === 'error' ? 'error' : 'success';
+    if (toastMsg) {
+        // Clean the URL
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        setTimeout(() => {
+            if (typeof showToast === 'function') {
+                showToast(decodeURIComponent(toastMsg), 5000, toastType);
+            } else {
+                alert(decodeURIComponent(toastMsg));
+            }
+        }, 500);
+    }
+</script>
+
+
+
+
+
+
+
+
+</body>
+
+</html></body>

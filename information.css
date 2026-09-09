@@ -4,6 +4,7 @@ body {
 }
 
 .information-page {
+  font-family: "Inter", sans-serif;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
@@ -32,7 +33,7 @@ body {
 
 .filters {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
@@ -47,50 +48,49 @@ body {
 
 .search-bar input {
   padding: 10px 15px;
-  border: 1px solid #ddd;
   border-radius: 8px;
   width: 250px;
   font-size: 0.9rem;
-  border: none;
 }
 
-.category-buttons {
-  display: flex;
-  gap: 1rem;
-}
-
-.category-btn {
-  padding: 0.5rem 1.5rem;
-  background: #f0f0f0;
+.category-filter select {
+  width: 150px;
+  min-height: 42px;
+  padding: 0 38px 0 14px;
+  border: 1px solid #bfc3bf;
   border-radius: 8px;
-  text-decoration: none;
+  background: #fff;
   color: #333;
-  font-weight: 500;
-  transition: all 0.2s;
+  cursor: pointer;
+  font: 500 14px "Inter", sans-serif;
 }
 
-.category-btn.active {
-  background: #2e7d32;
-  color: white;
-}
-
-.category-btn:hover:not(.active) {
-  background: #e0e0e0;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Species grid */
 
 .species-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
 }
 
 .species-card {
-  background: #eef0eda8;
+  position: relative;
+  background: #eef0ed;
   border: 1px solid #c7c7c7;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 16px;
   transition: ease-in-out 0.2s;
   cursor: pointer;
 }
@@ -153,8 +153,8 @@ body {
 .card-header .category-badge {
   margin-left: auto;
   flex-shrink: 0;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.9rem;
+  padding: 5px 10px;
+  font-size: 10px;
   border-radius: 20px;
   font-weight: 500;
 }
@@ -212,7 +212,368 @@ body {
   .search-bar input {
     width: 100%;
   }
-  .category-buttons {
-    justify-content: center;
+}
+
+/* Tree species management */
+.information-page .species-card .card-content {
+  padding: 16px 20px;
+}
+
+.species-detail-trigger {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  padding: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.species-status-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.species-status-filter a {
+  min-width: 96px;
+  padding: 7px 18px;
+  border: 1px solid #bfc3bf;
+  border-radius: 999px;
+  background: #fff;
+  color: #666;
+  text-align: center;
+  text-decoration: none;
+  font: 500 13px "Inter", sans-serif;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.species-status-filter a.active {
+  border-color: #83ba81;
+  background: #eef9eb;
+  color: #3f7c42;
+}
+
+.species-status-filter a:hover {
+  border-color: #3f7c42;
+}
+
+.species-page-status {
+  color: #3f7c42;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.species-page-status:empty {
+  display: none;
+}
+
+.species-add-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  min-height: 350px;
+  border: 2px dashed #aaa;
+  border-radius: 16px;
+  background: #f8f9f7;
+  color: #727772;
+  cursor: pointer;
+  font: 500 14px "Inter", sans-serif;
+}
+
+.species-add-card i {
+  font-size: 30px;
+}
+
+.species-add-card:hover {
+  border-color: #3f7c42;
+  background: #f0f6ed;
+  color: #3f7c42;
+}
+
+.species-actions {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 2;
+}
+
+.species-menu-trigger {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: white;
+  color: #3f3f3f;
+  cursor: pointer;
+}
+
+.species-menu {
+  position: absolute;
+  right: 0;
+  top: 42px;
+  width: 125px;
+  padding: 5px;
+  background: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 5px 15px #0002;
+  border-radius: 8px;
+}
+
+.species-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  text-align: left;
+  font: 13px "Inter", sans-serif;
+  border: 0;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  color: #333;
+}
+
+.species-menu button:hover {
+  background: #eef0ed;
+}
+
+.species-dialog {
+  width: min(650px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  background: white;
+  color: #3f3f3f;
+  font-family: "Inter", sans-serif;
+}
+
+.species-dialog::backdrop {
+  background: #0006;
+}
+
+html.species-modal-open,
+body.species-modal-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.species-dialog * {
+  box-sizing: border-box;
+}
+
+.species-dialog form {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 44px);
+  margin: 0;
+}
+
+.species-dialog-header {
+  padding: 24px 30px;
+  border-bottom: 1px solid #ddd;
+}
+
+.species-dialog h2 {
+  font: 600 25px "Inter", sans-serif;
+  margin: 0 0 8px;
+}
+
+.species-dialog-header p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.species-form-body {
+  overflow-y: auto;
+  padding: 24px 30px;
+}
+
+.species-form-body > label,
+.species-form-row label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 18px 0 7px;
+}
+
+.species-form-body label > span:not(.species-image-preview) {
+  color: #e53935;
+}
+
+.species-form-body input:not([type="hidden"]),
+.species-form-body textarea,
+.species-form-body select {
+  width: 100%;
+  border: 1px solid #bfc3bf;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #3f3f3f;
+  background: white;
+  font: 14px "Inter", sans-serif;
+}
+
+.species-form-body textarea {
+  resize: vertical;
+  min-height: 65px;
+}
+
+.species-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.species-form-row > div {
+  min-width: 0;
+}
+
+.species-form-body .species-upload {
+  margin: 0 0 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+  border: 1px dashed #aaa;
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.species-upload .species-image-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 190px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.species-upload .species-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.species-upload .species-image-preview i {
+  font-size: 45px;
+  color: #7a7a7a;
+}
+
+.species-form-body .species-upload > span:not(.species-image-preview) {
+  font-size: 12px;
+  font-weight: 400;
+  color: #666;
+  line-height: 1.5;
+}
+
+.species-upload input[type="file"] {
+  font-size: 11px;
+  padding: 7px;
+}
+
+.species-upload.is-dragging {
+  outline: 2px solid #3f7c42;
+  background: #f0f6ed;
+}
+
+.species-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #ddd;
+}
+
+.species-dialog-footer button {
+  min-width: 105px;
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid #bbb;
+  border-radius: 7px;
+  background: #f3f3f3;
+  color: #555;
+  cursor: pointer;
+  font: 600 14px "Inter", sans-serif;
+}
+
+.species-dialog-footer .species-save {
+  background: #3f7c42;
+  border-color: #3f7c42;
+  color: white;
+}
+
+.species-dialog button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.species-form-error {
+  color: #b3261e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.species-form-error:empty {
+  display: none;
+}
+
+.species-confirm {
+  max-width: 440px;
+}
+
+.species-confirm p {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.species-dialog [hidden],
+.species-menu[hidden] {
+  display: none !important;
+}
+
+
+@media (max-width: 900px) {
+  .information-page .species-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .information-page .species-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .information-page .search-bar input:not([type="hidden"]) {
+    width: 100%;
+  }
+
+  .category-filter,
+  .category-filter select {
+    width: 100%;
+  }
+
+  .species-form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .species-dialog-header,
+  .species-form-body {
+    padding: 20px;
+  }
+
+  .species-dialog h2 {
+    font-size: 22px;
+  }
+
+  .species-status-filter {
+    margin-left: 0;
   }
 }

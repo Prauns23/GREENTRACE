@@ -197,7 +197,7 @@ if (isset($_SESSION['user_id'])) {
                     <a href="<?php echo $basePath; ?>index.php"><i class="fa-solid fa-house"></i><span class="label">Home</span></a>
                 </li>
                 <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'ar-camera.php' || basename($_SERVER['PHP_SELF']) == 'ar-camera.php' ? 'active' : ''; ?>"><a href="<?php echo $basePath; ?>ar-camera.php"><i class="fa-solid fa-camera"></i><span class="label">AR Camera</span></a></li>
-                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'information.php' ? 'active' : ''; ?>"><a href="<?php echo $basePath; ?>information.php"> <i class="fa-solid fa-tree"></i><span class="label">Tree Species</span></a></li>
+                <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'information.php' ? 'active' : ''; ?>"><a href="<?php echo $basePath; ?>information.php"> <i class="fa-solid fa-tree"></i><span class="label">Explore</span></a></li>
                 <li class="<?php echo basename($_SERVER['PHP_SELF']) == 'activities.php' ? 'active' : ''; ?>">
                     <a href="<?php echo $basePath; ?>activities.php"><i class="fa-solid fa-hand-holding-heart"></i><span class="label">Volunteer</span></a>
                 </li>
