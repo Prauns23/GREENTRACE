@@ -1,6 +1,15 @@
 // information.js - all JavaScript for the Tree Species page
 
 document.addEventListener("DOMContentLoaded", function () {
+  // --- Grove tending modal ---
+  const groveTrigger = document.querySelector("[data-grove-trigger]");
+  groveTrigger?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      showGroveCard();
+    }
+  });
+
   // --- Search and category filters ---
   const searchInput = document.getElementById("searchInput");
   const searchForm = document.getElementById("searchForm");
@@ -121,6 +130,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+function showGroveCard() {
+  const container = document.getElementById("floatingGroveCardContainer");
+  const frame = document.getElementById("groveCardFrame");
+  if (!container || !frame) return;
+
+  frame.src = (window.basePath || "") + "modals/grove_card.php";
+  if (typeof window.showFloatingContainer === "function") {
+    window.showFloatingContainer(container);
+    return;
+  }
+
+  container.classList.add("active");
+  document.getElementById("overlay")?.classList.add("active");
+  document.body.classList.add("login-active");
+}
+
+window.showGroveCard = showGroveCard;
 
 //  Global function for the three‑dot menu toggle
 function toggleSpeciesMenu(btn) {

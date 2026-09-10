@@ -238,6 +238,13 @@ body.modal-scroll-locked {
   font-family: "Inter", sans-serif;
 }
 
+#floatingGroveCardContainer .floating-iframe {
+  width: min(520px, calc(100vw - 32px));
+  height: min(656px, calc(100vh - 32px));
+  border-radius: 14px;
+  font-family: "Inter", sans-serif;
+}
+
 @keyframes slideInRight {
   from {
     transform: translateX(100%);

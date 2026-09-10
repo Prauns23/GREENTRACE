@@ -164,6 +164,11 @@ if (isset($_SESSION['user_id'])) {
         <iframe src="<?php echo $basePath; ?>modals/species_confirm.php" class="floating-iframe" id="speciesConfirmFrame"></iframe>
     </div>
 
+    <!-- Grove Card Modal -->
+    <div class="floating-container" id="floatingGroveCardContainer">
+        <iframe src="<?php echo $basePath; ?>modals/grove_card.php" class="floating-iframe" id="groveCardFrame" title="Tree tending details"></iframe>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="navigation">
         <nav class="navbar" aria-label="Main navigation">

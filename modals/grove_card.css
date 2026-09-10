@@ -1,0 +1,200 @@
+* { box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: transparent;
+  color: #4e4e4e;
+  font-family: "Inter", sans-serif;
+}
+
+.grove-modal {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.grove-modal__header {
+  position: relative;
+  min-height: 138px;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 35px 30px;
+}
+
+.grove-modal__header h1 {
+  margin: 0;
+  color: #4e4e4e;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.grove-modal__header p {
+  margin: 13px 0 0;
+  color: #4e4e4e;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.grove-modal__day {
+  margin: 0 14px 1px auto;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: #3f7c42;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+}
+
+.grove-modal__close {
+  position: absolute;
+  top: 15px;
+  right: 25px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #3f3f3f;
+  cursor: pointer;
+  font: 300 48px/.7 "Inter", sans-serif;
+}
+
+.grove-modal__close:hover,
+.grove-modal__close:focus-visible { color: #3f7c42; }
+
+.grove-modal__content {
+  min-height: 437px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: 1px solid rgba(63, 63, 63, .2);
+  border-bottom: 1px solid rgba(63, 63, 63, .2);
+  padding: 39px 34px 0;
+}
+
+.grove-tree-action {
+  position: relative;
+  width: 227px;
+  height: 252px;
+  flex: 0 0 252px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.grove-tree-action::after {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(90, 90, 90, 0.678);
+  color: #fff;
+  content: attr(data-tooltip);
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -3px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  font-family: "Inter", sans-serif;
+}
+
+.grove-tree-action:hover::after,
+.grove-tree-action:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.grove-tree-illustration { width: 100%; height: 100%; }
+
+.grove-tree-illustration__canopy {
+  animation: grove-canopy-rustle 2.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+@keyframes grove-canopy-rustle {
+  0%, 100% { transform: rotate(-.9deg); }
+  50% { transform: rotate(.79deg); }
+}
+
+.grove-progress {
+  width: min(100%, 300px);
+  margin-top: 39px;
+  text-align: center;
+}
+
+.grove-progress__track {
+  width: 80%;
+  height: 8px;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(134, 141, 131, 0.24);
+}
+
+.grove-progress__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #3f7c42;
+}
+
+.grove-progress strong {
+  display: block;
+  margin-top: 18px;
+  color: rgba(63, 63, 63, .8);
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.grove-progress p {
+  margin: 10px 0 0;
+  color: #555555b2;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.grove-modal__footer {
+  min-height: 93px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 34px;
+  text-align: center;
+}
+
+.grove-modal__footer p {
+  margin: 0;
+  color: #646464;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+@media (max-width: 600px) {
+  .grove-modal__header { min-height: 124px; padding: 0 24px 24px; }
+  .grove-modal__header h1 { font-size: 28px; }
+  .grove-modal__header p { font-size: 14px; }
+  .grove-modal__day { margin-right: 4px; padding: 7px 12px; font-size: 12px; }
+  .grove-modal__content { padding: 28px 20px 0; }
+  .grove-tree-action { transform: scale(.88); margin-bottom: -17px; }
+  .grove-modal__footer { min-height: 86px; padding: 14px 28px; }
+}

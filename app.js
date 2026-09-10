@@ -170,6 +170,16 @@ function closeAllFloating() {
   });
 }
 
+function showFloatingContainer(container) {
+  if (!container) return;
+  closeAllFloating();
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+  lockModalBackground(container);
+}
+
 function switchToSignIn() {
   hideFloating();
   showSignIn();
@@ -521,6 +531,7 @@ window.showSignUp = showSignUp;
 window.showSignIn = showSignIn;
 window.queueToast = queueToast;
 window.hideFloating = hideFloating;
+window.showFloatingContainer = showFloatingContainer;
 window.switchToSignIn = switchToSignIn;
 window.switchToSignUp = switchToSignUp;
 window.showLogout = showLogout;

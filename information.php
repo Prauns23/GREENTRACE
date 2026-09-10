@@ -150,7 +150,7 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
                             <span>Your Grove</span>
                             <span>Day 4 of 7</span>
                         </header>
-                        <div class="tree-grove-card__phase tree-phase--day-four" role="img" aria-label="Narra at its fourth placeholder growth phase">
+                        <div class="tree-grove-card__phase tree-phase--day-four" role="button" tabindex="0" aria-label="Open Narra tree tending details" data-grove-trigger onclick="showGroveCard()">
                             <svg class="tree-growth-illustration" viewBox="0 0 320 320" aria-hidden="true" focusable="false">
                                 <g class="tree-growth-illustration__soil">
                                     <ellipse cx="160" cy="276" rx="120" ry="10" fill="oklch(0.78 0.04 90)" />
@@ -182,7 +182,6 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
 
                 <div class="grow-grid-right">
                     <div class="tree-stat-grid" aria-label="Tree tending preview statistics">
-                        <article class="tree-stat-card tree-stat-card--green"><strong>77</strong><span>Exp point</span></article>
                         <article class="tree-stat-card tree-stat-card--bright"><strong>4</strong><span>Progress</span></article>
                         <article class="tree-stat-card"><strong>0</strong><span>Matured trees</span></article>
                     </div>
