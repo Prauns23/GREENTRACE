@@ -19,6 +19,8 @@ document.addEventListener("DOMContentLoaded", function () {
       (card) => ({
         fact: card.querySelector("p")?.textContent.trim() || "",
         tone: card.dataset.noteTone === "accent" ? "accent" : "neutral",
+        sourceName: "GreenTrace Field Notes",
+        sourceUrl: "",
       }),
     );
 
@@ -36,6 +38,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const renderFieldNotes = (notes) => {
       fieldNotesGrid.replaceChildren();
+      const columns = Array.from({ length: 2 }, () => {
+        const column = document.createElement("div");
+        column.className = "field-notes-column";
+        fieldNotesGrid.append(column);
+        return column;
+      });
       const tones = shuffleNotes(
         Array.from({ length: Math.min(notes.length, 6) }, (_, index) =>
           index < Math.ceil(Math.min(notes.length, 6) / 2) ? "accent" : "neutral",
@@ -46,15 +54,60 @@ document.addEventListener("DOMContentLoaded", function () {
         const card = document.createElement("article");
         const isAccent = tones[index] === "accent";
         card.className = `field-note-card${isAccent ? " field-note-card--accent" : ""}`;
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-expanded", "false");
 
         const title = document.createElement("h4");
         title.textContent = `Note: ${String(index + 1).padStart(2, "0")}`;
         const fact = document.createElement("p");
         fact.textContent = note.fact;
-        card.append(title, fact);
-        fieldNotesGrid.append(card);
+
+        const source = document.createElement(note.sourceUrl ? "a" : "span");
+        source.className = "field-note-card__source";
+        if (note.sourceUrl) {
+          source.href = note.sourceUrl;
+          source.target = "_blank";
+          source.rel = "noopener noreferrer";
+        }
+        const sourceIcon = document.createElement("i");
+        sourceIcon.className = "fa-solid fa-paperclip";
+        sourceIcon.setAttribute("aria-hidden", "true");
+        const sourceText = document.createElement("span");
+        sourceText.textContent = `Source: ${note.sourceUrl || note.sourceName || "GreenTrace"}`;
+        source.append(sourceIcon, sourceText);
+
+        card.append(title, fact, source);
+        columns[Math.floor(index / 3)].append(card);
       });
     };
+
+    const toggleFieldNote = (card) => {
+      const shouldOpen = !card.classList.contains("field-note-card--active");
+      fieldNotesGrid.querySelectorAll(".field-note-card").forEach((note) => {
+        note.classList.remove("field-note-card--active");
+        note.setAttribute("aria-expanded", "false");
+      });
+
+      if (shouldOpen) {
+        card.classList.add("field-note-card--active");
+        card.setAttribute("aria-expanded", "true");
+      }
+    };
+
+    fieldNotesGrid.addEventListener("click", (event) => {
+      if (event.target.closest(".field-note-card__source")) return;
+      const card = event.target.closest(".field-note-card");
+      if (card) toggleFieldNote(card);
+    });
+
+    fieldNotesGrid.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const card = event.target.closest(".field-note-card");
+      if (!card) return;
+      event.preventDefault();
+      toggleFieldNote(card);
+    });
 
     // The data endpoint is intentionally optional while the curated API layer is built.
     // Add data-notes-endpoint="actions/field_notes.php?limit=6" to the grid when ready.

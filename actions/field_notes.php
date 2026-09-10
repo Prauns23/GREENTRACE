@@ -35,7 +35,15 @@ usort($topics, static function (array $left, array $right) use ($today): int {
 $selectedTopics = array_slice($topics, 0, $limit);
 
 $cacheDirectory = __DIR__ . '/../tmp/field-notes-cache';
-$cacheFile = $cacheDirectory . '/field-notes-' . $today . '-' . $limit . '.json';
+$cacheFile = $cacheDirectory . '/field-notes-v4-' . $today . '-' . $limit . '.json';
+if (is_dir($cacheDirectory)) {
+    $cacheLifetime = 14 * 24 * 60 * 60;
+    foreach (glob($cacheDirectory . '/field-notes-v*.json') ?: [] as $existingCacheFile) {
+        if (is_file($existingCacheFile) && filemtime($existingCacheFile) < time() - $cacheLifetime) {
+            unlink($existingCacheFile);
+        }
+    }
+}
 if (is_file($cacheFile)) {
     $cached = json_decode((string) file_get_contents($cacheFile), true);
     if (is_array($cached) && isset($cached['notes']) && is_array($cached['notes'])) {
@@ -52,7 +60,7 @@ $url = 'https://en.wikipedia.org/w/api.php?' . http_build_query([
     'prop' => 'extracts',
     'exintro' => '1',
     'explaintext' => '1',
-    'exchars' => '280',
+    'exsentences' => '2',
     'redirects' => '1',
     'titles' => $titles,
 ]);

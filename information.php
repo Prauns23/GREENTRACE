@@ -209,30 +209,34 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
                 <p>Short facts from foresters and ecologists, plus a timeline of Philippines Reforestation.</p>
             </div>
             <div class="card-notes-grid" data-field-notes-grid data-notes-endpoint="actions/field_notes.php?limit=6">
-                <article class="field-note-card field-note-card--accent" data-note-tone="accent">
-                    <h4>Note: 01</h4>
-                    <p>Rainforestation uses only native tree species to restore forest structure and biodiversity.</p>
-                </article>
-                <article class="field-note-card" data-note-tone="neutral">
-                    <h4>Note: 02</h4>
-                    <p>The cloud rat of Luzon disperses seeds of at least 22 native tree species.</p>
-                </article>
-                <article class="field-note-card field-note-card--accent" data-note-tone="accent">
-                    <h4>Note: 03</h4>
-                    <p>Tikbalang folklore once protected groves — villages avoided cutting large balete trees.</p>
-                </article>
-                <article class="field-note-card" data-note-tone="neutral">
-                    <h4>Note: 04</h4>
-                    <p>Endemic Philippine eagles need about 7,000 hectares of forest for each breeding pair.</p>
-                </article>
-                <article class="field-note-card field-note-card--accent" data-note-tone="accent">
-                    <h4>Note: 05</h4>
-                    <p>The Philippines lost roughly 90% of its primary forest cover during the 20th century.</p>
-                </article>
-                <article class="field-note-card" data-note-tone="neutral">
-                    <h4>Note: 06</h4>
-                    <p>Bamboo is technically a grass; many Philippine kawayan species can sequester carbon quickly.</p>
-                </article>
+                <div class="field-notes-column">
+                    <article class="field-note-card field-note-card--accent" data-note-tone="accent">
+                        <h4>Note: 01</h4>
+                        <p>Rainforestation uses only native tree species to restore forest structure and biodiversity.</p>
+                    </article>
+                    <article class="field-note-card" data-note-tone="neutral">
+                        <h4>Note: 02</h4>
+                        <p>The cloud rat of Luzon disperses seeds of at least 22 native tree species.</p>
+                    </article>
+                    <article class="field-note-card field-note-card--accent" data-note-tone="accent">
+                        <h4>Note: 03</h4>
+                        <p>Tikbalang folklore once protected groves — villages avoided cutting large balete trees.</p>
+                    </article>
+                </div>
+                <div class="field-notes-column">
+                    <article class="field-note-card" data-note-tone="neutral">
+                        <h4>Note: 04</h4>
+                        <p>Endemic Philippine eagles need about 7,000 hectares of forest for each breeding pair.</p>
+                    </article>
+                    <article class="field-note-card field-note-card--accent" data-note-tone="accent">
+                        <h4>Note: 05</h4>
+                        <p>The Philippines lost roughly 90% of its primary forest cover during the 20th century.</p>
+                    </article>
+                    <article class="field-note-card" data-note-tone="neutral">
+                        <h4>Note: 06</h4>
+                        <p>Bamboo is technically a grass; many Philippine kawayan species can sequester carbon quickly.</p>
+                    </article>
+                </div>
             </div>
             <p class="field-notes-status visually-hidden" data-field-notes-status aria-live="polite"></p>
         </section>
