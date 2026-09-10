@@ -1045,6 +1045,75 @@ body.species-modal-open {
   color: #3f3f3f;
 }
 
+/* Field Notes */
+.field-notes-section {
+  margin-top: 72px;
+}
+
+.notes-header {
+  max-width: 680px;
+  margin-bottom: 58px;
+}
+
+.notes-header h3 {
+  margin: 0 0 10px;
+  color: #3f3f3f;
+  font: 700 32px/1.2 "Inter", sans-serif;
+}
+
+.notes-header p {
+  margin: 0;
+  color: #565656;
+  font: 400 16px/1.35 "Inter", sans-serif;
+}
+
+.card-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px 58px;
+}
+
+.field-note-card {
+  min-height: 128px;
+  padding: 22px 26px;
+  border: 1px solid rgba(94, 94, 94, 0.24);
+  border-radius: 12px;
+  background: #f3f2f2;
+  color: #565656;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.field-note-card:hover {
+  border-color: #68747a;
+  transform: translateY(-2px);
+}
+
+.field-note-card--accent {
+  border-color: rgba(63, 124, 66, 0.22);
+  background: #e9fae6;
+}
+
+.field-note-card--accent:hover {
+  border-color: #3f7c42;
+}
+
+.field-note-card h4 {
+  margin: 0;
+  font: 700 18px "Inter", sans-serif;
+}
+
+.field-note-card p {
+  margin: 18px 0 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font: italic 400 15px/1.32 "Inter", sans-serif;
+}
+
 @media (max-width: 1050px) {
   .grow-grid {
     grid-template-columns: minmax(300px, 411px) minmax(0, 1fr);
@@ -1098,5 +1167,19 @@ body.species-modal-open {
 
   .tree-selection__choices {
     grid-template-columns: 1fr;
+  }
+
+  .field-notes-section {
+    margin-top: 52px;
+  }
+
+  .card-notes-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .field-note-card {
+    min-height: 0;
+    padding: 20px;
   }
 }

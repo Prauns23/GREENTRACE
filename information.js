@@ -10,6 +10,76 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // --- Field Notes ---
+  const fieldNotesGrid = document.querySelector("[data-field-notes-grid]");
+  if (fieldNotesGrid) {
+    const fieldNotesStatus = document.querySelector("[data-field-notes-status]");
+    const fallbackNotes = Array.from(
+      fieldNotesGrid.querySelectorAll(".field-note-card"),
+      (card) => ({
+        fact: card.querySelector("p")?.textContent.trim() || "",
+        tone: card.dataset.noteTone === "accent" ? "accent" : "neutral",
+      }),
+    );
+
+    const shuffleNotes = (notes) => {
+      const shuffled = [...notes];
+      for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const replacementIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[replacementIndex]] = [
+          shuffled[replacementIndex],
+          shuffled[index],
+        ];
+      }
+      return shuffled;
+    };
+
+    const renderFieldNotes = (notes) => {
+      fieldNotesGrid.replaceChildren();
+      const tones = shuffleNotes(
+        Array.from({ length: Math.min(notes.length, 6) }, (_, index) =>
+          index < Math.ceil(Math.min(notes.length, 6) / 2) ? "accent" : "neutral",
+        ),
+      );
+
+      notes.slice(0, 6).forEach((note, index) => {
+        const card = document.createElement("article");
+        const isAccent = tones[index] === "accent";
+        card.className = `field-note-card${isAccent ? " field-note-card--accent" : ""}`;
+
+        const title = document.createElement("h4");
+        title.textContent = `Note: ${String(index + 1).padStart(2, "0")}`;
+        const fact = document.createElement("p");
+        fact.textContent = note.fact;
+        card.append(title, fact);
+        fieldNotesGrid.append(card);
+      });
+    };
+
+    // The data endpoint is intentionally optional while the curated API layer is built.
+    // Add data-notes-endpoint="actions/field_notes.php?limit=6" to the grid when ready.
+    const endpoint = fieldNotesGrid.dataset.notesEndpoint;
+    if (!endpoint) {
+      renderFieldNotes(shuffleNotes(fallbackNotes));
+    } else {
+      fetch(endpoint, { headers: { Accept: "application/json" } })
+        .then((response) => {
+          if (!response.ok) throw new Error("Could not load field notes.");
+          return response.json();
+        })
+        .then((payload) => {
+          const notes = Array.isArray(payload.notes) ? payload.notes : [];
+          if (notes.length < 6) throw new Error("Not enough field notes returned.");
+          renderFieldNotes(shuffleNotes(notes));
+          if (fieldNotesStatus) fieldNotesStatus.textContent = "Field notes updated.";
+        })
+        .catch(() => {
+          renderFieldNotes(shuffleNotes(fallbackNotes));
+          if (fieldNotesStatus) fieldNotesStatus.textContent = "Showing curated field notes.";
+        });
+    }
+  }
+
   // --- Search and category filters ---
   const searchInput = document.getElementById("searchInput");
   const searchForm = document.getElementById("searchForm");
