@@ -137,7 +137,70 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
             <?php endif; ?>
         </div>
 
-        <!-- Let's introduce the watering page here; we can reuse the tree species for each trees that need to be watered or to choose from -->
+        <section class="grow-tree-container" aria-labelledby="grow-tree-title" data-preview="true">
+            <header class="grow-header">
+                <h2 id="grow-tree-title">Grow a Tree</h2>
+                <p>Choose a tree to tend and see its growing phase. Remember to visit each day to water your sapling! Additionally earn a badge to show off!</p>
+            </header>
+
+            <div class="grow-grid">
+                <div class="grow-grid-left">
+                    <article class="tree-grove-card" aria-label="Your grove preview: Narra at day 4 of 7">
+                        <header class="tree-grove-card__header">
+                            <span>Your Grove</span>
+                            <span>Day 4 of 7</span>
+                        </header>
+                        <div class="tree-grove-card__phase tree-phase--day-four" role="img" aria-label="Narra at its fourth placeholder growth phase">
+                            <svg class="tree-growth-illustration" viewBox="0 0 320 320" aria-hidden="true" focusable="false">
+                                <g class="tree-growth-illustration__soil">
+                                    <ellipse cx="160" cy="276" rx="120" ry="10" fill="oklch(0.78 0.04 90)" />
+                                    <ellipse cx="160" cy="272" rx="80" ry="6" fill="oklch(0.55 0.05 80)" opacity=".5" />
+                                </g>
+                                <g class="tree-growth-illustration__trunk">
+                                    <rect x="152.6" y="168" width="14.8" height="108" rx="7.4" fill="oklch(0.34 0.04 50)" />
+                                    <path d="M145.2 276q-10-2-16 2m29.6-2q10-2 16 2" fill="none" stroke="oklch(0.30 0.04 50)" stroke-linecap="round" stroke-width="3" />
+                                </g>
+                                <g class="tree-growth-illustration__canopy">
+                                    <circle cx="160" cy="115" r="74" fill="oklch(0.45 0.09 150)" />
+                                    <circle cx="115.6" cy="129.8" r="51.8" fill="oklch(0.5 0.1 148)" />
+                                    <circle cx="204.4" cy="129.8" r="51.8" fill="oklch(0.55 0.1 145)" />
+                                    <circle cx="160" cy="78" r="40.7" fill="oklch(0.6 0.11 142)" />
+                                </g>
+                            </svg>
+                        </div>
+                        <footer class="tree-grove-card__footer">
+                            <div>
+                                <h3>Narra</h3>
+                                <p>Pterocarpus indicus · Native</p>
+                            </div>
+                            <button type="button" class="tree-water-button" aria-disabled="true" aria-label="Watering is not available in this preview" data-tooltip="Click to water">
+                                <i class="fa-solid fa-heart" aria-hidden="true"></i>
+                            </button>
+                        </footer>
+                    </article>
+                </div>
+
+                <div class="grow-grid-right">
+                    <div class="tree-stat-grid" aria-label="Tree tending preview statistics">
+                        <article class="tree-stat-card tree-stat-card--green"><strong>77</strong><span>Exp point</span></article>
+                        <article class="tree-stat-card tree-stat-card--bright"><strong>4</strong><span>Progress</span></article>
+                        <article class="tree-stat-card"><strong>0</strong><span>Matured trees</span></article>
+                    </div>
+
+                    <article class="tree-selection">
+                        <h3>Plant a new tree</h3>
+                        <p>Available when your current tree finishes growing</p>
+                        <div class="tree-selection__choices" aria-label="Placeholder tree choices">
+                            <button type="button" class="tree-choice tree-choice--current" disabled><strong>Narra</strong><span>7 days · Native</span></button>
+                            <button type="button" class="tree-choice" disabled><strong>Mahogany</strong><span>5 days · Introduced</span></button>
+                            <button type="button" class="tree-choice" disabled><strong>Fire Tree</strong><span>5 days · Introduced</span></button>
+                            <button type="button" class="tree-choice" disabled><strong>Apitong</strong><span>7 days · Native</span></button>
+                            <button type="button" class="tree-choice" disabled><strong>Lauan</strong><span>7 days · Native</span></button>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
 
         <!-- Field Notes -->
 
