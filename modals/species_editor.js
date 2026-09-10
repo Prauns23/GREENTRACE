@@ -67,7 +67,7 @@
     });
   }
 
-  // ----- File selection & preview -----
+  //  File selection & preview 
   function selectFile(file) {
     errorEl.textContent = "";
     if (!file) {
@@ -125,28 +125,51 @@
   // ----- Form submission -----
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
-    if (!this.reportValidity()) return;
-
-    const submitBtn = this.querySelector(".btn-primary");
-    submitBtn.disabled = true;
     errorEl.textContent = "";
+    if (!this.reportValidity()) {
+      const invalidField = this.querySelector(":invalid");
+      errorEl.textContent = invalidField
+        ? `Please complete the ${invalidField.labels?.[0]?.textContent?.replace("*", "").trim() || "required fields"}.`
+        : "Please complete all required fields.";
+      errorEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+
+    const submitBtn = document.querySelector(
+      'button[type="submit"][form="species-form"].btn-primary',
+    );
+    if (!submitBtn) {
+      errorEl.textContent = "The save button is unavailable. Please refresh and try again.";
+      errorEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+    submitBtn.disabled = true;
 
     try {
       const data = new FormData(this);
       if (importanceInput) {
         data.set("importance", withoutBullets(importanceInput.value));
       }
-      const response = await fetch(this.action, {
+      const response = await fetch(this.getAttribute("action"), {
         method: "POST",
         body: data,
         credentials: "same-origin",
       });
-      const result = await response.json();
+      const responseText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error(
+          `Save failed (HTTP ${response.status}). The server returned an invalid response.`,
+        );
+      }
       if (!response.ok || !result.success) {
         throw new Error(result.error || "Unable to save the species.");
       }
-      // Notify parent (main page)
-      if (typeof parent.showToast === "function") {
+      if (typeof parent.queueToast === "function") {
+        parent.queueToast(result.message, "success");
+      } else if (typeof parent.showToast === "function") {
         parent.showToast(result.message, 3000, "success");
       } else {
         alert(result.message);
@@ -156,6 +179,7 @@
     } catch (err) {
       errorEl.textContent =
         err.message || "Connection failed. Please try again.";
+      errorEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } finally {
       submitBtn.disabled = false;
     }

@@ -127,7 +127,7 @@ body {
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
-  background: #f9f9f9;
+  background: #ffffff;
   margin-bottom: 32px;
 }
 
@@ -234,13 +234,45 @@ body {
 .confirm-box h2 {
   font-size: 22px;
   margin-bottom: 8px;
+  font-weight: 400;
 }
 
-.confirm-box p {
+.modal-wrapper.species-confirm-modal {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+}
+
+.species-confirm-modal .confirm-box {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.species-confirm-modal .confirm-box p,
+.species-confirm-modal .confirm-box .form-error {
+  flex: 0 0 auto;
   color: #555;
   line-height: 1.6;
-  max-width: 400px;
-  margin: 0 auto 20px;
+  max-width: 340px;
+  margin: 0 auto;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+}
+
+.species-confirm-footer {
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
+.modal-footer button {
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: "Inter", sans-serif;
 }
 
 /* Responsive */

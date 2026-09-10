@@ -31,7 +31,9 @@
       if (!response.ok || !result.success) {
         throw new Error(result.error || "Failed to update species.");
       }
-      if (typeof parent.showToast === "function") {
+      if (typeof parent.queueToast === "function") {
+        parent.queueToast(result.message, "success");
+      } else if (typeof parent.showToast === "function") {
         parent.showToast(result.message, 3000, "success");
       } else {
         alert(result.message);

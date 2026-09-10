@@ -27,7 +27,7 @@ if ($id > 0) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="species_modal.css">
+    <link rel="stylesheet" href="species_modal.css?v=<?= filemtime(__DIR__ . '/species_modal.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
@@ -105,7 +105,7 @@ if ($id > 0) {
         </div>
     </div>
 
-    <script src="species_editor.js"></script>
+    <script src="species_editor.js?v=<?= filemtime(__DIR__ . '/species_editor.js') ?>"></script>
 </body>
 
 </html>

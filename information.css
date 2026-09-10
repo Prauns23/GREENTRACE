@@ -83,6 +83,93 @@ body {
   position: relative;
 }
 
+/* Custom category filter dropdown */
+.category-filter-wrapper {
+  position: relative;
+}
+
+.category-filter-toggle {
+  min-width: 150px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #dddddd50;
+  border: 1px solid #bfc3bf;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "Inter", sans-serif;
+}
+
+.category-filter-toggle:hover,
+.category-filter-toggle[aria-expanded="true"] {
+  border-color: #2e7d32;
+  background: #e3ffe5;
+}
+
+.category-filter-toggle .filter-chevron {
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.category-filter-toggle[aria-expanded="true"] .filter-chevron {
+  transform: rotate(180deg);
+}
+
+.category-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 150px;
+  background: #ffffff;
+  border: 1px solid #d5d9df;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.category-filter-dropdown[hidden] {
+  display: none;
+}
+
+.category-filter-dropdown .filter-btn {
+  width: 100%;
+  display: block;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 0;
+  color: #475569;
+  font:
+    500 0.9rem "Inter",
+    sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.category-filter-dropdown .filter-btn:hover {
+  background: #f1f5f9;
+  color: #2e7d32;
+}
+
+.category-filter-dropdown .filter-btn:not(:last-child) {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.category-filter-dropdown .filter-btn.active {
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
 .category-filter::after {
   position: absolute;
   top: 50%;
@@ -398,11 +485,28 @@ body {
   right: 0;
   top: 35px;
   width: 125px;
-  padding: 5px;
   background: white;
   border: 1px solid #ddd;
   box-shadow: 0 5px 15px #0002;
   border-radius: 8px;
+  overflow: hidden;
+
+  /* Transition for sliding down effect*/
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition:
+    max-height 0.3s ease,
+    opacity 0.3 ease,
+    transform 0.3s ease;
+  visibility: hidden;
+}
+
+.species-menu.open {
+  max-height: 200px;
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .species-menu button {

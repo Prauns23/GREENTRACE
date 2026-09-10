@@ -212,6 +212,32 @@ function showToast(message, duration = 3000, type = "success") {
   setTimeout(() => hideToast(), duration);
 }
 
+function queueToast(message, type = "success") {
+  try {
+    sessionStorage.setItem(
+      "greenTracePendingToast",
+      JSON.stringify({ message, type }),
+    );
+  } catch (error) {
+    showToast(message, 3000, type);
+  }
+}
+
+function showQueuedToast() {
+  try {
+    const pending = sessionStorage.getItem("greenTracePendingToast");
+    if (!pending) return;
+
+    sessionStorage.removeItem("greenTracePendingToast");
+    const { message, type } = JSON.parse(pending);
+    if (typeof message === "string" && message) {
+      setTimeout(() => showToast(message, 3000, type === "error" ? "error" : "success"), 100);
+    }
+  } catch (error) {
+    sessionStorage.removeItem("greenTracePendingToast");
+  }
+}
+
 function hideToast() {
   const toast = document.getElementById("toast");
   if (toast) {
@@ -493,6 +519,7 @@ window.showEditActivityModal = showEditActivityModal;
 window.showActivityDetails = showActivityDetails;
 window.showSignUp = showSignUp;
 window.showSignIn = showSignIn;
+window.queueToast = queueToast;
 window.hideFloating = hideFloating;
 window.switchToSignIn = switchToSignIn;
 window.switchToSignUp = switchToSignUp;
@@ -505,3 +532,5 @@ window.showVolunteerForm = showVolunteerForm;
 window.showConfirmArchive = showConfirmArchive;
 window.showConfirmRestore = showConfirmRestore;
 window.showConfirmDelete = showConfirmDelete;
+
+showQueuedToast();

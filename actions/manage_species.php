@@ -4,7 +4,8 @@ require_once __DIR__ . '/../init_session.php';
 require_once __DIR__ . '/../config.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-function speciesReply(int $status, array $body): void {
+function speciesReply(int $status, array $body): void
+{
     http_response_code($status);
     echo json_encode($body);
     exit;
@@ -13,14 +14,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     speciesReply(405, ['error' => 'Method not allowed.']);
 }
 $userId = (int)($_SESSION['user_id'] ?? 0);
-$auth = $conn->prepare('SELECT role FROM users_tbl WHERE id = ? AND archived = 0');
+$auth = $conn->prepare('SELECT role FROM users_tbl WHERE id = ?');
 $auth->bind_param('i', $userId);
 $auth->execute();
 $role = $auth->get_result()->fetch_assoc()['role'] ?? '';
 if (!in_array($role, ['admin', 'super_admin'], true)) {
     speciesReply(403, ['error' => 'Administrator access is required.']);
 }
-function speciesText(string $key, int $max, bool $required = true): string {
+function speciesText(string $key, int $max, bool $required = true): string
+{
     $value = $_POST[$key] ?? '';
     if (!is_string($value)) speciesReply(422, ['error' => 'Invalid field: ' . $key]);
     $value = trim($value);
@@ -56,7 +58,12 @@ try {
                 speciesReply(422, ['error' => 'Upload a valid PNG or JPG image.']);
             }
             $directory = __DIR__ . '/../uploads/species';
-            if (!is_dir($directory) && !mkdir($directory, 0755, true)) throw new RuntimeException('Cannot create image directory.');
+            if (!is_dir($directory) && !mkdir($directory, 0777, true) && !is_dir($directory)) {
+                throw new RuntimeException('Cannot create image directory.');
+            }
+            if (!is_writable($directory)) {
+                throw new RuntimeException('Image directory is not writable.');
+            }
             $filename = bin2hex(random_bytes(16)) . ($mime === 'image/png' ? '.png' : '.jpg');
             $newFile = $directory . '/' . $filename;
             if (!move_uploaded_file($file['tmp_name'], $newFile)) throw new RuntimeException('Cannot save image.');
@@ -66,7 +73,8 @@ try {
     $conn->begin_transaction();
     if ($action !== 'add') {
         $lookup = $conn->prepare('SELECT id, archived FROM tree_species WHERE id = ? FOR UPDATE');
-        $lookup->bind_param('i', $id); $lookup->execute();
+        $lookup->bind_param('i', $id);
+        $lookup->execute();
         $current = $lookup->get_result()->fetch_assoc();
         if (!$current) throw new DomainException('Species not found.', 404);
         if ($action === 'edit' && $current['archived']) throw new DomainException('Restore this species before editing it.', 409);
@@ -75,17 +83,17 @@ try {
         $stmt = $conn->prepare('INSERT INTO tree_species (name, scientific_name, category, description, importance, fun_fact, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)');
         $stmt->bind_param('sssssss', $name, $scientific, $category, $description, $importance, $fact, $imageUrl);
     } elseif ($action === 'edit') {
-        // Update only editorial fields. Preserve AR dimensions, colors and spacing.
         $stmt = $conn->prepare('UPDATE tree_species SET name=?, scientific_name=?, category=?, description=?, importance=?, fun_fact=?, image_url=COALESCE(?, image_url) WHERE id=?');
         $stmt->bind_param('sssssssi', $name, $scientific, $category, $description, $importance, $fact, $imageUrl, $id);
     } else {
         $sql = $action === 'archive' ? 'UPDATE tree_species SET archived=1, archived_at=COALESCE(archived_at, NOW()) WHERE id=?' : 'UPDATE tree_species SET archived=0, archived_at=NULL WHERE id=?';
-        $stmt = $conn->prepare($sql); $stmt->bind_param('i', $id);
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $id);
     }
     $stmt->execute();
     if ($action === 'add') $id = $conn->insert_id;
     $conn->commit();
-    speciesReply(200, ['success' => true, 'id' => $id, 'message' => 'Species ' . ['add'=>'added', 'edit'=>'updated', 'archive'=>'archived', 'restore'=>'restored'][$action] . '.']);
+    speciesReply(200, ['success' => true, 'id' => $id, 'message' => 'Species ' . ['add' => 'added', 'edit' => 'updated', 'archive' => 'archived', 'restore' => 'restored'][$action] . '.']);
 } catch (Throwable $e) {
     $conn->rollback();
     if ($newFile && is_file($newFile)) unlink($newFile);
