@@ -63,6 +63,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const fact = document.createElement("p");
         fact.textContent = note.fact;
 
+        const citation = document.createElement("div");
+        citation.className = "field-note-card__citation";
+
         const source = document.createElement(note.sourceUrl ? "a" : "span");
         source.className = "field-note-card__source";
         if (note.sourceUrl) {
@@ -77,7 +80,24 @@ document.addEventListener("DOMContentLoaded", function () {
         sourceText.textContent = `Source: ${note.sourceUrl || note.sourceName || "GreenTrace"}`;
         source.append(sourceIcon, sourceText);
 
-        card.append(title, fact, source);
+        const citationPreview = document.createElement("div");
+        citationPreview.className = "field-note-card__citation-preview";
+        citationPreview.setAttribute("role", "tooltip");
+        if (note.imageUrl) {
+          const citationImage = document.createElement("img");
+          citationImage.src = note.imageUrl;
+          citationImage.alt = note.imageAlt || note.sourceName || "Reference image";
+          citationImage.loading = "lazy";
+          citationPreview.append(citationImage);
+        }
+        const citationLabel = document.createElement("strong");
+        citationLabel.textContent = note.sourceName || "Reference";
+        const citationUrl = document.createElement("span");
+        citationUrl.textContent = note.sourceUrl || "GreenTrace field notes";
+        citationPreview.append(citationLabel, citationUrl);
+
+        citation.append(source, citationPreview);
+        card.append(title, fact, citation);
         columns[Math.floor(index / 3)].append(card);
       });
     };

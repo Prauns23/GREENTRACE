@@ -35,7 +35,7 @@ usort($topics, static function (array $left, array $right) use ($today): int {
 $selectedTopics = array_slice($topics, 0, $limit);
 
 $cacheDirectory = __DIR__ . '/../tmp/field-notes-cache';
-$cacheFile = $cacheDirectory . '/field-notes-v4-' . $today . '-' . $limit . '.json';
+$cacheFile = $cacheDirectory . '/field-notes-v5-' . $today . '-' . $limit . '.json';
 if (is_dir($cacheDirectory)) {
     $cacheLifetime = 14 * 24 * 60 * 60;
     foreach (glob($cacheDirectory . '/field-notes-v*.json') ?: [] as $existingCacheFile) {
@@ -57,10 +57,12 @@ $url = 'https://en.wikipedia.org/w/api.php?' . http_build_query([
     'action' => 'query',
     'format' => 'json',
     'formatversion' => '2',
-    'prop' => 'extracts',
+    'prop' => 'extracts|pageimages',
     'exintro' => '1',
     'explaintext' => '1',
     'exsentences' => '2',
+    'piprop' => 'thumbnail',
+    'pithumbsize' => '320',
     'redirects' => '1',
     'titles' => $titles,
 ]);
@@ -87,9 +89,11 @@ if (is_string($response) && $statusCode >= 200 && $statusCode < 300) {
 $notes = [];
 foreach ($selectedTopics as $index => $topic) {
     $extract = '';
+    $imageUrl = '';
     foreach ($pages as $page) {
         if (strcasecmp((string) ($page['title'] ?? ''), $topic['title']) === 0) {
             $extract = trim(preg_replace('/\s+/', ' ', (string) ($page['extract'] ?? '')) ?? '');
+            $imageUrl = (string) ($page['thumbnail']['source'] ?? '');
             break;
         }
     }
@@ -99,6 +103,8 @@ foreach ($selectedTopics as $index => $topic) {
         'tone' => $topic['tone'],
         'sourceName' => 'Wikipedia',
         'sourceUrl' => 'https://en.wikipedia.org/wiki/' . rawurlencode(str_replace(' ', '_', $topic['title'])),
+        'imageUrl' => $imageUrl,
+        'imageAlt' => $topic['title'],
     ];
 }
 
