@@ -10,6 +10,119 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  const treeGrowthRoot = document.querySelector("[data-tree-growth-root]");
+  if (treeGrowthRoot) {
+    const waterButton = treeGrowthRoot.querySelector("[data-tree-water]");
+    const illustrationHost = treeGrowthRoot.querySelector("[data-tree-illustration-host]");
+    let watering = false;
+
+    const replaceTreeIllustration = (svg, animate = false) => {
+      if (!illustrationHost || !svg) return;
+      const currentStage = illustrationHost.querySelector("svg")?.dataset.treeStage;
+      const nextStage = String(svg.match(/data-tree-stage="(\d+)"/)?.[1] ?? "");
+      if (currentStage === nextStage && !animate) return;
+
+      const insertIllustration = () => {
+        illustrationHost.innerHTML = svg;
+        illustrationHost.classList.remove("is-phase-leaving");
+        if (animate) {
+          illustrationHost.classList.add("is-phase-entering");
+          window.setTimeout(
+            () => illustrationHost.classList.remove("is-phase-entering"),
+            700,
+          );
+        }
+      };
+
+      if (!animate) {
+        insertIllustration();
+        return;
+      }
+
+      illustrationHost.classList.add("is-phase-leaving");
+      window.setTimeout(insertIllustration, 180);
+    };
+
+    const applyTreeGrowthState = (state, animate = false) => {
+      if (!state) return;
+      const dayLabel = `Day ${state.day} of ${state.duration}`;
+      const card = treeGrowthRoot.querySelector("[data-tree-card]");
+      const name = treeGrowthRoot.querySelector("[data-tree-name]");
+      const scientific = treeGrowthRoot.querySelector("[data-tree-scientific]");
+      const category = treeGrowthRoot.querySelector("[data-tree-category]");
+      const day = treeGrowthRoot.querySelector("[data-tree-day-label]");
+      const progress = treeGrowthRoot.querySelector("[data-tree-progress-stat]");
+      const matured = treeGrowthRoot.querySelector("[data-tree-matured-stat]");
+      const status = treeGrowthRoot.querySelector("[data-tree-status]");
+
+      if (name) name.textContent = state.name;
+      if (scientific) scientific.textContent = state.scientificName;
+      if (category) category.textContent = state.category;
+      if (day) day.textContent = dayLabel;
+      if (progress) progress.textContent = state.day;
+      if (matured) matured.textContent = state.maturedCount;
+      if (status) status.textContent = state.message;
+      if (card) card.setAttribute("aria-label", `Your grove: ${state.name} at ${dayLabel.toLowerCase()}`);
+      if (groveTrigger) groveTrigger.setAttribute("aria-label", `Open ${state.name} tree tending details`);
+
+      if (waterButton) {
+        const label = state.canWater ? `Water ${state.name}` : state.message;
+        waterButton.setAttribute("aria-disabled", state.canWater ? "false" : "true");
+        waterButton.setAttribute("aria-label", label);
+        waterButton.dataset.tooltip = state.wateredToday
+          ? "Already watered"
+          : state.canWater
+            ? "Click to water"
+            : state.message;
+      }
+
+      replaceTreeIllustration(state.illustrationSvg, animate);
+    };
+
+    const showGrowthToast = (message, success) => {
+      if (typeof window.showToast === "function") {
+        window.showToast(message, 3500, success ? "success" : "error");
+      }
+    };
+
+    waterButton?.addEventListener("click", async () => {
+      if (watering) return;
+      if (waterButton.getAttribute("aria-disabled") === "true") {
+        showGrowthToast(waterButton.getAttribute("aria-label"), false);
+        return;
+      }
+
+      watering = true;
+      waterButton.classList.add("is-loading");
+      waterButton.setAttribute("aria-busy", "true");
+      try {
+        const response = await fetch(treeGrowthRoot.dataset.waterEndpoint, {
+          method: "POST",
+          headers: { Accept: "application/json" },
+        });
+        const payload = await response.json();
+        if (payload.state) applyTreeGrowthState(payload.state, payload.advanced === true);
+        showGrowthToast(payload.message || "Tree tending status updated.", response.ok && payload.success);
+
+        if (response.ok && payload.advanced) {
+          showGroveCard(true);
+        }
+      } catch (_error) {
+        showGrowthToast("The tree could not be watered. Please try again.", false);
+      } finally {
+        watering = false;
+        waterButton.classList.remove("is-loading");
+        waterButton.removeAttribute("aria-busy");
+      }
+    });
+
+    window.addEventListener("message", (event) => {
+      if (event.origin !== window.location.origin || event.data?.type !== "tree-growth-updated") return;
+      applyTreeGrowthState(event.data.state, event.data.animate === true);
+      if (event.data.message) showGrowthToast(event.data.message, event.data.success !== false);
+    });
+  }
+
   // --- Field Notes ---
   const fieldNotesGrid = document.querySelector("[data-field-notes-grid]");
   if (fieldNotesGrid) {
@@ -153,6 +266,76 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // --- Progressive history timeline ---
+  const historyTimeline = document.querySelector(".history-timeline");
+  if (historyTimeline) {
+    const milestones = Array.from(
+      historyTimeline.querySelectorAll(".history-milestone"),
+    );
+    let latestRevealedIndex = 0;
+
+    historyTimeline.classList.add("history-timeline--interactive");
+
+    const updateHistoryProgress = () => {
+      milestones.forEach((milestone, index) => {
+        const marker = milestone.querySelector(".history-milestone__marker");
+        const year = milestone.querySelector("time")?.textContent.trim() || "History";
+        const isRevealed = index <= latestRevealedIndex;
+        const isCurrent = index === latestRevealedIndex + 1;
+
+        milestone.classList.toggle("is-revealed", isRevealed);
+        milestone.classList.toggle("is-current", isCurrent);
+        milestone.classList.toggle("is-locked", !isRevealed && !isCurrent);
+        milestone.classList.toggle("is-complete", index < latestRevealedIndex);
+        milestone.setAttribute("aria-expanded", isRevealed ? "true" : "false");
+
+        if (!marker) return;
+        marker.removeAttribute("aria-hidden");
+        marker.setAttribute("role", "button");
+        marker.tabIndex = isCurrent ? 0 : -1;
+        marker.setAttribute("aria-disabled", isCurrent ? "false" : "true");
+        marker.setAttribute(
+          "aria-label",
+          isCurrent
+            ? `Reveal the ${year} milestone`
+            : isRevealed
+              ? `${year} milestone revealed`
+              : `Reveal earlier milestones before ${year}`,
+        );
+      });
+    };
+
+    const revealNextMilestone = (marker, moveFocus = false) => {
+      const milestone = marker.closest(".history-milestone");
+      const index = milestones.indexOf(milestone);
+      if (index !== latestRevealedIndex + 1) return;
+
+      latestRevealedIndex = index;
+      updateHistoryProgress();
+
+      if (moveFocus) {
+        milestones[index + 1]
+          ?.querySelector(".history-milestone__marker")
+          ?.focus();
+      }
+    };
+
+    historyTimeline.addEventListener("click", (event) => {
+      const marker = event.target.closest(".history-milestone__marker");
+      if (marker) revealNextMilestone(marker);
+    });
+
+    historyTimeline.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const marker = event.target.closest(".history-milestone__marker");
+      if (!marker) return;
+      event.preventDefault();
+      revealNextMilestone(marker, true);
+    });
+
+    updateHistoryProgress();
+  }
+
   // --- Search and category filters ---
   const searchInput = document.getElementById("searchInput");
   const searchForm = document.getElementById("searchForm");
@@ -274,12 +457,17 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-function showGroveCard() {
+function showGroveCard(animatePhase = false) {
   const container = document.getElementById("floatingGroveCardContainer");
   const frame = document.getElementById("groveCardFrame");
   if (!container || !frame) return;
 
-  frame.src = (window.basePath || "") + "modals/grove_card.php";
+  const modalUrl = new URL(
+    (window.basePath || "") + "modals/grove_card.php",
+    window.location.href,
+  );
+  if (animatePhase) modalUrl.searchParams.set("animate", "1");
+  frame.src = modalUrl.href;
   if (typeof window.showFloatingContainer === "function") {
     window.showFloatingContainer(container);
     return;

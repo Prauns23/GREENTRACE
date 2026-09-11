@@ -2,6 +2,7 @@
 require_once 'init_session.php';
 include 'header.php';
 require_once 'config.php';
+require_once __DIR__ . '/components/tree_growth.php';
 
 // Get filters from URL
 $category = is_string($_GET['category'] ?? null) ? $_GET['category'] : 'all';
@@ -47,6 +48,10 @@ if (!empty($params)) {
 $stmt->execute();
 $result = $stmt->get_result();
 $species = $result->fetch_all(MYSQLI_ASSOC);
+$treeGrowthState = treeGrowthState(
+    $conn,
+    isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null
+);
 ?>
 
 <link rel="stylesheet" href="information.css?v=<?= filemtime(__DIR__ . '/information.css') ?>">
@@ -137,7 +142,7 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
             <?php endif; ?>
         </div>
 
-        <section class="grow-tree-container" aria-labelledby="grow-tree-title" data-preview="true">
+        <section class="grow-tree-container" aria-labelledby="grow-tree-title" data-tree-growth-root data-water-endpoint="actions/water_tree.php">
             <header class="grow-header">
                 <h2 id="grow-tree-title">Grow a Tree</h2>
                 <p>Choose a tree to tend and see its growing phase. Remember to visit each day to water your sapling! Additionally earn a badge to show off!</p>
@@ -145,35 +150,20 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
 
             <div class="grow-grid">
                 <div class="grow-grid-left">
-                    <article class="tree-grove-card" aria-label="Your grove preview: Narra at day 4 of 7">
+                    <article class="tree-grove-card" data-tree-card aria-label="Your grove: <?= htmlspecialchars($treeGrowthState['name']) ?> at day <?= (int) $treeGrowthState['day'] ?> of <?= (int) $treeGrowthState['duration'] ?>">
                         <header class="tree-grove-card__header">
                             <span>Your Grove</span>
-                            <span>Day 4 of 7</span>
+                            <span data-tree-day-label>Day <?= (int) $treeGrowthState['day'] ?> of <?= (int) $treeGrowthState['duration'] ?></span>
                         </header>
-                        <div class="tree-grove-card__phase tree-phase--day-four" role="button" tabindex="0" aria-label="Open Narra tree tending details" data-grove-trigger onclick="showGroveCard()">
-                            <svg class="tree-growth-illustration" viewBox="0 0 320 320" aria-hidden="true" focusable="false">
-                                <g class="tree-growth-illustration__soil">
-                                    <ellipse cx="160" cy="276" rx="120" ry="10" fill="oklch(0.78 0.04 90)" />
-                                    <ellipse cx="160" cy="272" rx="80" ry="6" fill="oklch(0.55 0.05 80)" opacity=".5" />
-                                </g>
-                                <g class="tree-growth-illustration__trunk">
-                                    <rect x="152.6" y="168" width="14.8" height="108" rx="7.4" fill="oklch(0.34 0.04 50)" />
-                                    <path d="M145.2 276q-10-2-16 2m29.6-2q10-2 16 2" fill="none" stroke="oklch(0.30 0.04 50)" stroke-linecap="round" stroke-width="3" />
-                                </g>
-                                <g class="tree-growth-illustration__canopy">
-                                    <circle cx="160" cy="115" r="74" fill="oklch(0.45 0.09 150)" />
-                                    <circle cx="115.6" cy="129.8" r="51.8" fill="oklch(0.5 0.1 148)" />
-                                    <circle cx="204.4" cy="129.8" r="51.8" fill="oklch(0.55 0.1 145)" />
-                                    <circle cx="160" cy="78" r="40.7" fill="oklch(0.6 0.11 142)" />
-                                </g>
-                            </svg>
+                        <div class="tree-grove-card__phase" role="button" tabindex="0" aria-label="Open <?= htmlspecialchars($treeGrowthState['name']) ?> tree tending details" data-grove-trigger onclick="showGroveCard()" data-tree-illustration-host>
+                            <?= treeGrowthIllustrationSvg((int) $treeGrowthState['day']) ?>
                         </div>
                         <footer class="tree-grove-card__footer">
                             <div>
-                                <h3>Narra</h3>
-                                <p>Pterocarpus indicus · Native</p>
+                                <h3 data-tree-name><?= htmlspecialchars($treeGrowthState['name']) ?></h3>
+                                <p><span data-tree-scientific><?= htmlspecialchars($treeGrowthState['scientificName']) ?></span> · <span data-tree-category><?= htmlspecialchars($treeGrowthState['category']) ?></span></p>
                             </div>
-                            <button type="button" class="tree-water-button" aria-disabled="true" aria-label="Watering is not available in this preview" data-tooltip="Click to water">
+                            <button type="button" class="tree-water-button" data-tree-water aria-disabled="<?= $treeGrowthState['canWater'] ? 'false' : 'true' ?>" aria-label="<?= htmlspecialchars($treeGrowthState['canWater'] ? 'Water ' . $treeGrowthState['name'] : $treeGrowthState['message']) ?>" data-tooltip="<?= htmlspecialchars($treeGrowthState['wateredToday'] ? 'Already watered' : ($treeGrowthState['canWater'] ? 'Click to water' : $treeGrowthState['message'])) ?>">
                                 <i class="fa-solid fa-heart" aria-hidden="true"></i>
                             </button>
                         </footer>
@@ -181,9 +171,9 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
                 </div>
 
                 <div class="grow-grid-right">
-                    <div class="tree-stat-grid" aria-label="Tree tending preview statistics">
-                        <article class="tree-stat-card tree-stat-card--bright"><strong>4</strong><span>Progress</span></article>
-                        <article class="tree-stat-card"><strong>0</strong><span>Matured trees</span></article>
+                    <div class="tree-stat-grid" aria-label="Tree tending statistics">
+                        <article class="tree-stat-card tree-stat-card--bright"><strong data-tree-progress-stat><?= (int) $treeGrowthState['day'] ?></strong><span>Progress</span></article>
+                        <article class="tree-stat-card"><strong data-tree-matured-stat><?= (int) $treeGrowthState['maturedCount'] ?></strong><span>Matured trees</span></article>
                     </div>
 
                     <article class="tree-selection">
@@ -241,8 +231,103 @@ $species = $result->fetch_all(MYSQLI_ASSOC);
             <p class="field-notes-status visually-hidden" data-field-notes-status aria-live="polite"></p>
         </section>
 
-        <!-- Short history of PH Reforestation -->
+        <!-- Short history of Philippine reforestation -->
+        <section class="history-section" aria-labelledby="history-title">
+            <header class="history-header">
+                <h2 id="history-title">Short history of Philippine reforestation</h2>
+                <p>A few milestones that shaped forest protection, community stewardship, and restoration in the Philippines.</p>
+            </header>
 
+            <div class="main-history-content">
+                <div class="history-timeline">
+                    <ol class="history-timeline__column">
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="1975">1975</time>
+                                <p>The Revised Forestry Code placed protection, rehabilitation, and development of forest lands among the State’s forestry policies.</p>
+                                <a href="https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/26/20632" target="_blank" rel="noopener noreferrer">P.D. No. 705 <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="1992">1992</time>
+                                <p>Visayas State University established a Rainforestation research farm in Leyte, advancing native-tree restoration with local livelihoods.</p>
+                                <a href="https://rainforestation.vsu.edu.ph/?page_id=2614" target="_blank" rel="noopener noreferrer">Visayas State University <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="1995">1995</time>
+                                <p>Executive Order No. 263 adopted community-based forest management as the national strategy for sustainable forestlands.</p>
+                                <a href="https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/5/62977" target="_blank" rel="noopener noreferrer">E.O. No. 263 <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="2011">2011</time>
+                                <p>Executive Order No. 26 launched the National Greening Program, targeting 1.5 billion trees across 1.5 million hectares from 2011 to 2016.</p>
+                                <a href="https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/5/34112" target="_blank" rel="noopener noreferrer">E.O. No. 26 <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="2015">2015</time>
+                                <p>Executive Order No. 193 expanded the program to remaining unproductive, denuded, and degraded forestlands through 2028.</p>
+                                <a href="https://fmb.denr.gov.ph/ngp/wp-content/uploads/2022/10/20151112-EO-0193-BSA.pdf" target="_blank" rel="noopener noreferrer">E.O. No. 193 <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                    </ol>
+
+                    <ol class="history-timeline__column" start="6">
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="2016">2016</time>
+                                <p>DENR reports that 1.6 million hectares had been planted by the end of the National Greening Program’s initial 2011–2016 phase.</p>
+                                <a href="https://fmb.denr.gov.ph/ngp/wp-content/uploads/2023/11/DAO-2023-09.pdf" target="_blank" rel="noopener noreferrer">DENR progress record <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="2020">2020</time>
+                                <p>DENR’s Forestland Management and Integrated Natural Resources projects rehabilitated 23,856 hectares of denuded and degraded forestland across seven major river basins.</p>
+                                <a href="https://denr.gov.ph/wp-content/uploads/2023/05/Foreign-Assisted_and_Special_Projects_opt.pdf" target="_blank" rel="noopener noreferrer">DENR 2020 Annual Report <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="2021">2021</time>
+                                <p>DENR reported planting 95,666 hectares with 70.72 million seedlings under the Enhanced National Greening Program.</p>
+                                <a href="https://www.denr.gov.ph/wp-content/uploads/2024/02/DENR-Annual-Report-for-FY2021.pdf" target="_blank" rel="noopener noreferrer">DENR 2021 Annual Report <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="2025">2025</time>
+                                <p>DENR launched Forests for Life: 5 Million Trees by 2028, a nationwide reforestation initiative that drew pledges beyond its original target.</p>
+                                <a href="https://fmb.denr.gov.ph/ffl/?p=1163" target="_blank" rel="noopener noreferrer">Forests for Life launch <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                        <li class="history-milestone">
+                            <span class="history-milestone__marker" aria-hidden="true"></span>
+                            <div>
+                                <time datetime="2026">2026</time>
+                                <p>NGP regional coordinators met to shape the program’s design framework and update the national reforestation policy plan.</p>
+                                <a href="https://forestry.denr.gov.ph/fmb_web/news-and-events/national-greening-program-ngp-regional-coordinators-consultation-on-the-formulation-of-ngp-design-framework-and-updating-of-reforestation-policy-plan/" target="_blank" rel="noopener noreferrer">FMB consultation <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </section>
     </div>
     <script src="information.js" defer></script>
     <?php include 'footer.php'; ?>

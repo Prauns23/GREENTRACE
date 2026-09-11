@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: public, max-age=3600');
+header('Cache-Control: public, max-age=900');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 6;
 $limit = max(1, min($limit, 6));
 
-// A controlled topic pool keeps each daily card relevant to Philippine forests
+// A controlled topic pool keeps each rotating card relevant to Philippine forests
 // and restoration. MediaWiki supplies the current introductory extract only.
 $topics = [
     ['title' => 'Reforestation', 'tone' => 'accent', 'fallback' => 'Reforestation restores tree cover in areas where forests were removed or heavily degraded.'],
@@ -28,14 +28,21 @@ $topics = [
     ['title' => 'Shorea', 'tone' => 'neutral', 'fallback' => 'Shorea is a genus that includes many important dipterocarp trees in Southeast Asian forests.'],
 ];
 
-$today = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
-usort($topics, static function (array $left, array $right) use ($today): int {
-    return strcmp(hash('sha256', $today . $left['title']), hash('sha256', $today . $right['title']));
+$timeZone = new DateTimeZone('Asia/Manila');
+$now = new DateTimeImmutable('now', $timeZone);
+$rotationSeconds = 16 * 60 * 60;
+$rotationSlot = intdiv($now->getTimestamp(), $rotationSeconds);
+$rotationStartedAt = (new DateTimeImmutable('@' . ($rotationSlot * $rotationSeconds)))->setTimezone($timeZone);
+$nextRotationAt = $rotationStartedAt->modify('+16 hours');
+$rotationKey = '16h-' . $rotationSlot;
+
+usort($topics, static function (array $left, array $right) use ($rotationKey): int {
+    return strcmp(hash('sha256', $rotationKey . $left['title']), hash('sha256', $rotationKey . $right['title']));
 });
 $selectedTopics = array_slice($topics, 0, $limit);
 
 $cacheDirectory = __DIR__ . '/../tmp/field-notes-cache';
-$cacheFile = $cacheDirectory . '/field-notes-v5-' . $today . '-' . $limit . '.json';
+$cacheFile = $cacheDirectory . '/field-notes-v6-' . $rotationSlot . '-' . $limit . '.json';
 if (is_dir($cacheDirectory)) {
     $cacheLifetime = 14 * 24 * 60 * 60;
     foreach (glob($cacheDirectory . '/field-notes-v*.json') ?: [] as $existingCacheFile) {
@@ -108,7 +115,13 @@ foreach ($selectedTopics as $index => $topic) {
     ];
 }
 
-$payload = ['date' => $today, 'source' => 'MediaWiki', 'notes' => $notes];
+$payload = [
+    'source' => 'MediaWiki',
+    'refreshIntervalHours' => 16,
+    'refreshedAt' => $rotationStartedAt->format(DateTimeInterface::ATOM),
+    'nextRefreshAt' => $nextRotationAt->format(DateTimeInterface::ATOM),
+    'notes' => $notes,
+];
 if (!is_dir($cacheDirectory)) {
     mkdir($cacheDirectory, 0775, true);
 }
