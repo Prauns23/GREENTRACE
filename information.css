@@ -1085,6 +1085,15 @@ body.species-modal-open {
   color: #3f3f3f;
 }
 
+.grow-tree-container[data-authenticated="false"] .tree-choice {
+  cursor: pointer;
+}
+
+.grow-tree-container[data-authenticated="false"] .tree-choice:hover,
+.grow-tree-container[data-authenticated="false"] .tree-choice:focus-visible {
+  border-color: rgba(63, 124, 66, .58);
+}
+
 /* Field Notes */
 .field-notes-section {
   margin-top: 72px;

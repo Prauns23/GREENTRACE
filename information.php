@@ -142,7 +142,7 @@ $treeGrowthState = treeGrowthState(
             <?php endif; ?>
         </div>
 
-        <section class="grow-tree-container" aria-labelledby="grow-tree-title" data-tree-growth-root data-water-endpoint="actions/water_tree.php">
+        <section class="grow-tree-container" aria-labelledby="grow-tree-title" data-tree-growth-root data-authenticated="<?= $treeGrowthState['authenticated'] ? 'true' : 'false' ?>" data-water-endpoint="actions/water_tree.php">
             <header class="grow-header">
                 <h2 id="grow-tree-title">Grow a Tree</h2>
                 <p>Choose a tree to tend and see its growing phase. Remember to visit each day to water your sapling! Additionally earn a badge to show off!</p>
@@ -179,12 +179,12 @@ $treeGrowthState = treeGrowthState(
                     <article class="tree-selection">
                         <h3>Plant a new tree</h3>
                         <p>Available when your current tree finishes growing</p>
-                        <div class="tree-selection__choices" aria-label="Placeholder tree choices">
-                            <button type="button" class="tree-choice tree-choice--current" disabled><strong>Narra</strong><span>7 days · Native</span></button>
-                            <button type="button" class="tree-choice" disabled><strong>Mahogany</strong><span>5 days · Introduced</span></button>
-                            <button type="button" class="tree-choice" disabled><strong>Fire Tree</strong><span>5 days · Introduced</span></button>
-                            <button type="button" class="tree-choice" disabled><strong>Apitong</strong><span>7 days · Native</span></button>
-                            <button type="button" class="tree-choice" disabled><strong>Lauan</strong><span>7 days · Native</span></button>
+                        <div class="tree-selection__choices" aria-label="Tree choices">
+                            <button type="button" class="tree-choice tree-choice--current" data-tree-choice <?= $treeGrowthState['authenticated'] ? 'disabled' : 'aria-label="Sign in to select Narra"' ?>><strong>Narra</strong><span>7 days · Native</span></button>
+                            <button type="button" class="tree-choice" data-tree-choice <?= $treeGrowthState['authenticated'] ? 'disabled' : 'aria-label="Sign in to select Mahogany"' ?>><strong>Mahogany</strong><span>5 days · Introduced</span></button>
+                            <button type="button" class="tree-choice" data-tree-choice <?= $treeGrowthState['authenticated'] ? 'disabled' : 'aria-label="Sign in to select Fire Tree"' ?>><strong>Fire Tree</strong><span>5 days · Introduced</span></button>
+                            <button type="button" class="tree-choice" data-tree-choice <?= $treeGrowthState['authenticated'] ? 'disabled' : 'aria-label="Sign in to select Apitong"' ?>><strong>Apitong</strong><span>7 days · Native</span></button>
+                            <button type="button" class="tree-choice" data-tree-choice <?= $treeGrowthState['authenticated'] ? 'disabled' : 'aria-label="Sign in to select Lauan"' ?>><strong>Lauan</strong><span>7 days · Native</span></button>
                         </div>
                     </article>
                 </div>

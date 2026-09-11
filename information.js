@@ -14,7 +14,16 @@ document.addEventListener("DOMContentLoaded", function () {
   if (treeGrowthRoot) {
     const waterButton = treeGrowthRoot.querySelector("[data-tree-water]");
     const illustrationHost = treeGrowthRoot.querySelector("[data-tree-illustration-host]");
+    const isAuthenticated = treeGrowthRoot.dataset.authenticated === "true";
     let watering = false;
+
+    const requireTreeLogin = () => {
+      if (isAuthenticated) return false;
+      if (typeof window.showSignIn === "function") {
+        window.showSignIn();
+      }
+      return true;
+    };
 
     const replaceTreeIllustration = (svg, animate = false) => {
       if (!illustrationHost || !svg) return;
@@ -87,6 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     waterButton?.addEventListener("click", async () => {
       if (watering) return;
+      if (requireTreeLogin()) return;
       if (waterButton.getAttribute("aria-disabled") === "true") {
         showGrowthToast(waterButton.getAttribute("aria-label"), false);
         return;
@@ -114,6 +124,10 @@ document.addEventListener("DOMContentLoaded", function () {
         waterButton.classList.remove("is-loading");
         waterButton.removeAttribute("aria-busy");
       }
+    });
+
+    treeGrowthRoot.querySelectorAll("[data-tree-choice]").forEach((choice) => {
+      choice.addEventListener("click", () => requireTreeLogin());
     });
 
     window.addEventListener("message", (event) => {

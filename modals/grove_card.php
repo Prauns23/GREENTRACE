@@ -23,7 +23,7 @@ $animateInitialPhase = ($_GET['animate'] ?? '') === '1';
     <link rel="stylesheet" href="grove_card.css?v=<?= filemtime(__DIR__ . '/grove_card.css') ?>">
 </head>
 <body>
-    <main class="grove-modal" role="dialog" aria-modal="true" aria-labelledby="grove-modal-title" data-grove-root data-water-endpoint="../actions/water_tree.php" data-initial-animation="<?= $animateInitialPhase ? 'true' : 'false' ?>">
+    <main class="grove-modal" role="dialog" aria-modal="true" aria-labelledby="grove-modal-title" data-grove-root data-authenticated="<?= $treeGrowthState['authenticated'] ? 'true' : 'false' ?>" data-water-endpoint="../actions/water_tree.php" data-initial-animation="<?= $animateInitialPhase ? 'true' : 'false' ?>">
         <header class="grove-modal__header">
             <div>
                 <h1 id="grove-modal-title" data-grove-name><?= htmlspecialchars($treeGrowthState['name']) ?></h1>

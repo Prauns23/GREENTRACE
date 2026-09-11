@@ -89,6 +89,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   waterButton?.addEventListener("click", async () => {
     if (watering) return;
+    if (root.dataset.authenticated !== "true") {
+      if (parent !== window && typeof parent.showSignIn === "function") {
+        parent.showSignIn();
+      }
+      return;
+    }
     if (waterButton.getAttribute("aria-disabled") === "true") {
       notifyParent(waterButton.getAttribute("aria-label"), false);
       return;
