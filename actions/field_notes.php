@@ -43,13 +43,22 @@ $selectedTopics = array_slice($topics, 0, $limit);
 
 $cacheDirectory = __DIR__ . '/../tmp/field-notes-cache';
 $cacheFile = $cacheDirectory . '/field-notes-v6-' . $rotationSlot . '-' . $limit . '.json';
-if (is_dir($cacheDirectory)) {
-    $cacheLifetime = 14 * 24 * 60 * 60;
-    foreach (glob($cacheDirectory . '/field-notes-v*.json') ?: [] as $existingCacheFile) {
-        if (is_file($existingCacheFile) && filemtime($existingCacheFile) < time() - $cacheLifetime) {
-            unlink($existingCacheFile);
-        }
+$retainCacheFiles = static function (string $directory): void {
+    $cacheFiles = array_values(array_filter(
+        glob($directory . '/field-notes-v*.json') ?: [],
+        'is_file'
+    ));
+    usort($cacheFiles, static function (string $left, string $right): int {
+        $modifiedDifference = filemtime($right) <=> filemtime($left);
+        return $modifiedDifference !== 0 ? $modifiedDifference : strcmp($right, $left);
+    });
+
+    foreach (array_slice($cacheFiles, 2) as $oldCacheFile) {
+        @unlink($oldCacheFile);
     }
+};
+if (is_dir($cacheDirectory)) {
+    $retainCacheFiles($cacheDirectory);
 }
 if (is_file($cacheFile)) {
     $cached = json_decode((string) file_get_contents($cacheFile), true);
@@ -126,5 +135,6 @@ if (!is_dir($cacheDirectory)) {
     mkdir($cacheDirectory, 0775, true);
 }
 file_put_contents($cacheFile, json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX);
+$retainCacheFiles($cacheDirectory);
 
 echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
