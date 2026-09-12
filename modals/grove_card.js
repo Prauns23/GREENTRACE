@@ -77,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const label = state.canWater ? `Water ${state.name}` : state.message;
       waterButton.setAttribute("aria-disabled", state.canWater ? "false" : "true");
       waterButton.setAttribute("aria-label", label);
+      waterButton.dataset.wateredToday = state.wateredToday ? "true" : "false";
       waterButton.dataset.tooltip = state.wateredToday
         ? "Already watered"
         : state.canWater
@@ -96,6 +97,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     if (waterButton.getAttribute("aria-disabled") === "true") {
+      if (waterButton.dataset.wateredToday === "true") {
+        const status = root.querySelector("[data-grove-status]");
+        status?.classList.remove("is-shaking");
+        void status?.offsetWidth;
+        status?.classList.add("is-shaking");
+        return;
+      }
       notifyParent(waterButton.getAttribute("aria-label"), false);
       return;
     }

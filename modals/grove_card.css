@@ -62,14 +62,14 @@ body {
   position: absolute;
   top: 15px;
   right: 25px;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 0;
   background: transparent;
   color: #3f3f3f;
   cursor: pointer;
-  font: 300 48px/.7 "Inter", sans-serif;
+  font: 300 38px/.7 "Inter", sans-serif;
 }
 
 .grove-modal__close:hover,
@@ -181,11 +181,11 @@ body {
 
 .grove-progress__track {
   width: 80%;
-  height: 8px;
+  height: 6px;
   margin-inline: auto;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(134, 141, 131, 0.24);
+  background: rgba(142, 172, 130, 0.315);
 }
 
 .grove-progress__track span {
@@ -209,6 +209,18 @@ body {
   color: #555555b2;
   font-size: 14px;
   font-weight: 500;
+}
+
+.grove-progress p.is-shaking {
+  animation: grove-status-shake 420ms ease-in-out;
+}
+
+@keyframes grove-status-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
 }
 
 .grove-modal__footer {

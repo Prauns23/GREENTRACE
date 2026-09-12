@@ -78,6 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const label = state.canWater ? `Water ${state.name}` : state.message;
         waterButton.setAttribute("aria-disabled", state.canWater ? "false" : "true");
         waterButton.setAttribute("aria-label", label);
+        waterButton.dataset.wateredToday = state.wateredToday ? "true" : "false";
         waterButton.dataset.tooltip = state.wateredToday
           ? "Already watered"
           : state.canWater
@@ -98,7 +99,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (watering) return;
       if (requireTreeLogin()) return;
       if (waterButton.getAttribute("aria-disabled") === "true") {
-        showGrowthToast(waterButton.getAttribute("aria-label"), false);
+        showGrowthToast(
+          waterButton.getAttribute("aria-label"),
+          waterButton.dataset.wateredToday === "true",
+        );
         return;
       }
 

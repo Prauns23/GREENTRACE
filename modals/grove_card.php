@@ -34,7 +34,7 @@ $animateInitialPhase = ($_GET['animate'] ?? '') === '1';
         </header>
 
         <section class="grove-modal__content" data-grove-content aria-label="<?= htmlspecialchars($treeGrowthState['name']) ?> tending progress">
-            <button type="button" class="grove-tree-action" data-grove-water aria-disabled="<?= $treeGrowthState['canWater'] ? 'false' : 'true' ?>" data-tooltip="<?= htmlspecialchars($treeGrowthState['wateredToday'] ? 'Already watered' : ($treeGrowthState['canWater'] ? 'Click me!' : $treeGrowthState['message'])) ?>" aria-label="<?= htmlspecialchars($treeGrowthState['canWater'] ? 'Water ' . $treeGrowthState['name'] : $treeGrowthState['message']) ?>">
+            <button type="button" class="grove-tree-action" data-grove-water data-watered-today="<?= $treeGrowthState['wateredToday'] ? 'true' : 'false' ?>" aria-disabled="<?= $treeGrowthState['canWater'] ? 'false' : 'true' ?>" data-tooltip="<?= htmlspecialchars($treeGrowthState['wateredToday'] ? 'Already watered' : ($treeGrowthState['canWater'] ? 'Click me!' : $treeGrowthState['message'])) ?>" aria-label="<?= htmlspecialchars($treeGrowthState['canWater'] ? 'Water ' . $treeGrowthState['name'] : $treeGrowthState['message']) ?>">
                 <span class="grove-tree-action__illustration" data-grove-illustration-host>
                     <?= treeGrowthIllustrationSvg((int) $treeGrowthState['day'], 'grove-tree-illustration') ?>
                 </span>

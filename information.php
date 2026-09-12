@@ -163,7 +163,7 @@ $treeGrowthState = treeGrowthState(
                                 <h3 data-tree-name><?= htmlspecialchars($treeGrowthState['name']) ?></h3>
                                 <p><span data-tree-scientific><?= htmlspecialchars($treeGrowthState['scientificName']) ?></span> · <span data-tree-category><?= htmlspecialchars($treeGrowthState['category']) ?></span></p>
                             </div>
-                            <button type="button" class="tree-water-button" data-tree-water aria-disabled="<?= $treeGrowthState['canWater'] ? 'false' : 'true' ?>" aria-label="<?= htmlspecialchars($treeGrowthState['canWater'] ? 'Water ' . $treeGrowthState['name'] : $treeGrowthState['message']) ?>" data-tooltip="<?= htmlspecialchars($treeGrowthState['wateredToday'] ? 'Already watered' : ($treeGrowthState['canWater'] ? 'Click to water' : $treeGrowthState['message'])) ?>">
+                            <button type="button" class="tree-water-button" data-tree-water data-watered-today="<?= $treeGrowthState['wateredToday'] ? 'true' : 'false' ?>" aria-disabled="<?= $treeGrowthState['canWater'] ? 'false' : 'true' ?>" aria-label="<?= htmlspecialchars($treeGrowthState['canWater'] ? 'Water ' . $treeGrowthState['name'] : $treeGrowthState['message']) ?>" data-tooltip="<?= htmlspecialchars($treeGrowthState['wateredToday'] ? 'Already watered' : ($treeGrowthState['canWater'] ? 'Click to water' : $treeGrowthState['message'])) ?>">
                                 <i class="fa-solid fa-heart" aria-hidden="true"></i>
                             </button>
                         </footer>
