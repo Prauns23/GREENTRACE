@@ -112,6 +112,7 @@
       uploadedBy,
       category,
       size: "1.2 MB",
+      date: "Today",
     }));
   }
 
@@ -521,11 +522,18 @@
   function renderDetail(compartment) {
     const status = STATUS_STYLES[compartment.status];
     const detail = document.getElementById("compartmentDetailView");
+    const categoryOptions = Object.entries(STATUS_STYLES)
+      .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
+      .join("");
+    const dateOptions = [...new Set(compartment.photos.map((photo) => photo.date))]
+      .map((date) => `<option value="${escapeHtml(date)}">${escapeHtml(date)}</option>`)
+      .join("");
     detail.innerHTML = `
             <header class="mapv2-detail-heading">
                 <button type="button" class="mapv2-back-button" id="backToCompartments" aria-label="Back to compartment list"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
                 <div><h2>${escapeHtml(compartment.name)}</h2><p>${escapeHtml(locationReference(compartment))}</p></div>
             </header>
+              <div class="mapv2-detail-scroll">
             <div class="mapv2-detail-stats">
                 <div><span>Gross area</span><strong>${compartment.hectares.toFixed(2)} <small>ha</small></strong></div>
                 <div><span>Trees planted</span><strong>${plannedTreeCount(compartment)}</strong></div>
@@ -547,13 +555,38 @@
             </section>
             <section class="mapv2-photos-section">
                 <h3>Photos</h3>
-                <div class="mapv2-photo-filters"><select aria-label="Filter photo category"><option>Category</option></select><select aria-label="Filter photo date"><option>Date</option></select><button type="button">Clear filters</button></div>
+                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All categories</option>${categoryOptions}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Filter photo date"><option value="all">All dates</option>${dateOptions}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" id="clearPhotoFilters" hidden>Clear filters</button></div>
                 <div class="mapv2-photo-table" role="table">
-                    <div class="mapv2-photo-row mapv2-photo-head" role="row"><span>Name</span><span>Uploaded by</span><span>Category</span><span>Image size</span><span></span></div>
+                    <div class="mapv2-photo-row mapv2-photo-head" role="row"><span>Name</span><span>Uploaded by</span><span>Category</span><span>Size</span><span>Date</span><span></span></div>
                     <p class="mapv2-photo-date">Today</p>
-                    ${compartment.photos.map((photo) => `<div class="mapv2-photo-row" role="row"><span><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span>${escapeHtml(photo.uploadedBy)}</span><span>${escapeHtml(photo.category)}</span><span>${escapeHtml(photo.size)}</span><button class="mapv2-icon-button" type="button" aria-label="Photo options"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button></div>`).join("")}
+                    ${compartment.photos.map((photo) => `<div class="mapv2-photo-row" role="row" data-photo-category="${escapeHtml(photo.category.toLowerCase())}" data-photo-date="${escapeHtml(photo.date)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${escapeHtml(photo.date)}">${escapeHtml(photo.date)}</span><button class="mapv2-icon-button" type="button" aria-label="Photo options"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button></div>`).join("")}
                 </div>
-            </section>`;
+            </section>
+              </div>`;
+
+    const photoRows = detail.querySelectorAll(".mapv2-photo-row[data-photo-category]");
+    const categoryFilter = document.getElementById("photoCategoryFilter");
+    const dateFilter = document.getElementById("photoDateFilter");
+    const clearPhotoFilters = document.getElementById("clearPhotoFilters");
+    const updateClearButton = () => {
+      clearPhotoFilters.hidden = categoryFilter.value === "all" && dateFilter.value === "all";
+    };
+    const filterPhotoRows = () => {
+      const selectedCategory = categoryFilter.value;
+      const selectedDate = dateFilter.value;
+      photoRows.forEach((row) => {
+        row.hidden = (selectedCategory !== "all" && row.dataset.photoCategory !== selectedCategory)
+          || (selectedDate !== "all" && row.dataset.photoDate !== selectedDate);
+      });
+      updateClearButton();
+    };
+    categoryFilter.addEventListener("change", filterPhotoRows);
+    dateFilter.addEventListener("change", filterPhotoRows);
+    clearPhotoFilters.addEventListener("click", () => {
+      categoryFilter.value = "all";
+      dateFilter.value = "all";
+      filterPhotoRows();
+    });
 
     document
       .getElementById("detailStatusSelect")

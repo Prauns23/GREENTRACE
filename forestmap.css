@@ -50,6 +50,8 @@
   grid-template-columns: minmax(230px, 0.7fr) minmax(530px, 2fr) 420px;
   gap: 26px;
   align-items: stretch;
+  max-height: 680px;
+  overflow: hidden;
 }
 
 .mapv2-sidebar,
@@ -59,7 +61,37 @@
 }
 
 .mapv2-sidebar {
+  display: flex;
+  max-height: 680px;
+  flex-direction: column;
   padding: 0;
+}
+
+.mapv2-sidebar-scroll,
+.mapv2-compartments-scroll {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: #c4ccc5 transparent;
+  scrollbar-width: thin;
+}
+
+.mapv2-sidebar-scroll {
+  flex: 1 1 auto;
+  margin-top: 26px;
+}
+
+.mapv2-sidebar-scroll::-webkit-scrollbar,
+.mapv2-compartments-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mapv2-sidebar-scroll::-webkit-scrollbar-thumb,
+.mapv2-compartments-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #c4ccc5;
+  background-clip: padding-box;
 }
 
 .mapv2-search-field {
@@ -247,7 +279,7 @@
   border-radius: 6px;
   background: #fff;
   color: #4d504e;
-  font-size: 0.84rem;
+  font-size: 0.95rem;
 }
 
 .mapv2-filter-select select {
@@ -536,14 +568,32 @@
 }
 
 .mapv2-compartments {
+  display: flex;
+  flex-direction: column;
   min-height: 670px;
+  max-height: 680px;
+  overflow: hidden;
   padding: 28px 20px;
   border-radius: 12px;
   background: var(--map-panel);
 }
 
 .mapv2-panel-heading {
+  flex: 0 0 auto;
   padding-bottom: 17px;
+}
+#compartmentListView {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+}
+#compartmentListView[hidden],
+#compartmentDetailView[hidden] {
+  display: none !important;
+}
+.mapv2-compartments-scroll {
+  flex: 1 1 auto;
 }
 .mapv2-panel-heading h2 {
   margin: 0 0 7px;
@@ -696,6 +746,26 @@
   font-size: 0.78rem;
 }
 
+.mapv2-detail-scroll {
+  max-height: 590px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-color: #c4ccc5 transparent;
+  scrollbar-width: thin;
+}
+
+.mapv2-detail-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mapv2-detail-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #c4ccc5;
+  background-clip: padding-box;
+}
+
 .mapv2-detail-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -779,40 +849,81 @@
 .mapv2-photo-filters select {
   width: auto;
   min-width: 82px;
-  height: 32px;
-  font-size: 0.68rem;
+  height: 40px;
+  padding: 0 38px 0 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.mapv2-photo-filters .mapv2-filter-select {
+  flex: 0 0 auto;
 }
 .mapv2-photo-filters button {
   border: 0;
   background: transparent;
   color: #555b58;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  margin-left: 10px;
 }
 .mapv2-photo-table {
+  max-height: 250px;
   margin-top: 14px;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-color: #c4ccc5 transparent;
+  scrollbar-width: thin;
 }
+
+.mapv2-photo-table::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.mapv2-photo-table::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mapv2-photo-table::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #c4ccc5;
+  background-clip: padding-box;
+}
+
 .mapv2-photo-row {
   display: grid;
-  grid-template-columns: minmax(105px, 1.5fr) minmax(72px, 1fr) minmax(
-      55px,
-      0.75fr
-    ) minmax(50px, 0.65fr) 20px;
+  grid-template-columns: minmax(105px, 1.5fr) minmax(90px, 1fr) minmax(75px, 0.75fr) minmax(60px, 0.65fr) minmax(70px, 0.75fr) 20px;
   gap: 6px;
   align-items: center;
-  min-width: 420px;
+  width: 100%;
+  min-width: 520px;
   padding: 9px 0;
   border-bottom: 1px solid #d5dad5;
   color: #555b57;
-  font-size: 0.62rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.mapv2-photo-row:not(.mapv2-photo-head) {
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+.mapv2-photo-row:not(.mapv2-photo-head):hover {
+  background: #f2f8f1;
+}
+.mapv2-photo-row > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .mapv2-photo-head {
   padding-top: 0;
   color: #767c78;
-  font-size: 0.61rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 .mapv2-photo-row span:first-child {
   overflow: hidden;
@@ -829,10 +940,10 @@
   font-size: 0.6rem;
 }
 .mapv2-photo-date {
-  margin: 15px 0 0;
+  margin: 15px 0 24px;
   color: #6f756f;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 @media (max-width: 1260px) {
@@ -857,9 +968,12 @@
   }
   .mapv2-layout {
     grid-template-columns: 1fr;
+    max-height: none;
+    overflow: visible;
   }
   .mapv2-sidebar {
     max-width: none;
+    max-height: none;
   }
   .mapv2-map-panel,
   #forestMap {
@@ -868,9 +982,27 @@
   }
   .mapv2-compartments {
     grid-column: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .mapv2-sidebar-scroll,
+  .mapv2-compartments-scroll {
+    overflow: visible;
+  }
+  .mapv2-detail-scroll {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
   .mapv2-compartment-list {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 900px) {
+  .mapv2-page {
+    width: calc(100% / 0.9);
+    zoom: 0.9;
   }
 }
 

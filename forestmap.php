@@ -54,6 +54,7 @@ include 'header.php';
                 </div>
             </div>
 
+            <div class="mapv2-sidebar-scroll">
             <div class="mapv2-filter-grid">
                 <label>
                     <span>Status</span>
@@ -128,6 +129,7 @@ include 'header.php';
                 <span><i class="status-dot status-monitored"></i> Monitored</span>
                 <span><i class="status-dot status-completed"></i> Completed</span>
             </section>
+            </div>
         </aside>
 
         <!-- MAP -->
@@ -144,7 +146,9 @@ include 'header.php';
                     <h2>Compartments</h2>
                     <p>Select a compartment on the map, or pick one from the list.</p>
                 </header>
-                <div id="compartmentList" class="mapv2-compartment-list"></div>
+                <div class="mapv2-compartments-scroll">
+                    <div id="compartmentList" class="mapv2-compartment-list"></div>
+                </div>
             </section>
 
             <section id="compartmentDetailView" hidden></section>
