@@ -1,2 +1,5 @@
 # Runtime-generated logs
 *.log
+
+# Ephemeral field-note cache; regenerate it at runtime rather than commit it.
+/tmp/field-notes-cache/
