@@ -104,7 +104,13 @@
   min-width: 0;
 }
 
-.mapv2-scope-select select {
+.mapv2-filter-select {
+  position: relative;
+  min-width: 0;
+}
+
+.mapv2-scope-select select,
+.mapv2-filter-select select {
   display: block;
   width: 100%;
   min-width: 148px;
@@ -126,12 +132,15 @@
 }
 
 .mapv2-scope-select select:hover,
-.mapv2-scope-select select:focus-visible {
+.mapv2-scope-select select:focus-visible,
+.mapv2-filter-select select:hover,
+.mapv2-filter-select select:focus-visible {
   border-color: #2e7d32;
   color: #2e7d32;
 }
 
-.mapv2-scope-select select:focus-visible {
+.mapv2-scope-select select:focus-visible,
+.mapv2-filter-select select:focus-visible {
   outline-offset: 2px;
 }
 
@@ -239,6 +248,12 @@
   background: #fff;
   color: #4d504e;
   font-size: 0.84rem;
+}
+
+.mapv2-filter-select select {
+  min-width: 0;
+  height: 48px;
+  padding: 12px 42px 12px 24px;
 }
 
 .mapv2-control-section {
@@ -474,6 +489,32 @@
 .mapv2-page .leaflet-container {
   font-family: "Inter", sans-serif;
 }
+.mapv2-page .leaflet-interactive:focus {
+  outline: 0;
+}
+
+.mapv2-tree-cluster-icon {
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+
+.mapv2-tree-cluster {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--cluster-color);
+  border-radius: 50%;
+  color: #24462a;
+  text-align: center;
+}
+
+.mapv2-tree-cluster strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
 .leaflet-vegetation-proxy {
   filter: saturate(2.6) hue-rotate(12deg) contrast(1.05);
 }
@@ -553,7 +594,7 @@
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr) auto;
   gap: 11px;
-  align-items: start;
+  align-items: stretch;
   padding: 24px 11px;
   border: 1px solid transparent;
   border-radius: 9px;
@@ -577,6 +618,8 @@
   color: var(--map-green);
 }
 .mapv2-card-main {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 .mapv2-card-main h3 {
@@ -588,11 +631,14 @@
 }
 .mapv2-card-main p {
   margin: 4px 0;
+  /* margin-bottom: 24px; */
   color: #777d79;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   line-height: 1.35;
 }
+
 .mapv2-card-main small {
+  margin-top: auto;
   color: #7e8580;
   font-size: 0.8rem;
 }

@@ -26,6 +26,9 @@ include 'header.php';
     </header>
 
     <div class="mapv2-layout">
+
+        <!-- LEFTSIDE PANEL -->
+
         <aside class="mapv2-sidebar" aria-label="Map filters">
             <div class="mapv2-search-field">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
@@ -46,7 +49,7 @@ include 'header.php';
                         <i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>
                     </button>
                     <div class="mapv2-popover" id="mapFilterMenu" hidden>
-                        <button type="button" data-map-scope="archived">Archived compartments</button>
+                        <button type="button" data-map-scope="archived">Archived</button>
                     </div>
                 </div>
             </div>
@@ -54,22 +57,28 @@ include 'header.php';
             <div class="mapv2-filter-grid">
                 <label>
                     <span>Status</span>
-                    <select id="statusFilter">
-                        <option value="all">All statuses</option>
-                        <option value="planned">Planned</option>
-                        <option value="planted">Planted</option>
-                        <option value="monitored">Monitored</option>
-                        <option value="completed">Completed</option>
-                    </select>
+                    <div class="mapv2-filter-select">
+                        <select id="statusFilter">
+                            <option value="all">All statuses</option>
+                            <option value="planned">Planned</option>
+                            <option value="planted">Planted</option>
+                            <option value="monitored">Monitored</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                        <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
+                    </div>
                 </label>
                 <label>
                     <span>Year planted</span>
-                    <select id="yearFilter">
-                        <option value="all">All years</option>
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                    </select>
+                    <div class="mapv2-filter-select">
+                        <select id="yearFilter">
+                            <option value="all">All years</option>
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                        <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
+                    </div>
                 </label>
             </div>
 
@@ -89,9 +98,16 @@ include 'header.php';
             <section class="mapv2-control-section mapv2-layers">
                 <h2>Layers</h2>
                 <label class="mapv2-layer-toggle">
-                    <span>Sampling plots</span>
+                    <span>Tree species</span>
                     <span class="mapv2-switch">
-                        <input type="checkbox" id="samplingPlotsToggle" checked>
+                        <input type="checkbox" id="treeSpeciesToggle" checked>
+                        <span class="mapv2-switch-track" aria-hidden="true"></span>
+                    </span>
+                </label>
+                <label class="mapv2-layer-toggle">
+                    <span>Barangay boundaries</span>
+                    <span class="mapv2-switch">
+                        <input type="checkbox" id="barangayBoundariesToggle" checked>
                         <span class="mapv2-switch-track" aria-hidden="true"></span>
                     </span>
                 </label>
@@ -114,11 +130,14 @@ include 'header.php';
             </section>
         </aside>
 
+        <!-- MAP -->
         <section class="mapv2-map-panel" aria-label="Forest map">
             <div id="forestMap"></div>
             <p class="mapv2-notice" id="mapNotice" role="status" hidden></p>
         </section>
 
+
+        <!-- RIGHTSIDE PANEL -->
         <aside class="mapv2-compartments" id="compartmentPanel" aria-live="polite">
             <section id="compartmentListView">
                 <header class="mapv2-panel-heading">

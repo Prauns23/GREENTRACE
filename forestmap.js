@@ -7,6 +7,10 @@
     monitored: { label: "Monitored", color: "#56bb8b", fill: "#bfe9d5" },
     completed: { label: "Completed", color: "#397d48", fill: "#b9dfbd" },
   };
+  const DEFAULT_PLANTING_SPACING_M = 3;
+  const AUTO_PLOT_SPACING_M = 35;
+  const TREE_CLUSTER_ZOOM = 14;
+  const MAP_MIN_ZOOM = 13;
 
   // Temporary display data only. It will be replaced by the Map V2 API once the
   // compartment schema and create/edit workflows are ready.
@@ -18,7 +22,6 @@
       year: "2026",
       status: "planned",
       hectares: 74.53,
-      seedlings: 35,
       speciesMix: [
         { name: "Narra", scientificName: "Pterocarpus indicus", quantity: 20 },
         { name: "Lauan", scientificName: "Shorea spp.", quantity: 15 },
@@ -31,17 +34,6 @@
         [14.6907, 120.3432],
         [14.6919, 120.3372],
       ],
-      samplingPoints: [
-        [14.694, 120.3394],
-        [14.694, 120.3412],
-        [14.694, 120.343],
-        [14.6953, 120.3397],
-        [14.6953, 120.3415],
-        [14.6953, 120.3433],
-        [14.6966, 120.34],
-        [14.6966, 120.3418],
-        [14.6966, 120.3436],
-      ],
     },
     {
       id: "mount-natib-02",
@@ -50,7 +42,6 @@
       year: "2026",
       status: "completed",
       hectares: 6.45,
-      seedlings: 18,
       speciesMix: [
         { name: "Bagras", scientificName: "Eucalyptus deglupta", quantity: 18 },
       ],
@@ -61,12 +52,6 @@
         [14.7042, 120.3678],
         [14.7025, 120.3625],
       ],
-      samplingPoints: [
-        [14.7043, 120.3621],
-        [14.7045, 120.3641],
-        [14.7058, 120.3624],
-        [14.706, 120.3644],
-      ],
     },
     {
       id: "mount-natib-03",
@@ -75,7 +60,6 @@
       year: "2025",
       status: "monitored",
       hectares: 3.22,
-      seedlings: 12,
       speciesMix: [
         {
           name: "Mahogany",
@@ -89,12 +73,6 @@
         [14.6836, 120.3578],
         [14.6797, 120.3592],
         [14.6789, 120.3544],
-      ],
-      samplingPoints: [
-        [14.6808, 120.355],
-        [14.6809, 120.3567],
-        [14.682, 120.3553],
-        [14.6821, 120.357],
       ],
     },
   ];
@@ -117,11 +95,15 @@
   };
   const layers = {
     polygons: new Map(),
-    sampling: new Map(),
+    treeSpecies: new Map(),
+    treeClusters: new Map(),
     reports: null,
+    barangays: null,
     vegetation: null,
     base: null,
   };
+  let barangayFeatures = [];
+  const treeSpeciesByName = new Map();
   let map;
 
   function buildPhotos(name, uploadedBy, category) {
@@ -159,6 +141,10 @@
     return compartments.find((compartment) => compartment.id === id);
   }
 
+  function plannedTreeCount(compartment) {
+    return compartment.speciesMix.reduce((total, species) => total + species.quantity, 0);
+  }
+
   function boundaryCenter(boundary) {
     const totals = boundary.reduce(
       (sum, point) => ({ lat: sum.lat + point[0], lng: sum.lng + point[1] }),
@@ -176,45 +162,60 @@
   }
 
   function locationReference(compartment) {
-    return compartment.locationReference || coordinateReference(compartment);
+    if (compartment.barangay) {
+      const { name, municipality, province } = compartment.barangay;
+      return [name, municipality, province].filter(Boolean).join(", ");
+    }
+    return coordinateReference(compartment);
   }
 
-  async function resolveLocationReference(compartment) {
-    if (compartment.locationReference || compartment.locationLookupPending)
-      return;
+  function pointInRing(point, ring) {
+    let inside = false;
+    for (let current = 0, previous = ring.length - 1; current < ring.length; previous = current++) {
+      const [currentLng, currentLat] = ring[current];
+      const [previousLng, previousLat] = ring[previous];
+      const intersects = ((currentLat > point[1]) !== (previousLat > point[1]))
+        && (point[0] < ((previousLng - currentLng) * (point[1] - currentLat)) / (previousLat - currentLat) + currentLng);
+      if (intersects) inside = !inside;
+    }
+    return inside;
+  }
 
-    compartment.locationLookupPending = true;
-    const center = boundaryCenter(compartment.boundary);
+  function pointInGeometry(point, geometry) {
+    const polygons = geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
+    return polygons.some((polygon) => pointInRing(point, polygon[0]) && !polygon.slice(1).some((hole) => pointInRing(point, hole)));
+  }
 
+  function matchCompartmentsToBarangays() {
+    compartments.forEach((compartment) => {
+      const center = boundaryCenter(compartment.boundary);
+      const match = barangayFeatures.find((feature) => pointInGeometry([center.lng, center.lat], feature.geometry));
+      compartment.barangay = match ? match.properties : null;
+    });
+  }
+
+  async function loadBarangayBoundaries() {
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(center.lat)}&lon=${encodeURIComponent(center.lng)}&zoom=10&addressdetails=1`,
-        {
-          headers: { Accept: "application/json" },
+      const response = await fetch("actions/mapv2/get_barangay_boundaries.php", { headers: { Accept: "application/geo+json" } });
+      if (!response.ok) throw new Error("Barangay boundaries could not be loaded");
+      const collection = await response.json();
+      barangayFeatures = Array.isArray(collection.features) ? collection.features : [];
+      layers.barangays = L.geoJSON(collection, {
+        style: { color: "#ffffff", weight: 1.5, dashArray: "5 5", fillOpacity: 0 },
+        onEachFeature: (feature, layer) => {
+          layer.bindTooltip(feature.properties.name, { sticky: true });
+          layer.on("click", () => {
+            // Keep the barangay label without leaving a browser focus outline.
+            layer.getElement()?.blur();
+            layer.openTooltip();
+          });
         },
-      );
-      if (!response.ok) throw new Error("Location lookup failed");
-
-      const result = await response.json();
-      const address = result.address || {};
-      const locality =
-        address.village ||
-        address.town ||
-        address.city ||
-        address.municipality ||
-        address.county;
-      const province = address.state || address.province;
-      compartment.locationReference =
-        [locality, province, address.country].filter(Boolean).join(", ") ||
-        result.display_name ||
-        coordinateReference(compartment);
+      });
+      matchCompartmentsToBarangays();
+      refreshMapLayers();
+      refreshUI();
     } catch (error) {
-      // Coordinates remain the accurate geographic fallback when a reverse-geocoding service is unavailable.
-      compartment.locationReference = coordinateReference(compartment);
-    } finally {
-      compartment.locationLookupPending = false;
-      if (state.selectedId === compartment.id) renderDetail(compartment);
-      else renderList();
+      console.warn("Map V2 barangay boundaries are unavailable.", error);
     }
   }
 
@@ -237,7 +238,8 @@
     map = L.map("forestMap", {
       zoomControl: true,
       attributionControl: true,
-    }).setView([14.694, 120.348], 13);
+      minZoom: MAP_MIN_ZOOM,
+    }).setView([14.694, 120.348], MAP_MIN_ZOOM);
 
     const osm = L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -256,6 +258,9 @@
 
     layers.base = { osm, satellite };
     osm.addTo(map);
+    map.on("zoomend", () => {
+      if (layers.treeSpecies.size) rebuildTreeSpeciesLayers();
+    });
     layers.vegetation = L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       {
@@ -280,6 +285,105 @@
     );
   }
 
+  function speciesSpacing(species) {
+    return treeSpeciesByName.get(species.name.toLowerCase())?.planting_spacing_m || DEFAULT_PLANTING_SPACING_M;
+  }
+
+  function generateTreeSpeciesPoints(boundary, speciesMix) {
+    const quantity = speciesMix.reduce((total, species) => total + species.quantity, 0);
+    const ring = boundary.map(([lat, lng]) => [lng, lat]);
+    const latitudes = boundary.map(([lat]) => lat);
+    const longitudes = boundary.map(([, lng]) => lng);
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLng = Math.min(...longitudes);
+    const maxLng = Math.max(...longitudes);
+    const centerLat = (minLat + maxLat) / 2;
+    // A mixed plot uses the largest recommended spacing so every species still
+    // respects its minimum planting distance in one neat, shared grid.
+    const actualGridSpacingM = Math.max(...speciesMix.map(speciesSpacing));
+    let displayGridSpacingM = AUTO_PLOT_SPACING_M;
+
+    const getCandidates = (spacingM) => {
+      const latitudeStep = spacingM / 111_320;
+      const longitudeStep = spacingM / (111_320 * Math.cos((centerLat * Math.PI) / 180));
+      const candidates = [];
+      const startLat = Math.floor(minLat / latitudeStep) * latitudeStep;
+      const startLng = Math.floor(minLng / longitudeStep) * longitudeStep;
+
+      for (let lat = startLat; lat <= maxLat; lat += latitudeStep) {
+        for (let lng = startLng; lng <= maxLng; lng += longitudeStep) {
+          if (pointInRing([lng, lat], ring)) candidates.push([lat, lng]);
+        }
+      }
+      return candidates;
+    };
+
+    let candidates = getCandidates(displayGridSpacingM);
+    // A narrow compartment may not fit every tree at the expanded preview scale.
+    // Reduce only the visual scale until all species-mix quantities stay visible.
+    while (candidates.length < quantity && displayGridSpacingM > actualGridSpacingM) {
+      displayGridSpacingM = Math.max(actualGridSpacingM, displayGridSpacingM / 1.5);
+      candidates = getCandidates(displayGridSpacingM);
+    }
+
+    const selected = candidates
+      .sort(([leftLat, leftLng], [rightLat, rightLng]) => {
+        const leftDistance = (leftLat - centerLat) ** 2 + (leftLng - ((minLng + maxLng) / 2)) ** 2;
+        const rightDistance = (rightLat - centerLat) ** 2 + (rightLng - ((minLng + maxLng) / 2)) ** 2;
+        return leftDistance - rightDistance;
+      })
+      .slice(0, quantity)
+      .sort(([leftLat, leftLng], [rightLat, rightLng]) => leftLat - rightLat || leftLng - rightLng);
+
+    return selected.map((point, index) => ({
+      point,
+      species: speciesMix.find((species, speciesIndex) => index < speciesMix.slice(0, speciesIndex + 1).reduce((total, item) => total + item.quantity, 0)),
+      actualGridSpacingM,
+      displayGridSpacingM,
+    }));
+  }
+
+  function treeSpeciesDotStyle(status) {
+    const style = STATUS_STYLES[status];
+    return {
+      radius: 5,
+      color: "#ffffff",
+      weight: 1.5,
+      opacity: 1,
+      fillColor: style.color,
+      fillOpacity: 1,
+    };
+  }
+
+  function createTreeCluster(compartment) {
+    const style = STATUS_STYLES[compartment.status];
+    const treeCount = plannedTreeCount(compartment);
+    const cluster = L.marker(boundaryCenter(compartment.boundary), {
+      icon: L.divIcon({
+        className: "mapv2-tree-cluster-icon",
+        html: `<span class="mapv2-tree-cluster" style="--cluster-color: ${style.color}; --cluster-fill: ${style.fill}"><strong>${treeCount}</strong></span>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+      }),
+      keyboard: true,
+      title: String(treeCount),
+    }).on("click", () => selectCompartment(compartment.id));
+
+    return cluster;
+  }
+
+  function createTreeSpeciesLayer(compartment) {
+    const style = STATUS_STYLES[compartment.status];
+    return L.layerGroup(
+      generateTreeSpeciesPoints(compartment.boundary, compartment.speciesMix).map(({ point, species, actualGridSpacingM, displayGridSpacingM }) =>
+        L.circleMarker(point, treeSpeciesDotStyle(compartment.status))
+          .bindTooltip(`${species.name} · ${speciesSpacing(species)} m recommended · ${actualGridSpacingM} m actual grid · ${displayGridSpacingM.toFixed(1)} m map preview · ${style.label}`, { direction: "top" })
+          .on("click", () => selectCompartment(compartment.id)),
+      ),
+    );
+  }
+
   function createCompartmentLayers() {
     compartments.forEach((compartment) => {
       const style = STATUS_STYLES[compartment.status];
@@ -288,45 +392,73 @@
         fillColor: style.fill,
         fillOpacity: 0.45,
         weight: 2,
+        dashArray: "8 6",
       }).on("click", () => selectCompartment(compartment.id));
 
-      const sampling = L.layerGroup(
-        compartment.samplingPoints.map((point) =>
-          L.circleMarker(point, {
-            radius: 4,
-            color: style.color,
-            fillColor: style.color,
-            fillOpacity: 1,
-            weight: 1,
-          }).on("click", () => selectCompartment(compartment.id)),
-        ),
-      );
-
       layers.polygons.set(compartment.id, polygon);
-      layers.sampling.set(compartment.id, sampling);
+      layers.treeSpecies.set(compartment.id, createTreeSpeciesLayer(compartment));
+      layers.treeClusters.set(compartment.id, createTreeCluster(compartment));
     });
+  }
+
+  function rebuildTreeSpeciesLayers() {
+    layers.treeSpecies.forEach((layer) => map.removeLayer(layer));
+    layers.treeClusters.forEach((layer) => map.removeLayer(layer));
+    layers.treeSpecies.clear();
+    layers.treeClusters.clear();
+    compartments.forEach((compartment) => {
+      layers.treeSpecies.set(compartment.id, createTreeSpeciesLayer(compartment));
+      layers.treeClusters.set(compartment.id, createTreeCluster(compartment));
+    });
+    refreshMapLayers();
+  }
+
+  async function loadTreeSpeciesSpacing() {
+    try {
+      const response = await fetch("actions/mapv2/get_tree_species_spacing.php", { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("Tree species spacing could not be loaded");
+      const payload = await response.json();
+      (payload.species || []).forEach((species) => {
+        if (species.planting_spacing_m > 0) treeSpeciesByName.set(species.name.toLowerCase(), species);
+      });
+      rebuildTreeSpeciesLayers();
+    } catch (error) {
+      console.warn("Tree species spacing is unavailable; using the temporary 3 m grid.", error);
+    }
   }
 
   function refreshMapLayers() {
     const visible = new Set(
       visibleCompartments().map((compartment) => compartment.id),
     );
-    const samplingVisible = document.getElementById(
-      "samplingPlotsToggle",
+    const treeSpeciesVisible = document.getElementById(
+      "treeSpeciesToggle",
     ).checked;
+    const useTreeClusters = map.getZoom() < TREE_CLUSTER_ZOOM;
 
     layers.polygons.forEach((polygon, id) => {
       if (visible.has(id)) polygon.addTo(map);
       else map.removeLayer(polygon);
     });
-    layers.sampling.forEach((sampling, id) => {
-      if (visible.has(id) && samplingVisible) sampling.addTo(map);
-      else map.removeLayer(sampling);
+    layers.treeSpecies.forEach((treeSpecies, id) => {
+      if (visible.has(id) && treeSpeciesVisible && !useTreeClusters) treeSpecies.addTo(map);
+      else map.removeLayer(treeSpecies);
+    });
+    layers.treeClusters.forEach((treeCluster, id) => {
+      if (visible.has(id) && treeSpeciesVisible && useTreeClusters) treeCluster.addTo(map);
+      else map.removeLayer(treeCluster);
     });
 
     if (state.scope === "all" || state.scope === "reports")
       layers.reports.addTo(map);
     else map.removeLayer(layers.reports);
+
+    if (layers.barangays && document.getElementById("barangayBoundariesToggle").checked) {
+      layers.barangays.addTo(map);
+      layers.barangays.bringToBack();
+    } else if (layers.barangays) {
+      map.removeLayer(layers.barangays);
+    }
   }
 
   function updateMetrics() {
@@ -375,7 +507,7 @@
                     <div class="mapv2-card-main">
                         <h3>${escapeHtml(compartment.name)}</h3>
                         <p>${escapeHtml(locationReference(compartment))} · ${compartment.hectares.toFixed(2)} hectares</p>
-                        <small>Started: ${formatDate(compartment.startedAt)}</small>
+                        <small>Started: <strong>${formatDate(compartment.startedAt)}</strong></small>
                     </div>
                     <div class="mapv2-card-actions">
                         <button class="mapv2-icon-button mapv2-card-menu" type="button" data-view-id="${compartment.id}" aria-label="View ${escapeHtml(compartment.name)} details"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
@@ -396,9 +528,9 @@
             </header>
             <div class="mapv2-detail-stats">
                 <div><span>Gross area</span><strong>${compartment.hectares.toFixed(2)} <small>ha</small></strong></div>
-                <div><span>Seedlings/saplings</span><strong>${compartment.seedlings}</strong></div>
+                <div><span>Trees planted</span><strong>${plannedTreeCount(compartment)}</strong></div>
             </div>
-            <div class="mapv2-detail-field"><span>Location</span><p>${escapeHtml(locationReference(compartment))}</p><small>Derived from the compartment boundary.</small></div>
+            <div class="mapv2-detail-field"><span>Location</span><p>${escapeHtml(locationReference(compartment))}</p><small>Matched from the compartment's barangay boundary.</small></div>
             <label class="mapv2-detail-field"><span>Status</span>
                 <select id="detailStatusSelect">
                     ${Object.entries(STATUS_STYLES)
@@ -440,7 +572,6 @@
     if (!compartment) return;
     state.selectedId = id;
     renderDetail(compartment);
-    resolveLocationReference(compartment);
     const polygon = layers.polygons.get(id);
     if (polygon)
       map.fitBounds(polygon.getBounds(), { padding: [40, 40], maxZoom: 15 });
@@ -461,13 +592,13 @@
     layers.polygons
       .get(id)
       .setStyle({ color: style.color, fillColor: style.fill });
-    layers.sampling
+    layers.treeSpecies
       .get(id)
       .eachLayer((marker) =>
-        marker.setStyle({ color: style.color, fillColor: style.color }),
+        marker.setStyle(treeSpeciesDotStyle(nextStatus)),
       );
+    rebuildTreeSpeciesLayers();
     renderDetail(compartment);
-    refreshMapLayers();
     updateMetrics();
   }
 
@@ -526,7 +657,10 @@
         refreshUI();
       });
     document
-      .getElementById("samplingPlotsToggle")
+      .getElementById("treeSpeciesToggle")
+      .addEventListener("change", refreshMapLayers);
+    document
+      .getElementById("barangayBoundariesToggle")
       .addEventListener("change", refreshMapLayers);
     document
       .getElementById("vegetationOverlayToggle")
@@ -599,5 +733,7 @@
     createCompartmentLayers();
     bindControls();
     refreshUI();
+    loadBarangayBoundaries();
+    loadTreeSpeciesSpacing();
   });
 })();
