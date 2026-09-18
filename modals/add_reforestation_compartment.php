@@ -32,7 +32,7 @@ $conn->close();
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="add_reforestation_compartment.css?v=6">
+    <link rel="stylesheet" href="add_reforestation_compartment.css?v=7">
 </head>
 
 <body>
@@ -64,7 +64,8 @@ $conn->close();
                     </div>
                 </label>
                 <label class="compartment-field"><span class="compartment-field__label">Date started <b aria-hidden="true">*</b></span>
-                    <input name="date_started" type="date" value="<?= date('Y-m-d') ?>" required>
+                    <!-- The picker blocks future dates before the user starts drawing. -->
+                    <input name="date_started" type="date" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>" required>
                 </label>
             </div>
 
@@ -87,7 +88,7 @@ $conn->close();
     <script>
         window.mapV2Species = <?= json_encode($species, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
     </script>
-    <script src="add_reforestation_compartment.js?v=6"></script>
+    <script src="add_reforestation_compartment.js?v=7"></script>
 </body>
 
 </html>

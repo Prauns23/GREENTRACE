@@ -57,8 +57,18 @@ if ($name === '' || mb_strlen($name) > 150) {
 if (!in_array($status, $allowedStatuses, true)) {
     fail('The selected status is invalid.');
 }
-if (!$dateStarted || !DateTime::createFromFormat('Y-m-d', $dateStarted)) {
+// Check the exact date format and reject future dates even if a request skips the form.
+$startedDate = DateTimeImmutable::createFromFormat('!Y-m-d', $dateStarted);
+$dateErrors = DateTimeImmutable::getLastErrors();
+if (
+    !$startedDate ||
+    ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0)) ||
+    $startedDate->format('Y-m-d') !== $dateStarted
+) {
     fail('A valid start date is required.');
+}
+if ($startedDate > new DateTimeImmutable('today')) {
+    fail('The start date cannot be later than today.');
 }
 $speciesMix = json_decode($speciesMixJson, true);
 if (!is_array($speciesMix) || count($speciesMix) === 0) {
