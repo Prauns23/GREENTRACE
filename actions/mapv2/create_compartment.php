@@ -57,7 +57,7 @@ if ($name === '' || mb_strlen($name) > 150) {
 if (!in_array($status, $allowedStatuses, true)) {
     fail('The selected status is invalid.');
 }
-// Check the exact date format and reject future dates even if a request skips the form.
+// Check the exact date format and reject past dates even if a request skips the form.
 $startedDate = DateTimeImmutable::createFromFormat('!Y-m-d', $dateStarted);
 $dateErrors = DateTimeImmutable::getLastErrors();
 if (
@@ -67,8 +67,8 @@ if (
 ) {
     fail('A valid start date is required.');
 }
-if ($startedDate > new DateTimeImmutable('today')) {
-    fail('The start date cannot be later than today.');
+if ($startedDate < new DateTimeImmutable('today')) {
+    fail('The start date cannot be earlier than today.');
 }
 $speciesMix = json_decode($speciesMixJson, true);
 if (!is_array($speciesMix) || count($speciesMix) === 0) {

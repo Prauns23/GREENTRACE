@@ -89,7 +89,7 @@ $conn->close();
                     </div>
                 </label>
                 <label class="compartment-field"><span class="compartment-field__label">Date started <b aria-hidden="true">*</b></span>
-                    <input name="date_started" type="date" value="<?= htmlspecialchars((string) $compartment['date_started'], ENT_QUOTES, 'UTF-8') ?>" max="<?= date('Y-m-d') ?>" required>
+                    <input name="date_started" type="date" value="<?= htmlspecialchars((string) $compartment['date_started'], ENT_QUOTES, 'UTF-8') ?>" min="<?= date('Y-m-d') ?>" required>
                 </label>
             </div>
             <section class="species-mix" aria-labelledby="editSpeciesMixTitle">

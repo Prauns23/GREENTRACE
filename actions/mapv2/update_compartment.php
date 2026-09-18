@@ -52,7 +52,7 @@ if (!in_array($status, $allowedStatuses, true)) updateFail('The selected status 
 $startedDate = DateTimeImmutable::createFromFormat('!Y-m-d', $dateStarted);
 $dateErrors = DateTimeImmutable::getLastErrors();
 if (!$startedDate || ($dateErrors !== false && ($dateErrors['warning_count'] || $dateErrors['error_count'])) || $startedDate->format('Y-m-d') !== $dateStarted) updateFail('A valid start date is required.');
-if ($startedDate > new DateTimeImmutable('today')) updateFail('The start date cannot be later than today.');
+if ($startedDate < new DateTimeImmutable('today')) updateFail('The start date cannot be earlier than today.');
 if (!is_array($speciesMix) || !$speciesMix) updateFail('Add at least one tree species.');
 $ring = ($geometry['type'] ?? '') === 'Polygon' ? ($geometry['coordinates'][0] ?? null) : null;
 if (!is_array($ring) || count($ring) < 4) updateFail('The compartment boundary needs at least three corners.');

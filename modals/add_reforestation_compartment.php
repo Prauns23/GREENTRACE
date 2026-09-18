@@ -64,8 +64,8 @@ $conn->close();
                     </div>
                 </label>
                 <label class="compartment-field"><span class="compartment-field__label">Date started <b aria-hidden="true">*</b></span>
-                    <!-- The picker blocks future dates before the user starts drawing. -->
-                    <input name="date_started" type="date" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>" required>
+                    <!-- The picker accepts today or a planned future start date. -->
+                    <input name="date_started" type="date" value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>" required>
                 </label>
             </div>
 
