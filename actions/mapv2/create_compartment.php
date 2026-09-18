@@ -218,11 +218,19 @@ try {
     $pointInsert->close();
     $historyInsert->close();
 
+    // Return the stored timestamp so the new details panel uses database data.
+    $updatedAtStatement = $conn->prepare('SELECT updated_at FROM reforestation_compartments WHERE id = ?');
+    $updatedAtStatement->bind_param('i', $compartmentId);
+    $updatedAtStatement->execute();
+    $updatedAt = $updatedAtStatement->get_result()->fetch_assoc();
+    $updatedAtStatement->close();
+
     $conn->commit();
     echo json_encode([
         'success' => true,
         'compartment_id' => $compartmentId,
         'gross_area_ha' => round($areaHa, 4),
+        'updated_at' => $updatedAt['updated_at'] ?? null,
         'barangay' => $barangay ? [
             'id' => (int) $barangay['id'],
             'name' => $barangay['name'],

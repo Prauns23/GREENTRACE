@@ -182,7 +182,12 @@
   color: #475569;
   font-size: 0.75rem;
   pointer-events: none;
-  transform: translateY(-50%);
+  transform: translateY(-50%) rotate(180deg);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.mapv2-scope-select.is-disclosure-active .mapv2-scope-chevron,
+.mapv2-filter-select.is-disclosure-active .mapv2-scope-chevron {
+  transform: translateY(-50%) rotate(0deg);
 }
 
 .mapv2-menu-wrap {
@@ -215,7 +220,7 @@
 
 .mapv2-popover {
   position: absolute;
-  z-index: 1200;
+  z-index: 900;
   top: calc(100% + 6px);
   right: 0;
   min-width: 190px;
@@ -224,6 +229,35 @@
   border-radius: 8px;
   background: #fff;
   font-family: "Inter", sans-serif;
+}
+
+/* Application-owned dropdowns disclose with the same height/fade motion. */
+.mapv2-popover,
+.mapv2-card-menu-options,
+.mapv2-photo-actions {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-5px) scaleY(0.96);
+  transform-origin: top right;
+  transition:
+    max-height 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.mapv2-popover.is-open,
+.mapv2-card-menu-options.is-open,
+.mapv2-photo-actions.is-open {
+  max-height: 180px;
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mapv2-scope-chevron,
+  .mapv2-popover,
+  .mapv2-card-menu-options,
+  .mapv2-photo-actions {
+    transition: none;
+  }
 }
 
 .mapv2-popover button {
@@ -511,6 +545,10 @@
 .mapv2-page .leaflet-container {
   font-family: "Inter", sans-serif;
 }
+.mapv2-page .leaflet-top,
+.mapv2-page .leaflet-bottom {
+  z-index: 900;
+}
 .mapv2-tree-cluster-icon {
   display: grid;
   place-items: center;
@@ -537,19 +575,27 @@
   filter: saturate(2.6) hue-rotate(12deg) contrast(1.05);
 }
 
-.mapv2-notice {
-  position: absolute;
-  z-index: 800;
-  right: 20px;
-  bottom: 84px;
+.mapv2-toast {
+  position: fixed;
+  z-index: 1200;
+  right: 24px;
+  bottom: 24px;
   max-width: 290px;
   margin: 0;
   padding: 12px 14px;
+  border: 1px solid #b9cbb9;
   border-radius: 8px;
   background: #fff;
   color: #394439;
   font-size: 0.78rem;
   line-height: 1.45;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.mapv2-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .mapv2-compartments {
@@ -727,6 +773,50 @@
   height: 24px;
   font-size: 1rem;
 }
+.mapv2-card-menu-wrap {
+  position: relative;
+}
+.mapv2-card-menu-options {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 104px;
+  overflow: hidden;
+  border: 1px solid var(--map-border);
+  border-radius: 7px;
+  background: #fff;
+}
+.mapv2-card-menu-options button {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 11px;
+  color: var(--map-ink);
+  font: inherit;
+  font-size: 0.76rem;
+  text-align: left;
+}
+.mapv2-card-menu-options button:hover {
+  background: #edf6ec;
+}
+.mapv2-edit-corner-icon {
+  display: grid;
+  place-items: center;
+}
+.mapv2-edit-corner-icon span {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--map-green);
+  color: #fff;
+  font: 700 0.72rem/1 "Inter", sans-serif;
+}
 .mapv2-status-badge {
   padding: 4px 9px;
   border-radius: 99px;
@@ -841,6 +931,27 @@
   color: #7d847e;
   font-size: 0.68rem;
   line-height: 1.35;
+}
+.mapv2-updated-at {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 28px;
+  color: #6e746f;
+}
+.mapv2-updated-at span {
+  color: #5c615e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.mapv2-updated-at p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: right;
 }
 
 .mapv2-species-section,
@@ -1030,7 +1141,7 @@
   background: #f1f8f0;
 }
 .mapv2-photo-date {
-  margin: 15px 0 24px;
+  margin: 15px 0 7px;
   color: #6f756f;
   font-size: 0.85rem;
   font-weight: 500;

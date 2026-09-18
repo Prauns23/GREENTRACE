@@ -390,6 +390,24 @@ function showAddReforestationCompartmentModal() {
   lockModalBackground(container);
 }
 
+// Open the edit form for one saved Map V2 compartment.
+function showEditReforestationCompartmentModal(compartmentId) {
+  closeAllFloating();
+  const container = document.getElementById("floatingEditCompartmentContainer");
+  const iframe = document.getElementById("editCompartmentFrame");
+  if (!container || !iframe || !compartmentId) return;
+
+  iframe.src =
+    (window.basePath || "") +
+    "modals/edit_reforestation_compartment.php?id=" +
+    encodeURIComponent(compartmentId);
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+  lockModalBackground(container);
+}
+
 function showCompartmentReviewModal(reviewData) {
   closeAllFloating();
   const container = document.getElementById("floatingCompartmentReviewContainer");
@@ -560,6 +578,7 @@ window.showAddMessageModal = showAddMessageModal;
 window.showEditProfileModal = showEditProfileModal;
 window.showAddActivityModal = showAddActivityModal;
 window.showAddReforestationCompartmentModal = showAddReforestationCompartmentModal;
+window.showEditReforestationCompartmentModal = showEditReforestationCompartmentModal;
 window.showCompartmentReviewModal = showCompartmentReviewModal;
 window.showEditActivityModal = showEditActivityModal;
 window.showActivityDetails = showActivityDetails;

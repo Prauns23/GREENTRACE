@@ -82,7 +82,7 @@ $conn->close();
 
         <footer class="compartment-modal__footer">
             <button type="button" class="button button--secondary" id="cancelCompartmentModal">Cancel</button>
-            <button type="submit" form="addCompartmentForm" class="button button--primary">Draw boundary</button>
+            <button type="submit" form="addCompartmentForm" class="button button--primary">Create</button>
         </footer>
     </main>
     <script>

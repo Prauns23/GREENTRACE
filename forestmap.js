@@ -42,6 +42,55 @@
   let drawingPreview = null;
   let drawingToolbar = null;
   let creatingCompartment = false;
+  // Editing keeps a separate draft so it cannot add corners like a new drawing.
+  let editDraft = null;
+  let editCornerHandles = null;
+  let editToolbar = null;
+  let savingCompartmentEdit = false;
+  let mapToastTimer = null;
+  const disclosureTimers = new WeakMap();
+
+  // Animate application-owned menus. Native select option lists are browser UI,
+  // so their matching chevrons animate through CSS instead.
+  function openDisclosure(panel) {
+    if (!panel) return;
+    window.clearTimeout(disclosureTimers.get(panel));
+    panel.hidden = false;
+    window.requestAnimationFrame(() => panel.classList.add("is-open"));
+  }
+
+  function closeDisclosure(panel) {
+    if (!panel || panel.hidden) return;
+    window.clearTimeout(disclosureTimers.get(panel));
+    panel.classList.remove("is-open");
+    disclosureTimers.set(
+      panel,
+      window.setTimeout(() => {
+        if (!panel.classList.contains("is-open")) panel.hidden = true;
+      }, 220),
+    );
+  }
+
+  // Native select menus belong to the browser, so click state controls only the chevron.
+  function bindSelectDisclosureIndicators(root = document) {
+    root
+      .querySelectorAll(".mapv2-scope-select select, .mapv2-filter-select select")
+      .forEach((select) => {
+        if (select.dataset.disclosureBound === "true") return;
+        const wrapper = select.closest(".mapv2-scope-select, .mapv2-filter-select");
+        if (!wrapper) return;
+        select.dataset.disclosureBound = "true";
+        select.addEventListener("click", () => {
+          wrapper.classList.add("is-disclosure-active");
+        });
+        select.addEventListener("change", () => {
+          wrapper.classList.remove("is-disclosure-active");
+        });
+        select.addEventListener("blur", () => {
+          wrapper.classList.remove("is-disclosure-active");
+        });
+      });
+  }
 
   // Create temporary photo rows until the photo upload feature saves real files.
   function buildPhotos(name, uploadedBy, category) {
@@ -112,6 +161,20 @@
       month: "short",
       day: "2-digit",
     }).format(new Date(`${value}T00:00:00`));
+  }
+
+  // Keep database timestamps readable in the compartment details panel.
+  function formatUpdatedAt(value) {
+    if (!value) return "Not updated yet";
+    const timestamp = new Date(String(value).replace(" ", "T"));
+    if (Number.isNaN(timestamp.getTime())) return "Not available";
+    return new Intl.DateTimeFormat("en-PH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(timestamp);
   }
 
   // Find one compartment so click handlers can use its complete data.
@@ -272,7 +335,8 @@
     layers.base = { osm, satellite };
     osm.addTo(map);
     map.on("zoomend", () => {
-      if (layers.treeSpecies.size) rebuildTreeSpeciesLayers();
+      // Keep the edit handles clear while a boundary is being repositioned.
+      if (layers.treeSpecies.size && !editDraft) rebuildTreeSpeciesLayers();
     });
     layers.vegetation = L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -417,8 +481,7 @@
     clearDrawingPreview();
     drawingDraft = null;
     setDrawingToolbarVisibility(false);
-    const notice = document.getElementById("mapNotice");
-    notice.hidden = true;
+    hideMapNotice();
     window.hideFloating?.();
   }
 
@@ -465,6 +528,177 @@
     layers.treeClusters.set(compartment.id, createTreeCluster(compartment));
   }
 
+  // Remove one compartment's visual layers before its boundary is rebuilt.
+  function removeCompartmentLayers(id) {
+    [layers.polygons, layers.treeSpecies, layers.treeClusters].forEach((collection) => {
+      const layer = collection.get(id);
+      if (layer) map.removeLayer(layer);
+      collection.delete(id);
+    });
+  }
+
+  // Build the toolbar used only while existing corners are being repositioned.
+  function createEditToolbar() {
+    if (editToolbar) return editToolbar;
+    const control = L.control({ position: "topright" });
+    control.onAdd = () => {
+      const element = L.DomUtil.create("section", "mapv2-drawing-toolbar mapv2-edit-toolbar");
+      element.hidden = true;
+      element.innerHTML = `<div><strong>Reposition compartment corners</strong><span id="editCompartmentStatus">Drag an existing corner to adjust the boundary.</span></div><div class="mapv2-drawing-actions"><button type="button" id="cancelCompartmentEdit">Cancel</button><button type="button" class="mapv2-drawing-review" id="saveCompartmentEdit">Save changes</button></div>`;
+      L.DomEvent.disableClickPropagation(element);
+      L.DomEvent.disableScrollPropagation(element);
+      element.querySelector("#cancelCompartmentEdit").addEventListener("click", cancelCompartmentEdit);
+      element.querySelector("#saveCompartmentEdit").addEventListener("click", saveCompartmentEdit);
+      return element;
+    };
+    control.addTo(map);
+    editToolbar = control;
+    return control;
+  }
+
+  function setEditToolbarVisibility(isVisible) {
+    if (!editToolbar) return;
+    const toolbarElement = editToolbar.getContainer();
+    if (!toolbarElement) return;
+    toolbarElement.hidden = !isVisible;
+    toolbarElement.setAttribute("aria-hidden", String(!isVisible));
+  }
+
+  function editDraftSpeciesMix() {
+    return (editDraft?.species_mix || []).map((item) => {
+      const species = treeSpeciesById.get(Number(item.tree_species_id));
+      return {
+        id: Number(item.tree_species_id),
+        name: species?.name || "Tree species",
+        scientificName: species?.scientific_name || "Species name pending",
+        quantity: Number(item.planned_quantity) || 0,
+      };
+    });
+  }
+
+  // Add draggable markers for the saved corners. No map click handler runs in edit mode.
+  function showEditCornerHandles() {
+    if (!editDraft) return;
+    if (editCornerHandles) map.removeLayer(editCornerHandles);
+    const handles = editDraft.boundary.map((point, index) => {
+      const handle = L.marker(point, {
+        draggable: true,
+        icon: L.divIcon({
+          className: "mapv2-edit-corner-icon",
+          html: `<span>${index + 1}</span>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13],
+        }),
+      });
+      handle.on("drag", (event) => {
+        editDraft.boundary[index] = [event.latlng.lat, event.latlng.lng];
+        layers.polygons.get(editDraft.id)?.setLatLngs(editDraft.boundary);
+      });
+      return handle;
+    });
+    editCornerHandles = L.layerGroup(handles).addTo(map);
+  }
+
+  // Start edit mode with the saved boundary, allowing only the existing corners to move.
+  function beginCompartmentEdit(draft) {
+    const compartment = getCompartment(String(draft?.id));
+    if (!compartment || !Array.isArray(draft?.species_mix) || !draft.species_mix.length) {
+      showMapNotice("This compartment is unavailable for editing. Refresh the page and try again.");
+      return;
+    }
+    cancelCompartmentDrawing();
+    editDraft = {
+      ...draft,
+      id: String(compartment.id),
+      boundary: compartment.boundary.map((point) => [...point]),
+      originalBoundary: compartment.boundary.map((point) => [...point]),
+    };
+    const treeSpeciesLayer = layers.treeSpecies.get(editDraft.id);
+    const treeClusterLayer = layers.treeClusters.get(editDraft.id);
+    if (treeSpeciesLayer) map.removeLayer(treeSpeciesLayer);
+    if (treeClusterLayer) map.removeLayer(treeClusterLayer);
+    showEditCornerHandles();
+    createEditToolbar();
+    setEditToolbarVisibility(true);
+    map.fitBounds(L.latLngBounds(editDraft.boundary), { padding: [36, 36] });
+    showMapNotice("Drag an existing corner to reposition the compartment. New corners cannot be added here.");
+  }
+
+  // Restore the stored boundary when editing is cancelled.
+  function cancelCompartmentEdit() {
+    if (!editDraft) return;
+    const id = editDraft.id;
+    layers.polygons.get(id)?.setLatLngs(editDraft.originalBoundary);
+    if (editCornerHandles) {
+      map.removeLayer(editCornerHandles);
+      editCornerHandles = null;
+    }
+    editDraft = null;
+    setEditToolbarVisibility(false);
+    refreshMapLayers();
+    hideMapNotice();
+  }
+
+  function editBoundaryGeoJson(boundary) {
+    const ring = boundary.map(([lat, lng]) => [lng, lat]);
+    ring.push([...ring[0]]);
+    return JSON.stringify({ type: "Polygon", coordinates: [ring] });
+  }
+
+  // Save both the edited form values and the repositioned, same-count corners.
+  async function saveCompartmentEdit() {
+    if (!editDraft || savingCompartmentEdit) return;
+    savingCompartmentEdit = true;
+    const payload = new FormData();
+    payload.append("id", editDraft.id);
+    payload.append("name", editDraft.name);
+    payload.append("status", editDraft.status);
+    payload.append("date_started", editDraft.date_started);
+    payload.append("species_mix", JSON.stringify(editDraft.species_mix));
+    payload.append("boundary_geojson", editBoundaryGeoJson(editDraft.boundary));
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+    if (csrf) payload.append("csrf_token", csrf);
+    try {
+      const response = await fetch("actions/mapv2/update_compartment.php", {
+        method: "POST",
+        body: payload,
+        headers: { Accept: "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "The compartment could not be updated.");
+      }
+      const compartment = getCompartment(editDraft.id);
+      const savedDraft = editDraft;
+      if (editCornerHandles) {
+        map.removeLayer(editCornerHandles);
+        editCornerHandles = null;
+      }
+      setEditToolbarVisibility(false);
+      removeCompartmentLayers(savedDraft.id);
+      Object.assign(compartment, {
+        name: savedDraft.name,
+        status: savedDraft.status,
+        startedAt: savedDraft.date_started,
+        year: savedDraft.date_started.slice(0, 4),
+        hectares: Number(result.gross_area_ha) || estimateBoundaryHectares(savedDraft.boundary.map(([lat, lng]) => ({ lat, lng }))),
+        speciesMix: editDraftSpeciesMix(),
+        boundary: savedDraft.boundary.map((point) => [...point]),
+        barangay: result.barangay || matchedBarangayForBoundary(savedDraft.boundary),
+        updatedAt: result.updated_at || new Date().toISOString(),
+      });
+      editDraft = null;
+      addCompartmentLayers(compartment);
+      refreshUI();
+      selectCompartment(compartment.id);
+      showMapNotice("Compartment details and boundary updated.");
+    } catch (error) {
+      showMapNotice(error.message || "The compartment could not be updated.");
+    } finally {
+      savingCompartmentEdit = false;
+    }
+  }
+
   // Save the reviewed boundary and species mix, then show the new compartment.
   async function saveReviewedCompartment() {
     if (!drawingDraft || drawingDraft.points.length < 3 || creatingCompartment) return;
@@ -499,6 +733,7 @@
         photos: [],
         boundary,
         barangay: result.barangay || matchedBarangayForBoundary(boundary),
+        updatedAt: result.updated_at || new Date().toISOString(),
       };
       compartments.push(newCompartment);
       addCompartmentLayers(newCompartment);
@@ -704,6 +939,7 @@
           id: String(record.id),
           name: record.name,
           startedAt: record.started_at,
+          updatedAt: record.updated_at,
           year: String(record.started_at || "").slice(0, 4),
           status: STATUS_STYLES[record.status] ? record.status : "planned",
           hectares: Number(record.hectares) || 0,
@@ -740,12 +976,12 @@
       else map.removeLayer(polygon);
     });
     layers.treeSpecies.forEach((treeSpecies, id) => {
-      if (visible.has(id) && treeSpeciesVisible && !useTreeClusters)
+      if (id !== editDraft?.id && visible.has(id) && treeSpeciesVisible && !useTreeClusters)
         treeSpecies.addTo(map);
       else map.removeLayer(treeSpecies);
     });
     layers.treeClusters.forEach((treeCluster, id) => {
-      if (visible.has(id) && treeSpeciesVisible && useTreeClusters)
+      if (id !== editDraft?.id && visible.has(id) && treeSpeciesVisible && useTreeClusters)
         treeCluster.addTo(map);
       else map.removeLayer(treeCluster);
     });
@@ -787,7 +1023,7 @@
     }
     if (state.scope === "archived") {
       list.innerHTML =
-        '<p class="mapv2-empty-state">Archived compartments will appear here when the archive workflow is added.</p>';
+        '<p class="mapv2-empty-state">Archived compartments are not loaded in this view.</p>';
       return;
     }
     const addCompartmentCard = `
@@ -814,7 +1050,13 @@
                         <small>Started: <strong>${formatDate(compartment.startedAt)}</strong></small>
                     </div>
                     <div class="mapv2-card-actions">
-                        <button class="mapv2-icon-button mapv2-card-menu" type="button" data-view-id="${compartment.id}" aria-label="View ${escapeHtml(compartment.name)} details"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
+                        <div class="mapv2-card-menu-wrap">
+                          <button class="mapv2-icon-button mapv2-card-menu" type="button" data-compartment-menu-toggle="${compartment.id}" aria-label="Actions for ${escapeHtml(compartment.name)}" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
+                          <div class="mapv2-card-menu-options" data-compartment-menu="${compartment.id}" hidden>
+                            <button type="button" data-compartment-edit="${compartment.id}">Edit</button>
+                            <button type="button" data-compartment-archive="${compartment.id}">Archive</button>
+                          </div>
+                        </div>
                         <span class="mapv2-status-badge" style="--badge-color: ${status.color}; --badge-fill: ${status.fill}">${status.label}</span>
                     </div>
                 </article>`;
@@ -832,6 +1074,71 @@
         selectCompartment(card.dataset.compartmentId);
       });
     });
+    const closeCardMenus = () => {
+      list.querySelectorAll("[data-compartment-menu]").forEach((menu) => {
+        closeDisclosure(menu);
+      });
+      list.querySelectorAll("[data-compartment-menu-toggle]").forEach((button) => {
+        button.setAttribute("aria-expanded", "false");
+      });
+    };
+    list.querySelectorAll("[data-compartment-menu-toggle]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const menu = list.querySelector(
+          `[data-compartment-menu="${button.dataset.compartmentMenuToggle}"]`,
+        );
+        const isOpen = menu && !menu.hidden && menu.classList.contains("is-open");
+        closeCardMenus();
+        if (menu) {
+          if (!isOpen) openDisclosure(menu);
+          button.setAttribute("aria-expanded", String(!isOpen));
+        }
+      });
+    });
+    list.querySelectorAll("[data-compartment-edit]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeCardMenus();
+        window.showEditReforestationCompartmentModal?.(button.dataset.compartmentEdit);
+      });
+    });
+    list.querySelectorAll("[data-compartment-archive]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeCardMenus();
+        archiveCompartment(button.dataset.compartmentArchive);
+      });
+    });
+  }
+
+  // Archive from the card menu while preserving its database record for later restore work.
+  async function archiveCompartment(id) {
+    const compartment = getCompartment(id);
+    if (!compartment || !window.confirm(`Archive \"${compartment.name}\"?`)) return;
+    const payload = new FormData();
+    payload.append("id", id);
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+    if (csrf) payload.append("csrf_token", csrf);
+    try {
+      const response = await fetch("actions/mapv2/archive_compartment.php", {
+        method: "POST",
+        body: payload,
+        headers: { Accept: "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "The compartment could not be archived.");
+      removeCompartmentLayers(id);
+      compartments.splice(compartments.indexOf(compartment), 1);
+      if (state.selectedId === id) state.selectedId = null;
+      refreshUI();
+      showMapNotice("Compartment archived.");
+    } catch (error) {
+      showMapNotice(error.message || "The compartment could not be archived.");
+    }
   }
 
   // Replace the list with the selected compartment details and its photo area.
@@ -841,16 +1148,6 @@
     const photos = Array.isArray(compartment.photos) ? compartment.photos : [];
     const categoryOptions = Object.entries(STATUS_STYLES)
       .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
-      .join("");
-    const photoYears = [
-      ...new Set(
-        photos
-          .filter((photo) => !photo.archived)
-          .map((photo) => photo.uploadedAt.slice(0, 4)),
-      ),
-    ]
-      .sort((left, right) => right.localeCompare(left))
-      .map((year) => `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`)
       .join("");
     const photoRowsMarkup = photos
       .map((photo, index) => {
@@ -886,9 +1183,10 @@
                 <h3>Species mix</h3>
                 ${compartment.speciesMix.map((species) => `<article class="mapv2-species-card"><div><strong>${escapeHtml(species.name)}</strong><em>${escapeHtml(species.scientificName)}</em></div><b>×${species.quantity}</b></article>`).join("")}
             </section>
+            <div class="mapv2-updated-at"><span>Updated at</span><p>${escapeHtml(formatUpdatedAt(compartment.updatedAt))}</p></div>
             <section class="mapv2-photos-section">
                 <h3>Photos</h3>
-                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All categories</option>${categoryOptions}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Filter photo date"><option value="current-month">Current month</option><option value="last-month">Last month</option><option value="custom-range">Custom range</option><option value="yearly">Yearly view</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-date-range" id="photoCustomRange" hidden><input id="photoStartDate" type="date" aria-label="Photo date range start"><span>to</span><input id="photoEndDate" type="date" aria-label="Photo date range end"></div><div class="mapv2-filter-select" id="photoYearFilterWrap" hidden><select id="photoYearFilter" aria-label="Photo year"><option value="all">All years</option>${yearOptions}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" id="clearPhotoFilters" hidden>Clear filters</button></div>
+                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All categories</option>${categoryOptions}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Sort photos"><option value="newest-to-oldest" selected>Newest to oldest</option><option value="oldest-to-newest">Oldest to newest</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" id="clearPhotoFilters" hidden>Clear filters</button></div>
                 <div class="mapv2-photo-table" role="table">
                     <div class="mapv2-photo-row mapv2-photo-head" role="row"><span>Name</span><span>Uploaded by</span><span>Category</span><span>Size</span><span>Date</span><span></span></div>
                     <p class="mapv2-photo-date" id="photoDateCaption">Current month</p>
@@ -908,6 +1206,7 @@
 
     document.getElementById("compartmentListView").hidden = true;
     detail.hidden = false;
+    bindSelectDisclosureIndicators(detail);
 
     try {
     const photoRows = detail.querySelectorAll(
@@ -915,68 +1214,78 @@
     );
     const categoryFilter = document.getElementById("photoCategoryFilter");
     const dateFilter = document.getElementById("photoDateFilter");
-    const customRange = document.getElementById("photoCustomRange");
-    const startDate = document.getElementById("photoStartDate");
-    const endDate = document.getElementById("photoEndDate");
-    const yearFilterWrap = document.getElementById("photoYearFilterWrap");
-    const photoYearFilter = document.getElementById("photoYearFilter");
     const dateCaption = document.getElementById("photoDateCaption");
     const clearPhotoFilters = document.getElementById("clearPhotoFilters");
+    const photoTable = detail.querySelector(".mapv2-photo-table");
 
-    const updateDateControls = () => {
-      const isCustomRange = dateFilter.value === "custom-range";
-      const isYearly = dateFilter.value === "yearly";
-      customRange.hidden = !isCustomRange;
-      yearFilterWrap.hidden = !isYearly;
-      dateCaption.textContent = dateFilter.options[dateFilter.selectedIndex].textContent;
-    };
     const updateClearButton = () => {
       clearPhotoFilters.hidden =
-        categoryFilter.value === "all" && dateFilter.value === "current-month";
+        categoryFilter.value === "all" && dateFilter.value === "newest-to-oldest";
+    };
+    // Group the newest-first result the same way notification lists group recent items.
+    const photoGroupForDate = (value) => {
+      const photoDay = new Date(`${value}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const daysAgo = Math.floor((today - photoDay) / 86400000);
+      if (daysAgo === 0) return "Today";
+      if (daysAgo > 0 && daysAgo < 7) return "This Week";
+      return "Older";
+    };
+    const arrangePhotoRows = () => {
+      photoTable.querySelectorAll("[data-photo-group-heading]").forEach((heading) => heading.remove());
+      const visibleRows = [...photoRows].filter((row) => !row.hidden);
+      const hiddenRows = [...photoRows].filter((row) => row.hidden);
+      const descending = dateFilter.value === "newest-to-oldest";
+      visibleRows.sort((left, right) => descending
+        ? right.dataset.photoDate.localeCompare(left.dataset.photoDate)
+        : left.dataset.photoDate.localeCompare(right.dataset.photoDate));
+      const groups = new Map();
+      visibleRows.forEach((row) => {
+        const label = photoGroupForDate(row.dataset.photoDate);
+        if (!groups.has(label)) groups.set(label, []);
+        groups.get(label).push(row);
+      });
+      if (!groups.size) {
+        dateCaption.textContent = "No photos found";
+        dateCaption.hidden = false;
+        photoTable.append(dateCaption, ...hiddenRows);
+        return;
+      }
+      let usesCaption = true;
+      groups.forEach((rows, label) => {
+        const heading = usesCaption ? dateCaption : document.createElement("p");
+        heading.className = "mapv2-photo-date";
+        heading.textContent = label;
+        heading.hidden = false;
+        if (!usesCaption) heading.dataset.photoGroupHeading = "true";
+        photoTable.append(heading, ...rows);
+        usesCaption = false;
+      });
+      photoTable.append(...hiddenRows);
     };
     const filterPhotoRows = () => {
       const selectedCategory = categoryFilter.value;
-      const selectedPeriod = dateFilter.value;
-      const currentMonth = monthKey(new Date());
-      const previousMonthDate = new Date();
-      previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
-      const previousMonth = monthKey(previousMonthDate);
       photoRows.forEach((row) => {
-        const photoDate = row.dataset.photoDate;
-        const periodMatches =
-          (selectedPeriod === "current-month" && monthKey(photoDate) === currentMonth) ||
-          (selectedPeriod === "last-month" && monthKey(photoDate) === previousMonth) ||
-          (selectedPeriod === "custom-range" &&
-            (!startDate.value || photoDate >= startDate.value) &&
-            (!endDate.value || photoDate <= endDate.value)) ||
-          (selectedPeriod === "yearly" &&
-            (photoYearFilter.value === "all" || photoDate.startsWith(photoYearFilter.value)));
-        row.hidden =
-          (selectedCategory !== "all" &&
-            row.dataset.photoCategory !== selectedCategory) ||
-          !periodMatches;
+      row.hidden =
+        (selectedCategory !== "all" &&
+            row.dataset.photoCategory !== selectedCategory);
       });
-      updateDateControls();
       updateClearButton();
+      arrangePhotoRows();
     };
     categoryFilter.addEventListener("change", filterPhotoRows);
     dateFilter.addEventListener("change", filterPhotoRows);
-    startDate.addEventListener("change", filterPhotoRows);
-    endDate.addEventListener("change", filterPhotoRows);
-    photoYearFilter.addEventListener("change", filterPhotoRows);
     clearPhotoFilters.addEventListener("click", () => {
       categoryFilter.value = "all";
-      dateFilter.value = "current-month";
-      startDate.value = "";
-      endDate.value = "";
-      photoYearFilter.value = "all";
+      dateFilter.value = "newest-to-oldest";
       filterPhotoRows();
     });
     filterPhotoRows();
 
     const closePhotoMenus = () => {
       detail.querySelectorAll("[data-photo-menu]").forEach((menu) => {
-        menu.hidden = true;
+        closeDisclosure(menu);
       });
       detail.querySelectorAll("[data-photo-menu-toggle]").forEach((button) => {
         button.setAttribute("aria-expanded", "false");
@@ -1016,9 +1325,9 @@
       const menuToggle = event.target.closest("[data-photo-menu-toggle]");
       if (menuToggle) {
         const menu = detail.querySelector(`[data-photo-menu="${menuToggle.dataset.photoMenuToggle}"]`);
-        const willOpen = menu.hidden;
+        const willOpen = menu.hidden || !menu.classList.contains("is-open");
         closePhotoMenus();
-        menu.hidden = !willOpen;
+        if (willOpen) openDisclosure(menu);
         menuToggle.setAttribute("aria-expanded", String(willOpen));
         return;
       }
@@ -1118,10 +1427,12 @@
         <div class="mapv2-detail-field"><span>Location</span><p>${escapeHtml(locationReference(compartment))}</p></div>
         <label class="mapv2-detail-field"><span>Status</span><div class="mapv2-filter-select"><select id="detailStatusSelect">${Object.entries(STATUS_STYLES).map(([key, item]) => `<option value="${key}" ${key === compartment.status ? "selected" : ""}>${item.label}</option>`).join("")}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div></label>
         <section class="mapv2-species-section"><h3>Species mix</h3>${compartment.speciesMix.map((species) => `<article class="mapv2-species-card"><div><strong>${escapeHtml(species.name)}</strong><em>${escapeHtml(species.scientificName)}</em></div><b>×${species.quantity}</b></article>`).join("")}</section>
+        <div class="mapv2-updated-at"><span>Updated at</span><p>${escapeHtml(formatUpdatedAt(compartment.updatedAt))}</p></div>
         <section class="mapv2-photos-section"><h3>Photos</h3><div class="mapv2-photo-table" role="table"><div class="mapv2-photo-row mapv2-photo-head" role="row"><span>Name</span><span>Uploaded by</span><span>Category</span><span>Size</span><span>Date</span></div>${photoRows}</div></section>
       </div>`;
     document.getElementById("compartmentListView").hidden = true;
     detail.hidden = false;
+    bindSelectDisclosureIndicators(detail);
     document.getElementById("backToCompartments").addEventListener("click", showList);
     document.getElementById("detailStatusSelect").addEventListener("change", (event) =>
       updateCompartmentStatus(compartment.id, event.target.value),
@@ -1154,24 +1465,40 @@
     detail.addEventListener("animationend", finishExit, { once: true });
   }
 
-  // Change local map colours immediately after a status selection changes.
-  function updateCompartmentStatus(id, nextStatus) {
+  // Save a quick status change, then refresh its colour and stored timestamp.
+  async function updateCompartmentStatus(id, nextStatus) {
     const compartment = getCompartment(id);
     if (!compartment || !STATUS_STYLES[nextStatus]) return;
-    compartment.status = nextStatus;
-    const style = STATUS_STYLES[nextStatus];
-    layers.polygons
-      .get(id)
-      .setStyle({ color: style.color, fillColor: style.fill });
-    layers.treeSpecies
-      .get(id)
-      .eachLayer((marker) => marker.setStyle(treeSpeciesDotStyle(nextStatus)));
-    rebuildTreeSpeciesLayers();
+    const statusSelect = document.getElementById("detailStatusSelect");
+    if (statusSelect) statusSelect.disabled = true;
     try {
+      const payload = new FormData();
+      payload.append("id", id);
+      payload.append("status", nextStatus);
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+      if (csrf) payload.append("csrf_token", csrf);
+      const response = await fetch("actions/mapv2/update_compartment_status.php", {
+        method: "POST",
+        body: payload,
+        headers: { Accept: "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "The compartment status could not be updated.");
+      }
+      compartment.status = nextStatus;
+      compartment.updatedAt = result.updated_at || new Date().toISOString();
+      const style = STATUS_STYLES[nextStatus];
+      layers.polygons.get(id)?.setStyle({ color: style.color, fillColor: style.fill });
+      rebuildTreeSpeciesLayers();
       renderDetail(compartment);
     } catch (error) {
       console.error("Map V2 compartment detail could not be rendered.", error);
-      renderDetailFallback(compartment);
+      showMapNotice(error.message || "The compartment status could not be updated.");
+      if (statusSelect) {
+        statusSelect.value = compartment.status;
+        statusSelect.disabled = false;
+      }
     }
     updateMetrics();
   }
@@ -1197,13 +1524,29 @@
   }
 
   function showMapNotice(message) {
-    const notice = document.getElementById("mapNotice");
-    notice.textContent = message;
-    notice.hidden = false;
+    const toast = document.getElementById("mapToast");
+    if (!toast) return;
+    window.clearTimeout(mapToastTimer);
+    toast.textContent = message;
+    toast.hidden = false;
+    window.requestAnimationFrame(() => toast.classList.add("is-visible"));
+    mapToastTimer = window.setTimeout(hideMapNotice, 4600);
+  }
+
+  // Hide feedback after a short pause so it never blocks the map permanently.
+  function hideMapNotice() {
+    const toast = document.getElementById("mapToast");
+    if (!toast) return;
+    window.clearTimeout(mapToastTimer);
+    toast.classList.remove("is-visible");
+    window.setTimeout(() => {
+      if (!toast.classList.contains("is-visible")) toast.hidden = true;
+    }, 180);
   }
 
   // Connect filters, layer switches, menus, and base map buttons to the map.
   function bindControls() {
+    bindSelectDisclosureIndicators();
     document
       .getElementById("searchInput")
       .addEventListener("input", (event) => {
@@ -1254,8 +1597,9 @@
     const menuButton = document.getElementById("mapFilterMenuBtn");
     const menu = document.getElementById("mapFilterMenu");
     menuButton.addEventListener("click", () => {
-      const isOpen = !menu.hidden;
-      menu.hidden = isOpen;
+      const isOpen = !menu.hidden && menu.classList.contains("is-open");
+      if (isOpen) closeDisclosure(menu);
+      else openDisclosure(menu);
       menuButton.setAttribute("aria-expanded", String(!isOpen));
     });
     menu.addEventListener("click", (event) => {
@@ -1263,14 +1607,14 @@
       if (!option) return;
       state.scope = option.dataset.mapScope;
       document.getElementById("mapScopeSelect").value = "all";
-      menu.hidden = true;
+      closeDisclosure(menu);
       menuButton.setAttribute("aria-expanded", "false");
       showList();
       refreshUI();
     });
     document.addEventListener("click", (event) => {
       if (!event.target.closest(".mapv2-menu-wrap")) {
-        menu.hidden = true;
+        closeDisclosure(menu);
         menuButton.setAttribute("aria-expanded", "false");
       }
     });
@@ -1288,6 +1632,8 @@
         window.hideFloating?.();
       } else if (event.data?.type === "mapv2:confirm-compartment-create") {
         saveReviewedCompartment();
+      } else if (event.data?.type === "mapv2:begin-compartment-edit") {
+        beginCompartmentEdit(event.data.payload);
       }
     });
   }

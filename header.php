@@ -139,6 +139,11 @@ if (isset($_SESSION['user_id'])) {
         <iframe src="" class="floating-iframe" id="addCompartmentFrame" title="Add reforestation compartment"></iframe>
     </div>
 
+    <!-- Edit Reforestation Compartment Modal -->
+    <div class="floating-container" id="floatingEditCompartmentContainer">
+        <iframe src="" class="floating-iframe" id="editCompartmentFrame" title="Edit reforestation compartment"></iframe>
+    </div>
+
     <!-- Review Reforestation Compartment Modal -->
     <div class="floating-container" id="floatingCompartmentReviewContainer">
         <iframe src="" class="floating-iframe" id="compartmentReviewFrame" title="Review reforestation compartment"></iframe>

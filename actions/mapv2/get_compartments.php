@@ -14,7 +14,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_a
 try {
     $compartments = [];
     $result = $conn->query(
-        'SELECT rc.id, rc.name, rc.status, rc.date_started, rc.gross_area_ha,
+        'SELECT rc.id, rc.name, rc.status, rc.date_started, rc.updated_at, rc.gross_area_ha,
                 ST_AsGeoJSON(rc.boundary) AS boundary_geojson,
                 b.id AS barangay_id, b.name AS barangay_name,
                 b.municipality_name, b.province_name
@@ -35,6 +35,7 @@ try {
             'name' => $row['name'],
             'status' => $row['status'],
             'started_at' => $row['date_started'],
+            'updated_at' => $row['updated_at'],
             'hectares' => (float) ($row['gross_area_ha'] ?? 0),
             'boundary' => array_map(static fn(array $point): array => [(float) $point[1], (float) $point[0]], $coordinates),
             'barangay' => $row['barangay_id'] ? [

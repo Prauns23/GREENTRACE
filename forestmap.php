@@ -17,7 +17,7 @@ include 'header.php';
 ?>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="forestmap.css?v=mapv2-create-review-7">
+<link rel="stylesheet" href="forestmap.css?v=mapv2-dropdown-active-13">
 
 <main class="forestmap-page mapv2-page">
     <header class="mapv2-heading">
@@ -137,7 +137,8 @@ include 'header.php';
         <!-- Middle panel: Leaflet renders boundaries, seedlings, and map tools here. -->
         <section class="mapv2-map-panel" aria-label="Forest map">
             <div id="forestMap"></div>
-            <p class="mapv2-notice" id="mapNotice" role="status" hidden></p>
+            <!-- Short map feedback appears here, then dismisses itself. -->
+            <div class="mapv2-toast" id="mapToast" role="status" aria-live="polite" hidden></div>
         </section>
 
 
@@ -159,6 +160,6 @@ include 'header.php';
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="forestmap.js?v=mapv2-create-review-8"></script>
+<script src="forestmap.js?v=mapv2-dropdown-active-15"></script>
 
 <?php include 'footer.php'; ?>
