@@ -12,7 +12,8 @@
   const DEFAULT_PLANTING_SPACING_M = 3;
   const AUTO_PLOT_SPACING_M = 35;
   const TREE_CLUSTER_ZOOM = 14;
-  const MAP_MIN_ZOOM = 13;
+  const MAP_MIN_ZOOM = 5;
+  const INITIAL_MAP_ZOOM = 13;
 
   // Compartments are loaded from the Map V2 API. Temporary sample plots have
   // been removed now that real compartment boundaries can be created.
@@ -315,7 +316,7 @@
       zoomControl: true,
       attributionControl: true,
       minZoom: MAP_MIN_ZOOM,
-    }).setView([14.694, 120.348], MAP_MIN_ZOOM);
+    }).setView([14.694, 120.348], INITIAL_MAP_ZOOM);
 
     const osm = L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
