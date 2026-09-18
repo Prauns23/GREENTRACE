@@ -17,7 +17,7 @@ include 'header.php';
 ?>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="forestmap.css">
+<link rel="stylesheet" href="forestmap.css?v=mapv2-create-review-7">
 
 <main class="forestmap-page mapv2-page">
     <header class="mapv2-heading">
@@ -27,7 +27,7 @@ include 'header.php';
 
     <div class="mapv2-layout">
 
-        <!-- LEFTSIDE PANEL -->
+        <!-- Left panel: find compartments and change what the map shows. -->
 
         <aside class="mapv2-sidebar" aria-label="Map filters">
             <div class="mapv2-search-field">
@@ -64,6 +64,7 @@ include 'header.php';
                             <option value="planned">Planned</option>
                             <option value="planted">Planted</option>
                             <option value="monitored">Monitored</option>
+                            <option value="low_survival">Low survival</option>
                             <option value="completed">Completed</option>
                         </select>
                         <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
@@ -127,24 +128,25 @@ include 'header.php';
                 <span><i class="status-dot status-planned"></i> Planned</span>
                 <span><i class="status-dot status-planted"></i> Planted</span>
                 <span><i class="status-dot status-monitored"></i> Monitored</span>
+                <span><i class="status-dot status-low-survival"></i> Low survival</span>
                 <span><i class="status-dot status-completed"></i> Completed</span>
             </section>
             </div>
         </aside>
 
-        <!-- MAP -->
+        <!-- Middle panel: Leaflet renders boundaries, seedlings, and map tools here. -->
         <section class="mapv2-map-panel" aria-label="Forest map">
             <div id="forestMap"></div>
             <p class="mapv2-notice" id="mapNotice" role="status" hidden></p>
         </section>
 
 
-        <!-- RIGHTSIDE PANEL -->
+        <!-- Right panel: start a new compartment or inspect the selected one. -->
         <aside class="mapv2-compartments" id="compartmentPanel" aria-live="polite">
             <section id="compartmentListView">
                 <header class="mapv2-panel-heading">
                     <h2>Compartments</h2>
-                    <p>Select a compartment on the map, or pick one from the list.</p>
+                    <p>Select a compartment on the map or create a compartment by clicking the plus card.</p>
                 </header>
                 <div class="mapv2-compartments-scroll">
                     <div id="compartmentList" class="mapv2-compartment-list"></div>
@@ -157,6 +159,6 @@ include 'header.php';
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="forestmap.js"></script>
+<script src="forestmap.js?v=mapv2-create-review-8"></script>
 
 <?php include 'footer.php'; ?>

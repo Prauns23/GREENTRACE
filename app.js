@@ -376,6 +376,40 @@ function showAddActivityModal() {
   activeContainer = container;
 }
 
+function showAddReforestationCompartmentModal() {
+  closeAllFloating();
+  const container = document.getElementById("floatingAddCompartmentContainer");
+  const iframe = document.getElementById("addCompartmentFrame");
+  if (!container || !iframe) return;
+
+  iframe.src = (window.basePath || "") + "modals/add_reforestation_compartment.php";
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+  lockModalBackground(container);
+}
+
+function showCompartmentReviewModal(reviewData) {
+  closeAllFloating();
+  const container = document.getElementById("floatingCompartmentReviewContainer");
+  const iframe = document.getElementById("compartmentReviewFrame");
+  if (!container || !iframe) return;
+
+  iframe.onload = () => {
+    iframe.contentWindow?.postMessage(
+      { type: "mapv2:review-compartment-data", payload: reviewData },
+      window.location.origin,
+    );
+  };
+  iframe.src = (window.basePath || "") + "modals/review_reforestation_compartment.php";
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+  lockModalBackground(container);
+}
+
 function getCSRFToken() {
   return document
     .querySelector('meta[name="csrf-token"]')
@@ -525,6 +559,8 @@ window.showCreateChannelModal = showCreateChannelModal;
 window.showAddMessageModal = showAddMessageModal;
 window.showEditProfileModal = showEditProfileModal;
 window.showAddActivityModal = showAddActivityModal;
+window.showAddReforestationCompartmentModal = showAddReforestationCompartmentModal;
+window.showCompartmentReviewModal = showCompartmentReviewModal;
 window.showEditActivityModal = showEditActivityModal;
 window.showActivityDetails = showActivityDetails;
 window.showSignUp = showSignUp;

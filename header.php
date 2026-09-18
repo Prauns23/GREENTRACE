@@ -25,7 +25,7 @@ if (isset($_SESSION['user_id'])) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     <link rel="stylesheet" href="pagination.css">
-    <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>index.css">
+    <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>index.css?v=<?php echo filemtime(__DIR__ . '/index.css'); ?>">
     <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>volunteer.css">
     <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>information.css">
     <link rel="stylesheet" href="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>activities.css">
@@ -132,6 +132,16 @@ if (isset($_SESSION['user_id'])) {
 
     <div class="floating-container" id="floatingAddActivityContainer">
         <iframe src="<?php echo $basePath; ?>modals/add_activity.php" class="floating-iframe" id="addActivityFrame"></iframe>
+    </div>
+
+    <!-- Add Reforestation Compartment Modal -->
+    <div class="floating-container" id="floatingAddCompartmentContainer">
+        <iframe src="" class="floating-iframe" id="addCompartmentFrame" title="Add reforestation compartment"></iframe>
+    </div>
+
+    <!-- Review Reforestation Compartment Modal -->
+    <div class="floating-container" id="floatingCompartmentReviewContainer">
+        <iframe src="" class="floating-iframe" id="compartmentReviewFrame" title="Review reforestation compartment"></iframe>
     </div>
 
     <!-- Edit Profile Modal -->

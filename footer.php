@@ -1,6 +1,6 @@
 </div> <!-- close .page-content -->
 
-<script src="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>app.js"></script>
+<script src="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>app.js?v=<?php echo filemtime(__DIR__ . '/app.js'); ?>"></script>
 <script src="<?php echo (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) ? '../' : ''; ?>nav.js"></script>
 
 <script>
