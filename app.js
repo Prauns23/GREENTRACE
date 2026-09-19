@@ -428,6 +428,61 @@ function showCompartmentReviewModal(reviewData) {
   lockModalBackground(container);
 }
 
+// Open the photo uploader with the compartment status preselected as its category.
+function showUploadReforestationPhotoModal(compartmentId, options = {}) {
+  closeAllFloating();
+  const container = document.getElementById("floatingUploadReforestationPhotoContainer");
+  const iframe = document.getElementById("uploadReforestationPhotoFrame");
+  if (!container || !iframe || !compartmentId) return;
+  iframe.style.height = "";
+
+  const params = new URLSearchParams({ compartment_id: String(compartmentId) });
+  if (options.category) params.set("category", options.category);
+  iframe.onload = () => {
+    if (Array.isArray(options.files) && options.files.length) {
+      iframe.contentWindow?.postMessage(
+        { type: "mapv2:prefill-photo-files", files: options.files },
+        window.location.origin,
+      );
+    }
+  };
+  iframe.src = (window.basePath || "") + "modals/upload_reforestation_photos.php?" + params.toString();
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+  lockModalBackground(container);
+}
+
+// Let the upload modal use only the space its current previews need, within the viewport.
+window.addEventListener("message", (event) => {
+  if (event.origin !== window.location.origin || event.data?.type !== "mapv2:resize-upload-photo-modal") return;
+  const iframe = document.getElementById("uploadReforestationPhotoFrame");
+  const requested = Number(event.data.height);
+  if (iframe && Number.isFinite(requested)) iframe.style.height = `${Math.min(680, Math.max(390, requested))}px`;
+});
+
+// The edit modal receives the currently rendered photo while storage is being connected.
+function showEditReforestationPhotoModal(photo) {
+  closeAllFloating();
+  const container = document.getElementById("floatingEditReforestationPhotoContainer");
+  const iframe = document.getElementById("editReforestationPhotoFrame");
+  if (!container || !iframe || !photo) return;
+
+  iframe.onload = () => {
+    iframe.contentWindow?.postMessage(
+      { type: "mapv2:edit-photo-data", payload: photo },
+      window.location.origin,
+    );
+  };
+  iframe.src = (window.basePath || "") + "modals/edit_reforestation_photo.php";
+  container.classList.add("active");
+  overlay.classList.add("active");
+  body.classList.add("login-active");
+  activeContainer = container;
+  lockModalBackground(container);
+}
+
 function getCSRFToken() {
   return document
     .querySelector('meta[name="csrf-token"]')
@@ -580,6 +635,8 @@ window.showAddActivityModal = showAddActivityModal;
 window.showAddReforestationCompartmentModal = showAddReforestationCompartmentModal;
 window.showEditReforestationCompartmentModal = showEditReforestationCompartmentModal;
 window.showCompartmentReviewModal = showCompartmentReviewModal;
+window.showUploadReforestationPhotoModal = showUploadReforestationPhotoModal;
+window.showEditReforestationPhotoModal = showEditReforestationPhotoModal;
 window.showEditActivityModal = showEditActivityModal;
 window.showActivityDetails = showActivityDetails;
 window.showSignUp = showSignUp;

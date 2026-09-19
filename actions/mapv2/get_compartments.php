@@ -45,6 +45,7 @@ try {
                 'province' => $row['province_name'],
             ] : null,
             'species_mix' => [],
+            'photos' => [],
         ];
     }
 
@@ -64,6 +65,24 @@ try {
                 'scientific_name' => $species['scientific_name'],
                 'quantity' => (int) $species['planned_quantity'],
             ];
+        }
+        // Photo metadata is optional to the map list. A photo problem must not hide compartments.
+        try {
+            $photoResult = $conn->query(
+                'SELECT cp.id, cp.compartment_id, COALESCE(NULLIF(cp.display_name, \'\'), cp.original_filename) AS name, cp.category, cp.storage_path, cp.file_size_bytes, cp.created_at
+                 FROM compartment_photos cp WHERE cp.compartment_id IN (' . $ids . ') AND cp.archived = 0 ORDER BY cp.created_at DESC, cp.id DESC'
+            );
+            while ($photo = $photoResult->fetch_assoc()) {
+                $bytes = (int) $photo['file_size_bytes'];
+                $compartments[(int) $photo['compartment_id']]['photos'][] = [
+                    'id' => (string) $photo['id'], 'name' => $photo['name'], 'uploadedBy' => 'Administrator',
+                    'category' => ucwords(str_replace('_', ' ', $photo['category'])),
+                    'size' => $bytes >= 1048576 ? number_format($bytes / 1048576, 1) . ' MB' : max(1, (int) round($bytes / 1024)) . ' KB',
+                    'uploadedAt' => substr($photo['created_at'], 0, 10), 'path' => $photo['storage_path'],
+                ];
+            }
+        } catch (Throwable $photoException) {
+            error_log('Map V2 photo metadata could not be loaded: ' . $photoException->getMessage());
         }
     }
 

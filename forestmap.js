@@ -137,6 +137,13 @@
     }).format(new Date(`${value}T00:00:00`));
   }
 
+  // Format browser file sizes for draft rows before the storage endpoint returns saved files.
+  function formatPhotoSize(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 1) return "—";
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   function monthKey(value) {
     const date = value instanceof Date ? value : new Date(`${value}T00:00:00`);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -952,7 +959,7 @@
             scientificName: species.scientific_name || "",
             quantity: Number(species.quantity) || 0,
           })),
-          photos: [],
+          photos: record.photos || [],
         };
         compartments.push(compartment);
         addCompartmentLayers(compartment);
@@ -1034,7 +1041,7 @@
 
     const emptyState = compartments.length
       ? `<div class="mapv2-empty-state mapv2-empty-state--no-match"><strong>No matching compartments</strong><span>Try clearing your search or filters.</span></div>`
-      : `<div class="mapv2-empty-state mapv2-empty-state--initial"><strong>No compartments yet</strong><span>Create the first compartment using the card above.</span></div>`;
+      : `<div class="mapv2-empty-state mapv2-empty-state--initial"><span>Create the first compartment using the card above.</span></div>`;
 
     list.innerHTML =
       addCompartmentCard +
@@ -1149,11 +1156,11 @@
     const photos = Array.isArray(compartment.photos) ? compartment.photos : [];
     const categoryOptions = Object.entries(STATUS_STYLES)
       .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
-      .join("");
+      .join("") + '<option value="other">Other</option>';
     const photoRowsMarkup = photos
       .map((photo, index) => {
         if (photo.archived) return "";
-        return `<div class="mapv2-photo-row" role="row" data-photo-index="${index}" data-photo-category="${escapeHtml(photo.category.toLowerCase())}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><span class="mapv2-photo-actions" data-photo-menu="${index}" hidden><button type="button" data-photo-action="edit" data-photo-index="${index}">Edit</button><button type="button" data-photo-action="archive" data-photo-index="${index}">Archive</button></span></span></div>`;
+        return `<div class="mapv2-photo-row" role="row" data-photo-index="${index}" data-photo-category="${escapeHtml(photo.category.toLowerCase().replace(/\s+/g, "_"))}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><span class="mapv2-photo-actions" data-photo-menu="${index}" hidden><button type="button" data-photo-action="edit" data-photo-index="${index}">Edit</button><button type="button" data-photo-action="archive" data-photo-index="${index}">Archive</button></span></span></div>`;
       })
       .join("");
     detail.innerHTML = `
@@ -1187,23 +1194,20 @@
             <div class="mapv2-updated-at"><span>Updated at</span><p>${escapeHtml(formatUpdatedAt(compartment.updatedAt))}</p></div>
             <section class="mapv2-photos-section">
                 <h3>Photos</h3>
-                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All categories</option>${categoryOptions}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Sort photos"><option value="newest-to-oldest" selected>Newest to oldest</option><option value="oldest-to-newest">Oldest to newest</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" id="clearPhotoFilters" hidden>Clear filters</button></div>
-                <div class="mapv2-photo-table" role="table">
+                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All categories</option>${categoryOptions}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Sort photos"><option value="newest-to-oldest" selected>Newest to oldest</option><option value="oldest-to-newest">Oldest to newest</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" class="mapv2-photo-upload-button" id="uploadCompartmentPhotos" aria-label="Upload photos"><i class="fa-solid fa-plus" aria-hidden="true"></i></button><button type="button" id="clearPhotoFilters" hidden>Clear filters</button></div>
+                <div class="mapv2-photo-table" id="photoDropTarget" role="table">
+                    <div class="mapv2-photo-drag-state" id="photoDragState" hidden>
+                    <strong>Upload photos or drag and drop
+                    </strong>
+                    <small>PNG, JPG up to 10 MB each</small>
+                    </div>
                     <div class="mapv2-photo-row mapv2-photo-head" role="row"><span>Name</span><span>Uploaded by</span><span>Category</span><span>Size</span><span>Date</span><span></span></div>
                     <p class="mapv2-photo-date" id="photoDateCaption">Current month</p>
                     ${photoRowsMarkup}
                 </div>
             </section>
               </div>
-            <dialog class="mapv2-photo-editor" id="photoEditorDialog" aria-labelledby="photoEditorTitle">
-                <form method="dialog" id="photoEditorForm">
-                    <header><h3 id="photoEditorTitle">Edit photo</h3><button type="button" class="mapv2-icon-button" id="closePhotoEditor" aria-label="Close photo editor"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></header>
-                    <label>Name<input id="photoEditorName" type="text" required></label>
-                    <label>Category<select id="photoEditorCategory">${categoryOptions}</select></label>
-                    <label class="image-container mapv2-photo-dropzone" id="photoImageDropzone" for="photoImageInput"><input id="photoImageInput" type="file" accept="image/*" hidden><i class="fa-regular fa-image" aria-hidden="true"></i><strong>Drop an image here</strong><span>or click to choose a replacement</span><img id="photoImagePreview" alt="Selected photo preview" hidden></label>
-                    <footer><button type="button" id="cancelPhotoEditor">Cancel</button><button type="submit" class="mapv2-primary-button">Save</button></footer>
-                </form>
-            </dialog>`;
+            `;
 
     document.getElementById("compartmentListView").hidden = true;
     detail.hidden = false;
@@ -1292,34 +1296,10 @@
         button.setAttribute("aria-expanded", "false");
       });
     };
-    const photoEditor = document.getElementById("photoEditorDialog");
-    const photoEditorForm = document.getElementById("photoEditorForm");
-    const photoEditorName = document.getElementById("photoEditorName");
-    const photoEditorCategory = document.getElementById("photoEditorCategory");
-    const photoImageInput = document.getElementById("photoImageInput");
-    const photoDropzone = document.getElementById("photoImageDropzone");
-    const photoImagePreview = document.getElementById("photoImagePreview");
-    let editingPhotoIndex = null;
-    let previewUrl = null;
-
-    const showPhotoPreview = (file) => {
-      if (!file || !file.type.startsWith("image/")) return;
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      previewUrl = URL.createObjectURL(file);
-      photoImagePreview.src = previewUrl;
-      photoImagePreview.hidden = false;
-      photoDropzone.classList.add("has-preview");
-    };
     const openPhotoEditor = (index) => {
       const photo = photos[index];
-      if (!photo) return;
-      editingPhotoIndex = index;
-      photoEditorName.value = photo.name;
-      photoEditorCategory.value = photo.category.toLowerCase();
-      photoImageInput.value = "";
-      photoImagePreview.hidden = true;
-      photoDropzone.classList.remove("has-preview", "is-dragging");
-      photoEditor.showModal();
+      if (!photo || typeof window.showEditReforestationPhotoModal !== "function") return;
+      window.showEditReforestationPhotoModal({ ...photo, compartmentId: compartment.id, photoIndex: index });
     };
 
     detail.addEventListener("click", (event) => {
@@ -1347,35 +1327,67 @@
       if (!event.target.closest(".mapv2-photo-menu-wrap")) closePhotoMenus();
     });
 
-    photoImageInput.addEventListener("change", () => showPhotoPreview(photoImageInput.files[0]));
-    ["dragenter", "dragover"].forEach((eventName) => {
-      photoDropzone.addEventListener(eventName, (event) => {
-        event.preventDefault();
-        photoDropzone.classList.add("is-dragging");
-      });
-    });
-    ["dragleave", "drop"].forEach((eventName) => {
-      photoDropzone.addEventListener(eventName, (event) => {
-        event.preventDefault();
-        photoDropzone.classList.remove("is-dragging");
-      });
-    });
-    photoDropzone.addEventListener("drop", (event) => showPhotoPreview(event.dataTransfer.files[0]));
-    photoEditorForm.addEventListener("submit", (event) => {
+    const photoDropTarget = document.getElementById("photoDropTarget");
+    const photoDragState = document.getElementById("photoDragState");
+    document.getElementById("uploadCompartmentPhotos").addEventListener("click", () =>
+      window.showUploadReforestationPhotoModal?.(compartment.id, { category: compartment.status }),
+    );
+    const hideDirectUploadState = () => {
+      photoDragState.hidden = true;
+      photoDropTarget.classList.remove("is-dragging", "is-uploading");
+    };
+    photoDropTarget.addEventListener("dragenter", (event) => {
       event.preventDefault();
-      const photo = photos[editingPhotoIndex];
-      if (!photo) return;
-      photo.name = photoEditorName.value.trim() || photo.name;
-      photo.category = STATUS_STYLES[photoEditorCategory.value]?.label || photo.category;
-      photoEditor.close();
-      renderDetail(compartment);
+      photoDragState.hidden = false;
+      photoDropTarget.classList.add("is-dragging");
     });
-    ["closePhotoEditor", "cancelPhotoEditor"].forEach((id) => {
-      document.getElementById(id).addEventListener("click", () => photoEditor.close());
+    photoDropTarget.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
     });
-    photoEditor.addEventListener("close", () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      previewUrl = null;
+    photoDropTarget.addEventListener("dragleave", (event) => {
+      event.preventDefault();
+      if (!photoDropTarget.contains(event.relatedTarget)) hideDirectUploadState();
+    });
+    photoDropTarget.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      const files = [...event.dataTransfer.files]
+        .filter((file) => ["image/jpeg", "image/png"].includes(file.type) && file.size <= 10 * 1024 * 1024)
+        .slice(0, 5);
+      if (!files.length) {
+        hideDirectUploadState();
+        showMapNotice("Drop PNG or JPG images up to 10 MB each.");
+        return;
+      }
+
+      // Direct table drops use the compartment status and never open the upload modal.
+      const category = ["planned", "planted", "monitored", "low_survival", "completed"].includes(compartment.status)
+        ? compartment.status
+        : "other";
+      photoDropTarget.classList.remove("is-dragging");
+      photoDropTarget.classList.add("is-uploading");
+      photoDragState.querySelector("strong").textContent = `Uploading ${files.length} photo${files.length === 1 ? "" : "s"}…`;
+      photoDragState.querySelector("small").textContent = `Category: ${STATUS_STYLES[compartment.status]?.label || "Other"}`;
+      try {
+        const payload = new FormData();
+        payload.append("compartment_id", compartment.id);
+        payload.append("category", category);
+        payload.append("csrf_token", document.querySelector('meta[name="csrf-token"]')?.content || "");
+        files.forEach((file) => payload.append("photos[]", file));
+        const response = await fetch("actions/mapv2/upload_compartment_photos.php", {
+          method: "POST",
+          body: payload,
+          headers: { Accept: "application/json" },
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || "Photos could not be uploaded.");
+        compartment.photos.unshift(...(result.photos || []));
+        renderDetail(compartment);
+        showMapNotice(`${result.photos.length} photo${result.photos.length === 1 ? "" : "s"} uploaded.`);
+      } catch (error) {
+        hideDirectUploadState();
+        showMapNotice(error.message || "Photos could not be uploaded.");
+      }
     });
     } catch (error) {
       console.warn("Map V2 photo controls could not be initialized.", error);
@@ -1635,6 +1647,24 @@
         saveReviewedCompartment();
       } else if (event.data?.type === "mapv2:begin-compartment-edit") {
         beginCompartmentEdit(event.data.payload);
+      } else if (event.data?.type === "mapv2:photos-uploaded") {
+        const payload = event.data.payload || {};
+        const compartment = getCompartment(String(payload.compartmentId));
+        const photos = Array.isArray(payload.photos) ? payload.photos : [];
+        if (!compartment || !photos.length) return;
+        compartment.photos = Array.isArray(compartment.photos) ? compartment.photos : [];
+        compartment.photos.unshift(...photos);
+        if (state.selectedId === compartment.id) renderDetail(compartment);
+        showMapNotice(`${photos.length} photo${photos.length === 1 ? "" : "s"} uploaded.`);
+      } else if (event.data?.type === "mapv2:save-photo-edit-draft") {
+        const payload = event.data.payload || {};
+        const compartment = getCompartment(String(payload.compartmentId));
+        const photo = compartment?.photos?.[Number(payload.photoIndex)];
+        if (!photo) return;
+        photo.name = String(payload.name || photo.name).trim() || photo.name;
+        photo.category = STATUS_STYLES[payload.category]?.label || photo.category;
+        if (state.selectedId === compartment.id) renderDetail(compartment);
+        showMapNotice("Photo details updated for this browser session.");
       }
     });
   }

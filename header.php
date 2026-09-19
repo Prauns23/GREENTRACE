@@ -149,6 +149,15 @@ if (isset($_SESSION['user_id'])) {
         <iframe src="" class="floating-iframe" id="compartmentReviewFrame" title="Review reforestation compartment"></iframe>
     </div>
 
+    <!-- Reforestation photo modals are loaded only when a photo action is requested. -->
+    <div class="floating-container" id="floatingUploadReforestationPhotoContainer">
+        <iframe src="" class="floating-iframe" id="uploadReforestationPhotoFrame" title="Upload reforestation photos"></iframe>
+    </div>
+
+    <div class="floating-container" id="floatingEditReforestationPhotoContainer">
+        <iframe src="" class="floating-iframe" id="editReforestationPhotoFrame" title="Edit reforestation photo"></iframe>
+    </div>
+
     <!-- Edit Profile Modal -->
     <div class="floating-container" id="floatingEditProfileContainer">
         <iframe src="<?php echo $basePath; ?>modals/edit_profile.php" class="floating-iframe" id="editProfileFrame"></iframe>

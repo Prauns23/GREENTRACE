@@ -17,7 +17,7 @@ include 'header.php';
 ?>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="forestmap.css?v=mapv2-dropdown-active-13">
+<link rel="stylesheet" href="forestmap.css?v=mapv2-photo-drag-fade-19">
 
 <main class="forestmap-page mapv2-page">
     <header class="mapv2-heading">
@@ -160,6 +160,6 @@ include 'header.php';
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="forestmap.js?v=mapv2-dropdown-active-15"></script>
+<script src="forestmap.js?v=mapv2-photo-direct-18"></script>
 
 <?php include 'footer.php'; ?>

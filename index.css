@@ -207,6 +207,20 @@ body.modal-scroll-locked {
   background: transparent;
 }
 
+#floatingUploadReforestationPhotoContainer .floating-iframe {
+  width: min(460px, calc(100vw - 32px));
+  height: min(460px, calc(100vh - 32px));
+  border-radius: 18px;
+  background: transparent;
+}
+
+#floatingEditReforestationPhotoContainer .floating-iframe {
+  width: min(430px, calc(100vw - 32px));
+  height: min(390px, calc(100vh - 32px));
+  border-radius: 18px;
+  background: transparent;
+}
+
 #floatingEditProfileContainer .floating-iframe {
   width: 1200px;
   height: 100%;

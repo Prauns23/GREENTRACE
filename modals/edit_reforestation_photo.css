@@ -1,0 +1,89 @@
+@import url("upload_reforestation_photos.css?v=1");
+.photo-edit-modal {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+}
+.photo-edit-modal__header {
+  flex: 0 0 auto;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid #dfe4df;
+}
+.photo-edit-modal__header h1 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+.photo-edit-modal__content {
+  display: grid;
+  flex: 1 1 auto;
+  align-content: start;
+  gap: 18px;
+  padding: 24px 28px;
+}
+.photo-edit-field {
+  display: grid;
+  gap: 8px;
+  color: #555b57;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.photo-edit-field input,
+.photo-edit-select select {
+  width: 100%;
+  height: 43px;
+  padding: 0 13px;
+  border: 1px solid #b8c0b9;
+  border-radius: 7px;
+  background: #fff;
+  color: #414442;
+  font:
+    500 0.9rem "Inter",
+    sans-serif;
+}
+.photo-edit-select {
+  position: relative;
+  display: block;
+}
+.photo-edit-select select {
+  appearance: none;
+  padding-right: 38px;
+  cursor: pointer;
+}
+.photo-edit-select i {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  font-size: 0.72rem;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.photo-edit-modal__footer {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 28px;
+  border-top: 1px solid #dfe4df;
+}
+.photo-edit-button {
+  min-width: 96px;
+  height: 38px;
+  border-radius: 7px;
+  cursor: pointer;
+  font:
+    600 0.84rem "Inter",
+    sans-serif;
+}
+.photo-edit-button--secondary {
+  border: 1px solid #c9d0ca;
+  background: #fff;
+  color: #687068;
+}
+.photo-edit-button--primary {
+  border: 1px solid #377f40;
+  background: #377f40;
+  color: #fff;
+}
