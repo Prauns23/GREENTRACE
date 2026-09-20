@@ -224,6 +224,59 @@
     photoGalleryState = null;
   }
 
+  function movePhotoGallery(step) {
+    if (!photoGalleryState) return;
+    const nextIndex = photoGalleryState.index + step;
+    if (
+      nextIndex < 0 ||
+      nextIndex >= photoGalleryState.photos.length
+    )
+      return;
+    photoGalleryState.index = nextIndex;
+    updatePhotoGallery();
+  }
+
+  function bindPhotoGalleryControls() {
+    const gallery = document.getElementById("mapv2PhotoGallery");
+    const dialog = gallery?.querySelector(".mapv2-photo-gallery__dialog");
+    const close = document.getElementById("mapv2GalleryClose");
+    const previous = document.getElementById("mapv2GalleryPrevious");
+    const next = document.getElementById("mapv2GalleryNext");
+    if (!gallery || !dialog || !close || !previous || !next) return;
+
+    close.addEventListener("click", closePhotoGallery);
+    previous.addEventListener("click", () => movePhotoGallery(-1));
+    next.addEventListener("click", () => movePhotoGallery(1));
+    gallery.addEventListener("click", (event) => {
+      if (event.target === gallery) closePhotoGallery();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (gallery.hidden) return;
+      if (event.key === "Escape") closePhotoGallery();
+      if (event.key === "ArrowLeft") movePhotoGallery(-1);
+      if (event.key === "ArrowRight") movePhotoGallery(1);
+    });
+  }
+
+  function positionPhotoMenu(menu, toggle) {
+    if (!menu || !toggle) return;
+    const bounds = toggle.getBoundingClientRect();
+    const menuWidth = 112;
+    const left = Math.max(8, Math.min(bounds.right - menuWidth, window.innerWidth - menuWidth - 8));
+    menu.classList.add("mapv2-photo-actions--floating");
+    menu.style.top = `${bounds.bottom + 4}px`;
+    menu.style.left = `${left}px`;
+    menu.style.right = "auto";
+  }
+
+  function resetPhotoMenuPosition(menu) {
+    menu?.classList.remove("mapv2-photo-actions--floating");
+    if (!menu) return;
+    menu.style.top = "";
+    menu.style.left = "";
+    menu.style.right = "";
+  }
+
   function openPhotoGallery(compartment, photoIndex) {
     const gallery = document.getElementById("mapv2PhotoGallery");
     const photo = compartment.photos?.[photoIndex];
@@ -1333,7 +1386,7 @@
         const menuActions = isArchived
           ? `<button type="button" data-photo-action="restore" data-photo-index="${index}">Restore</button>`
           : `<button type="button" data-photo-action="edit" data-photo-index="${index}">Edit</button><button type="button" data-photo-action="archive" data-photo-index="${index}">Archive</button>`;
-        return `<div class="mapv2-photo-row" role="row" tabindex="0" aria-label="Preview ${escapeHtml(photo.name)}" data-photo-index="${index}" data-photo-archived="${isArchived}" data-photo-category="${escapeHtml(photo.category.toLowerCase().replace(/\s+/g, "_"))}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><span class="mapv2-photo-actions" data-photo-menu="${index}" hidden>${menuActions}</span></span></div>`;
+        return `<div class="mapv2-photo-row" role="row" tabindex="0" aria-label="Preview ${escapeHtml(photo.name)}" data-photo-index="${index}" data-photo-archived="${isArchived}" data-photo-category="${escapeHtml(photo.category.toLowerCase().replace(/\s+/g, "_"))}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><div class="mapv2-photo-actions" data-photo-menu="${index}" role="menu" hidden>${menuActions}</div></span></div>`;
       })
       .join("");
     detail.innerHTML = `
@@ -1367,7 +1420,7 @@
               <div class="mapv2-detail-updated"><span>Updated at</span><p>${escapeHtml(formatCompartmentUpdate(compartment))}</p></div>
             <section class="mapv2-photos-section">
                 <h3>Photos</h3>
-                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All</option>${categoryOptions}<option value="archived">Archived</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Sort photos"><option value="newest-to-oldest" selected>Newest to oldest</option><option value="oldest-to-newest">Oldest to newest</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" class="mapv2-photo-upload-button" id="uploadCompartmentPhotos" aria-label="Upload photos"><i class="fa-solid fa-plus" aria-hidden="true"></i></button><button type="button" id="clearPhotoFilters" hidden>Clear filters</button></div>
+                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All</option>${categoryOptions}<option value="archived">Archived</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Sort photos"><option value="newest-to-oldest" selected>Newest to oldest</option><option value="oldest-to-newest">Oldest to newest</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" class="mapv2-photo-upload-button" id="uploadCompartmentPhotos" aria-label="Upload photos"><i class="fa-solid fa-plus" aria-hidden="true"></i></button><button type="button" class="mapv2-filter-reset" id="clearPhotoFilters" hidden>Clear filters</button></div>
                 <div class="mapv2-photo-table" id="photoDropTarget" role="table">
                     <div class="mapv2-photo-drag-state" id="photoDragState" hidden>
                     <strong>Upload photos or drag and drop
@@ -1475,6 +1528,7 @@
       const closePhotoMenus = () => {
         detail.querySelectorAll("[data-photo-menu]").forEach((menu) => {
           closeDisclosure(menu);
+          resetPhotoMenuPosition(menu);
         });
         detail
           .querySelectorAll("[data-photo-menu-toggle]")
@@ -1504,7 +1558,10 @@
           );
           const willOpen = menu.hidden || !menu.classList.contains("is-open");
           closePhotoMenus();
-          if (willOpen) openDisclosure(menu);
+          if (willOpen) {
+            openDisclosure(menu);
+            positionPhotoMenu(menu, menuToggle);
+          }
           menuToggle.setAttribute("aria-expanded", String(willOpen));
           return;
         }
@@ -2033,6 +2090,7 @@
     });
     createCompartmentLayers();
     bindControls();
+    bindPhotoGalleryControls();
     bindCompartmentCreation();
     refreshUI();
     loadBarangayBoundaries();
