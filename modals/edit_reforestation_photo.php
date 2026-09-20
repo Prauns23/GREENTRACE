@@ -11,6 +11,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_a
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
     <title>Edit reforestation photo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,12 +32,13 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_a
                         <option value="planted">Planted</option>
                         <option value="monitored">Monitored</option>
                         <option value="low_survival">Low survival</option>
+                        <option value="completed">Completed</option>
                         <option value="other">Other</option>
                     </select><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span></label>
         </form>
         <footer class="photo-edit-modal__footer"><button type="button" class="photo-edit-button photo-edit-button--secondary" id="cancelEditPhoto">Cancel</button><button type="submit" form="editPhotoForm" class="photo-edit-button photo-edit-button--primary">Save</button></footer>
     </main>
-    <script src="edit_reforestation_photo.js?v=1"></script>
+    <script src="edit_reforestation_photo.js?v=2"></script>
 </body>
 
 </html>

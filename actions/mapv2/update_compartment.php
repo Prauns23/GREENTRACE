@@ -112,8 +112,9 @@ try {
     $areaHa = $areaSqm / 10000;
     $polygonWkt = 'POLYGON((' . implode(',', array_map(static fn(array $point): string => sprintf('%.8F %.8F', $point[0], $point[1]), $normalisedRing)) . '))';
 
-    $updateStatement = $conn->prepare('UPDATE reforestation_compartments SET barangay_id = ?, name = ?, status = ?, date_started = ?, gross_area_ha = ?, calculated_area_sqm = ?, boundary = ST_GeomFromText(?) WHERE id = ?');
-    $updateStatement->bind_param('isssddsi', $barangayId, $name, $status, $dateStarted, $areaHa, $areaSqm, $polygonWkt, $id);
+    $updatedBy = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+    $updateStatement = $conn->prepare('UPDATE reforestation_compartments SET barangay_id = ?, name = ?, status = ?, date_started = ?, gross_area_ha = ?, calculated_area_sqm = ?, boundary = ST_GeomFromText(?), updated_by = ? WHERE id = ?');
+    $updateStatement->bind_param('isssddsii', $barangayId, $name, $status, $dateStarted, $areaHa, $areaSqm, $polygonWkt, $updatedBy, $id);
     if (!$updateStatement->execute()) throw new RuntimeException($conn->error);
     $updateStatement->close();
 
@@ -143,13 +144,19 @@ try {
         $history->close();
     }
     // Read the database timestamp after the update so the details panel stays accurate.
-    $updatedAtStatement = $conn->prepare('SELECT updated_at FROM reforestation_compartments WHERE id = ?');
+    $updatedAtStatement = $conn->prepare(
+        'SELECT rc.updated_at,
+                COALESCE(NULLIF(TRIM(CONCAT_WS(" ", u.fname, u.lname)), ""), "Unknown user") AS updated_by_name
+         FROM reforestation_compartments rc
+         LEFT JOIN users_tbl u ON u.id = rc.updated_by
+         WHERE rc.id = ?'
+    );
     $updatedAtStatement->bind_param('i', $id);
     $updatedAtStatement->execute();
     $updatedAt = $updatedAtStatement->get_result()->fetch_assoc();
     $updatedAtStatement->close();
     $conn->commit();
-    echo json_encode(['success' => true, 'gross_area_ha' => round($areaHa, 4), 'updated_at' => $updatedAt['updated_at'] ?? null, 'barangay' => $barangay ? ['id' => (int) $barangay['id'], 'name' => $barangay['name'], 'municipality' => $barangay['municipality_name'], 'province' => $barangay['province_name']] : null]);
+    echo json_encode(['success' => true, 'gross_area_ha' => round($areaHa, 4), 'updated_at' => $updatedAt['updated_at'] ?? null, 'updated_by' => $updatedAt['updated_by_name'] ?? 'Unknown user', 'barangay' => $barangay ? ['id' => (int) $barangay['id'], 'name' => $barangay['name'], 'municipality' => $barangay['municipality_name'], 'province' => $barangay['province_name']] : null]);
 } catch (Throwable $exception) {
     $conn->rollback();
     http_response_code($exception instanceof InvalidArgumentException ? 422 : 500);

@@ -20,20 +20,27 @@
     .addEventListener("click", () => parent.hideFloating());
   document
     .getElementById("editPhotoForm")
-    .addEventListener("submit", (event) => {
+    .addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!photo) return;
-      parent.postMessage(
-        {
-          type: "mapv2:save-photo-edit-draft",
-          payload: {
-            ...photo,
-            name: document.getElementById("editPhotoName").value.trim(),
-            category: document.getElementById("editPhotoCategory").value,
-          },
-        },
-        window.location.origin,
-      );
-      parent.hideFloating();
+      const saveButton = event.submitter;
+      saveButton.disabled = true;
+      saveButton.textContent = "Saving…";
+      try {
+        const payload = new FormData();
+        payload.append("id", photo.id);
+        payload.append("name", document.getElementById("editPhotoName").value.trim());
+        payload.append("category", document.getElementById("editPhotoCategory").value);
+        payload.append("csrf_token", document.querySelector('meta[name="csrf-token"]').content);
+        const response = await fetch("../actions/mapv2/update_compartment_photo.php", { method: "POST", body: payload, headers: { Accept: "application/json" } });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || "Photo details could not be saved.");
+        parent.postMessage({ type: "mapv2:photo-updated", payload: { ...photo, ...result.photo } }, window.location.origin);
+        parent.hideFloating();
+      } catch (error) {
+        alert(error.message || "Photo details could not be saved.");
+        saveButton.disabled = false;
+        saveButton.textContent = "Save";
+      }
     });
 })();

@@ -17,7 +17,7 @@ include 'header.php';
 ?>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="forestmap.css?v=mapv2-photo-controls-20">
+<link rel="stylesheet" href="forestmap.css?v=mapv2-photo-gallery-25">
 
 <main class="forestmap-page mapv2-page">
     <header class="mapv2-heading">
@@ -55,82 +55,82 @@ include 'header.php';
             </div>
 
             <div class="mapv2-sidebar-scroll">
-            <div class="mapv2-filter-grid">
-                <label>
-                    <span>Status</span>
-                    <div class="mapv2-filter-select">
-                        <select id="statusFilter">
-                            <option value="all">All statuses</option>
-                            <option value="planned">Planned</option>
-                            <option value="planted">Planted</option>
-                            <option value="monitored">Monitored</option>
-                            <option value="low_survival">Low survival</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                        <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
-                    </div>
-                </label>
-                <label>
-                    <span>Year planted</span>
-                    <div class="mapv2-filter-select">
-                        <select id="yearFilter">
-                            <option value="all">All years</option>
-                            <option value="2026">2026</option>
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                        </select>
-                        <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
-                    </div>
-                </label>
-            </div>
-
-            <section class="mapv2-control-section">
-                <h2>Basemap</h2>
-                <div class="mapv2-basemap-toggle" role="tablist" aria-label="Basemap" data-active="osm">
-                    <button type="button" class="mapv2-basemap-button is-active" data-basemap="osm" role="tab" aria-selected="true">OSM</button>
-                    <button type="button" class="mapv2-basemap-button" data-basemap="satellite" role="tab" aria-selected="false">Satellite</button>
+                <div class="mapv2-filter-grid">
+                    <label>
+                        <span>Status</span>
+                        <div class="mapv2-filter-select">
+                            <select id="statusFilter">
+                                <option value="all">All statuses</option>
+                                <option value="planned">Planned</option>
+                                <option value="planted">Planted</option>
+                                <option value="monitored">Monitored</option>
+                                <option value="low_survival">Low survival</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                            <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
+                        </div>
+                    </label>
+                    <label>
+                        <span>Year planted</span>
+                        <div class="mapv2-filter-select">
+                            <select id="yearFilter">
+                                <option value="all">All years</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                            </select>
+                            <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
+                        </div>
+                    </label>
                 </div>
-            </section>
 
-            <div class="mapv2-metrics" aria-label="Map totals">
-                <div><span>Net area</span><strong id="netArea">0</strong><small>ha</small></div>
-                <div><span>Forest plots</span><strong id="forestPlotCount">0</strong></div>
-            </div>
+                <section class="mapv2-control-section">
+                    <h2>Basemap</h2>
+                    <div class="mapv2-basemap-toggle" role="tablist" aria-label="Basemap" data-active="osm">
+                        <button type="button" class="mapv2-basemap-button is-active" data-basemap="osm" role="tab" aria-selected="true">OSM</button>
+                        <button type="button" class="mapv2-basemap-button" data-basemap="satellite" role="tab" aria-selected="false">Satellite</button>
+                    </div>
+                </section>
 
-            <section class="mapv2-control-section mapv2-layers">
-                <h2>Layers</h2>
-                <label class="mapv2-layer-toggle">
-                    <span>Tree species</span>
-                    <span class="mapv2-switch">
-                        <input type="checkbox" id="treeSpeciesToggle" checked>
-                        <span class="mapv2-switch-track" aria-hidden="true"></span>
-                    </span>
-                </label>
-                <label class="mapv2-layer-toggle">
-                    <span>Barangay boundaries</span>
-                    <span class="mapv2-switch">
-                        <input type="checkbox" id="barangayBoundariesToggle" checked>
-                        <span class="mapv2-switch-track" aria-hidden="true"></span>
-                    </span>
-                </label>
-                <label class="mapv2-layer-toggle">
-                    <span>Vegetation index overlay</span>
-                    <span class="mapv2-switch">
-                        <input type="checkbox" id="vegetationOverlayToggle">
-                        <span class="mapv2-switch-track" aria-hidden="true"></span>
-                    </span>
-                </label>
-                <p class="mapv2-helper-text">A visual greenness proxy from satellite imagery, not measured NDVI.</p>
-            </section>
+                <div class="mapv2-metrics" aria-label="Map totals">
+                    <div><span>Net area</span><strong id="netArea">0</strong><small>ha</small></div>
+                    <div><span>Forest plots</span><strong id="forestPlotCount">0</strong></div>
+                </div>
 
-            <section class="mapv2-control-section mapv2-legend">
-                <h2>Legend</h2>
-                <span><i class="status-dot status-planned"></i> Planned</span>
-                <span><i class="status-dot status-planted"></i> Planted</span>
-                <span><i class="status-dot status-monitored"></i> Monitored</span>
-                <span><i class="status-dot status-low-survival"></i> Low survival</span>
-                <span><i class="status-dot status-completed"></i> Completed</span>
-            </section>
+                <section class="mapv2-control-section mapv2-layers">
+                    <h2>Layers</h2>
+                    <label class="mapv2-layer-toggle">
+                        <span>Tree species</span>
+                        <span class="mapv2-switch">
+                            <input type="checkbox" id="treeSpeciesToggle" checked>
+                            <span class="mapv2-switch-track" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                    <label class="mapv2-layer-toggle">
+                        <span>Barangay boundaries</span>
+                        <span class="mapv2-switch">
+                            <input type="checkbox" id="barangayBoundariesToggle" checked>
+                            <span class="mapv2-switch-track" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                    <label class="mapv2-layer-toggle">
+                        <span>Vegetation index overlay</span>
+                        <span class="mapv2-switch">
+                            <input type="checkbox" id="vegetationOverlayToggle">
+                            <span class="mapv2-switch-track" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                    <p class="mapv2-helper-text">A visual greenness proxy from satellite imagery, not measured NDVI.</p>
+                </section>
+
+                <section class="mapv2-control-section mapv2-legend">
+                    <h2>Legend</h2>
+                    <span><i class="status-dot status-planned"></i> Planned</span>
+                    <span><i class="status-dot status-planted"></i> Planted</span>
+                    <span><i class="status-dot status-monitored"></i> Monitored</span>
+                    <span><i class="status-dot status-low-survival"></i> Low survival</span>
+                    <span><i class="status-dot status-completed"></i> Completed</span>
+                </section>
             </div>
         </aside>
 
@@ -159,7 +159,23 @@ include 'header.php';
     </div>
 </main>
 
+<!-- The compartment photo viewer stays in the map page and supports gallery navigation. -->
+<section class="mapv2-photo-gallery" id="mapv2PhotoGallery" role="dialog" aria-modal="true" aria-labelledby="mapv2GalleryName" aria-hidden="true" hidden>
+    <div class="mapv2-photo-gallery__dialog">
+        <header class="mapv2-photo-gallery__header">
+            <p id="mapv2GalleryName">Compartment photo</p>
+            <span id="mapv2GalleryCounter" aria-live="polite"></span>
+            <button type="button" id="mapv2GalleryClose">Close</button>
+        </header>
+        <div class="mapv2-photo-gallery__content">
+            <button type="button" class="mapv2-photo-gallery__nav" id="mapv2GalleryPrevious" aria-label="Previous photo"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+            <img id="mapv2GalleryImage" alt="">
+            <button type="button" class="mapv2-photo-gallery__nav" id="mapv2GalleryNext" aria-label="Next photo"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+        </div>
+    </div>
+</section>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="forestmap.js?v=mapv2-photo-controls-20"></script>
+<script src="forestmap.js?v=mapv2-photo-gallery-25"></script>
 
 <?php include 'footer.php'; ?>

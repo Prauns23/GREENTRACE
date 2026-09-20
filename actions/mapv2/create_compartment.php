@@ -166,13 +166,13 @@ try {
     $createdBy = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
     $compartmentStatement = $conn->prepare(
         'INSERT INTO reforestation_compartments
-        (barangay_id, name, status, date_started, gross_area_ha, calculated_area_sqm, boundary, created_by)
-        VALUES (?, ?, ?, ?, ?, ?, ST_GeomFromText(?), ?)'
+        (barangay_id, name, status, date_started, gross_area_ha, calculated_area_sqm, boundary, created_by, updated_by)
+        VALUES (?, ?, ?, ?, ?, ?, ST_GeomFromText(?), ?, ?)'
     );
     if (!$compartmentStatement) {
         throw new RuntimeException($conn->error);
     }
-    $compartmentStatement->bind_param('isssddsi', $barangayId, $name, $status, $dateStarted, $areaHa, $areaSqm, $polygonWkt, $createdBy);
+    $compartmentStatement->bind_param('isssddsii', $barangayId, $name, $status, $dateStarted, $areaHa, $areaSqm, $polygonWkt, $createdBy, $createdBy);
     if (!$compartmentStatement->execute()) {
         throw new RuntimeException($compartmentStatement->error);
     }
@@ -219,7 +219,13 @@ try {
     $historyInsert->close();
 
     // Return the stored timestamp so the new details panel uses database data.
-    $updatedAtStatement = $conn->prepare('SELECT updated_at FROM reforestation_compartments WHERE id = ?');
+    $updatedAtStatement = $conn->prepare(
+        'SELECT rc.updated_at,
+                COALESCE(NULLIF(TRIM(CONCAT_WS(" ", u.fname, u.lname)), ""), "Unknown user") AS updated_by_name
+         FROM reforestation_compartments rc
+         LEFT JOIN users_tbl u ON u.id = rc.updated_by
+         WHERE rc.id = ?'
+    );
     $updatedAtStatement->bind_param('i', $compartmentId);
     $updatedAtStatement->execute();
     $updatedAt = $updatedAtStatement->get_result()->fetch_assoc();
@@ -231,6 +237,7 @@ try {
         'compartment_id' => $compartmentId,
         'gross_area_ha' => round($areaHa, 4),
         'updated_at' => $updatedAt['updated_at'] ?? null,
+        'updated_by' => $updatedAt['updated_by_name'] ?? 'Unknown user',
         'barangay' => $barangay ? [
             'id' => (int) $barangay['id'],
             'name' => $barangay['name'],

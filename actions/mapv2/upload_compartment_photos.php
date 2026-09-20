@@ -22,6 +22,13 @@ $exists = $conn->prepare('SELECT id FROM reforestation_compartments WHERE id = ?
 $root = dirname(__DIR__, 2) . '/uploads/compartment_photos/' . date('Y/m');
 if (!is_dir($root) && !mkdir($root, 0755, true) && !is_dir($root)) { http_response_code(500); echo json_encode(['success'=>false,'error'=>'Photo storage is unavailable.']); exit; }
 $finfo = new finfo(FILEINFO_MIME_TYPE); $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null; $saved=[];
+$uploaderName = 'Unknown user';
+if ($userId) {
+  $userStatement = $conn->prepare('SELECT CONCAT_WS(" ", fname, lname) AS full_name FROM users_tbl WHERE id = ? LIMIT 1');
+  $userStatement->bind_param('i', $userId); $userStatement->execute();
+  $userRow = $userStatement->get_result()->fetch_assoc(); $userStatement->close();
+  if (trim((string) ($userRow['full_name'] ?? '')) !== '') $uploaderName = trim($userRow['full_name']);
+}
 foreach ((array) $_FILES['photos']['name'] as $key => $original) {
   $tmp = $_FILES['photos']['tmp_name'][$key] ?? ''; $size=(int)($_FILES['photos']['size'][$key]??0); $error=(int)($_FILES['photos']['error'][$key]??UPLOAD_ERR_NO_FILE);
   if ($error !== UPLOAD_ERR_OK || $size < 1 || $size > 10*1024*1024 || !is_uploaded_file($tmp)) continue;
@@ -30,7 +37,7 @@ foreach ((array) $_FILES['photos']['name'] as $key => $original) {
   if (!move_uploaded_file($tmp, $root.'/'.$stored)) continue;
   $insert=$conn->prepare('INSERT INTO compartment_photos (compartment_id, uploaded_by, category, storage_path, original_filename, display_name, mime_type, file_size_bytes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
   $insert->bind_param('iisssssi',$id,$userId,$category,$relative,$safeName,$safeName,$mime,$size); $insert->execute(); $photoId=$insert->insert_id; $insert->close();
-  $saved[]=['id'=>(string)$photoId,'name'=>$safeName,'uploadedBy'=>trim(($_SESSION['first_name']??'').' '.($_SESSION['last_name']??'')) ?: 'Administrator','category'=>ucwords(str_replace('_',' ',$category)),'size'=>round($size/1048576,1).' MB','uploadedAt'=>date('Y-m-d'),'path'=>$relative];
+  $saved[]=['id'=>(string)$photoId,'name'=>$safeName,'uploadedBy'=>$uploaderName,'category'=>ucwords(str_replace('_',' ',$category)),'size'=>round($size/1048576,1).' MB','uploadedAt'=>date('Y-m-d'),'path'=>$relative];
 }
 if (!$saved) { http_response_code(422); echo json_encode(['success'=>false,'error'=>'Only PNG or JPG images up to 10 MB can be uploaded.']); exit; }
 echo json_encode(['success'=>true,'photos'=>$saved]);

@@ -37,8 +37,9 @@ try {
 
     if ($current['status'] !== $status) {
         // updated_at changes automatically because it is an ON UPDATE timestamp column.
-        $updateStatement = $conn->prepare('UPDATE reforestation_compartments SET status = ? WHERE id = ?');
-        $updateStatement->bind_param('si', $status, $id);
+        $updatedBy = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+        $updateStatement = $conn->prepare('UPDATE reforestation_compartments SET status = ?, updated_by = ? WHERE id = ?');
+        $updateStatement->bind_param('sii', $status, $updatedBy, $id);
         if (!$updateStatement->execute()) throw new RuntimeException($updateStatement->error);
         $updateStatement->close();
 
@@ -50,13 +51,19 @@ try {
         $historyStatement->close();
     }
 
-    $timestampStatement = $conn->prepare('SELECT updated_at FROM reforestation_compartments WHERE id = ?');
+    $timestampStatement = $conn->prepare(
+        'SELECT rc.updated_at,
+                COALESCE(NULLIF(TRIM(CONCAT_WS(" ", u.fname, u.lname)), ""), "Unknown user") AS updated_by_name
+         FROM reforestation_compartments rc
+         LEFT JOIN users_tbl u ON u.id = COALESCE(rc.updated_by, rc.created_by)
+         WHERE rc.id = ?'
+    );
     $timestampStatement->bind_param('i', $id);
     $timestampStatement->execute();
     $timestamp = $timestampStatement->get_result()->fetch_assoc();
     $timestampStatement->close();
     $conn->commit();
-    echo json_encode(['success' => true, 'updated_at' => $timestamp['updated_at'] ?? null]);
+    echo json_encode(['success' => true, 'updated_at' => $timestamp['updated_at'] ?? null, 'updated_by' => $timestamp['updated_by_name'] ?? 'Unknown user']);
 } catch (Throwable $exception) {
     $conn->rollback();
     http_response_code($exception instanceof InvalidArgumentException ? 404 : 500);

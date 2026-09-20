@@ -52,6 +52,7 @@ $conn->close();
 ?>
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -63,6 +64,7 @@ $conn->close();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="edit_reforestation_compartment.css?v=1">
 </head>
+
 <body>
     <main class="compartment-modal" aria-labelledby="editCompartmentModalTitle">
         <header class="compartment-modal__header">
@@ -109,10 +111,11 @@ $conn->close();
     <script>
         window.mapV2Species = <?= json_encode($species, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
         window.mapV2EditCompartment = <?= json_encode([
-            'id' => (int) $compartment['id'],
-            'species_mix' => $mix,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+                                            'id' => (int) $compartment['id'],
+                                            'species_mix' => $mix,
+                                        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
     </script>
     <script src="edit_reforestation_compartment.js?v=1"></script>
 </body>
+
 </html>

@@ -49,6 +49,7 @@
   let editToolbar = null;
   let savingCompartmentEdit = false;
   let mapToastTimer = null;
+  let photoGalleryState = null;
   const disclosureTimers = new WeakMap();
 
   // Animate application-owned menus. Native select option lists are browser UI,
@@ -75,10 +76,14 @@
   // Native select menus belong to the browser, so click state controls only the chevron.
   function bindSelectDisclosureIndicators(root = document) {
     root
-      .querySelectorAll(".mapv2-scope-select select, .mapv2-filter-select select")
+      .querySelectorAll(
+        ".mapv2-scope-select select, .mapv2-filter-select select",
+      )
       .forEach((select) => {
         if (select.dataset.disclosureBound === "true") return;
-        const wrapper = select.closest(".mapv2-scope-select, .mapv2-filter-select");
+        const wrapper = select.closest(
+          ".mapv2-scope-select, .mapv2-filter-select",
+        );
         if (!wrapper) return;
         select.dataset.disclosureBound = "true";
         select.addEventListener("click", () => {
@@ -140,7 +145,8 @@
   // Format browser file sizes for draft rows before the storage endpoint returns saved files.
   function formatPhotoSize(bytes) {
     if (!Number.isFinite(bytes) || bytes < 1) return "—";
-    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    if (bytes < 1024 * 1024)
+      return `${Math.max(1, Math.round(bytes / 1024))} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
@@ -180,9 +186,63 @@
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
     }).format(timestamp);
+  }
+
+  // Pair the saved timestamp with the person who last changed this compartment.
+  function formatCompartmentUpdate(compartment) {
+    const date = formatUpdatedAt(compartment?.updatedAt);
+    const editor = String(compartment?.updatedBy || "").trim();
+    return editor ? `${date} · ${editor}` : date;
+  }
+
+  // Keep saved compartment photos inside the map page instead of opening a new tab.
+  function updatePhotoGallery() {
+    const gallery = document.getElementById("mapv2PhotoGallery");
+    if (!gallery || !photoGalleryState) return;
+    const { photos, index } = photoGalleryState;
+    const photo = photos[index];
+    const image = document.getElementById("mapv2GalleryImage");
+    const name = document.getElementById("mapv2GalleryName");
+    const counter = document.getElementById("mapv2GalleryCounter");
+    const previous = document.getElementById("mapv2GalleryPrevious");
+    const next = document.getElementById("mapv2GalleryNext");
+    if (!photo || !image || !name || !counter || !previous || !next) return;
+    image.src = photo.path;
+    image.alt = photo.name || "Compartment photo";
+    name.textContent = photo.name || "Compartment photo";
+    counter.textContent = `${index + 1} / ${photos.length}`;
+    previous.disabled = index === 0;
+    next.disabled = index === photos.length - 1;
+  }
+
+  function closePhotoGallery() {
+    const gallery = document.getElementById("mapv2PhotoGallery");
+    if (!gallery) return;
+    gallery.hidden = true;
+    gallery.setAttribute("aria-hidden", "true");
+    photoGalleryState = null;
+  }
+
+  function openPhotoGallery(compartment, photoIndex) {
+    const gallery = document.getElementById("mapv2PhotoGallery");
+    const photo = compartment.photos?.[photoIndex];
+    if (!gallery || !photo?.path) {
+      showMapNotice("This photo preview is unavailable.");
+      return;
+    }
+    const galleryPhotos = compartment.photos.filter(
+      (item) => !item.archived && item.path,
+    );
+    const index = galleryPhotos.findIndex(
+      (item) => String(item.id) === String(photo.id),
+    );
+    if (index < 0) return;
+    photoGalleryState = { photos: galleryPhotos, index };
+    gallery.hidden = false;
+    gallery.setAttribute("aria-hidden", "false");
+    updatePhotoGallery();
+    document.getElementById("mapv2GalleryClose")?.focus();
   }
 
   // Find one compartment so click handlers can use its complete data.
@@ -375,14 +435,17 @@
 
   function estimateBoundaryHectares(points) {
     if (points.length < 3) return 0;
-    const meanLatitude = points.reduce((total, point) => total + point.lat, 0) / points.length;
-    const metresPerLongitude = 111320 * Math.cos((meanLatitude * Math.PI) / 180);
+    const meanLatitude =
+      points.reduce((total, point) => total + point.lat, 0) / points.length;
+    const metresPerLongitude =
+      111320 * Math.cos((meanLatitude * Math.PI) / 180);
     const metresPerLatitude = 110574;
     let twiceArea = 0;
     points.forEach((point, index) => {
       const next = points[(index + 1) % points.length];
-      twiceArea += (point.lng * metresPerLongitude) * (next.lat * metresPerLatitude) -
-        (next.lng * metresPerLongitude) * (point.lat * metresPerLatitude);
+      twiceArea +=
+        point.lng * metresPerLongitude * (next.lat * metresPerLatitude) -
+        next.lng * metresPerLongitude * (point.lat * metresPerLatitude);
     });
     return Math.abs(twiceArea) / 2 / 10000;
   }
@@ -390,15 +453,19 @@
   function matchedBarangayForBoundary(boundary) {
     if (!boundary.length) return null;
     const center = boundaryCenter(boundary);
-    return barangayFeatures.find((feature) =>
-      pointInGeometry([center.lng, center.lat], feature.geometry),
-    )?.properties || null;
+    return (
+      barangayFeatures.find((feature) =>
+        pointInGeometry([center.lng, center.lat], feature.geometry),
+      )?.properties || null
+    );
   }
 
   function drawingLocationReference() {
     const matched = matchedBarangayForBoundary(getDrawingBoundary());
     return matched
-      ? [matched.name, matched.municipality, matched.province].filter(Boolean).join(", ")
+      ? [matched.name, matched.municipality, matched.province]
+          .filter(Boolean)
+          .join(", ")
       : "No Morong barangay boundary matched yet";
   }
 
@@ -412,13 +479,19 @@
       element.innerHTML = `<div><strong>Drawing compartment boundary</strong><span id="drawingCompartmentStatus">Add at least three corners.</span></div><div class="mapv2-drawing-actions"><button type="button" id="undoCompartmentCorner">Undo corner</button><button type="button" id="cancelCompartmentBoundary">Cancel</button><button type="button" class="mapv2-drawing-review" id="reviewCompartmentBoundary" disabled>Review</button></div>`;
       L.DomEvent.disableClickPropagation(element);
       L.DomEvent.disableScrollPropagation(element);
-      element.querySelector("#undoCompartmentCorner").addEventListener("click", () => {
-        if (!drawingDraft?.points.length) return;
-        drawingDraft.points.pop();
-        refreshDrawingPreview();
-      });
-      element.querySelector("#cancelCompartmentBoundary").addEventListener("click", cancelCompartmentDrawing);
-      element.querySelector("#reviewCompartmentBoundary").addEventListener("click", reviewCompartmentDrawing);
+      element
+        .querySelector("#undoCompartmentCorner")
+        .addEventListener("click", () => {
+          if (!drawingDraft?.points.length) return;
+          drawingDraft.points.pop();
+          refreshDrawingPreview();
+        });
+      element
+        .querySelector("#cancelCompartmentBoundary")
+        .addEventListener("click", cancelCompartmentDrawing);
+      element
+        .querySelector("#reviewCompartmentBoundary")
+        .addEventListener("click", reviewCompartmentDrawing);
       return element;
     };
     control.addTo(map);
@@ -441,46 +514,62 @@
     const points = drawingDraft.points;
     const previewLayers = [];
     if (points.length >= 3) {
-      previewLayers.push(L.polygon(points, {
-        color: "#377f40",
-        fillColor: "#b9dfbd",
-        fillOpacity: 0.35,
-        weight: 2,
-        dashArray: "7 6",
-      }));
+      previewLayers.push(
+        L.polygon(points, {
+          color: "#377f40",
+          fillColor: "#b9dfbd",
+          fillOpacity: 0.35,
+          weight: 2,
+          dashArray: "7 6",
+        }),
+      );
     } else if (points.length > 1) {
-      previewLayers.push(L.polyline(points, { color: "#377f40", weight: 3, dashArray: "7 6" }));
+      previewLayers.push(
+        L.polyline(points, { color: "#377f40", weight: 3, dashArray: "7 6" }),
+      );
     }
     points.forEach((point, index) => {
-      previewLayers.push(L.marker(point, {
-        interactive: false,
-        icon: L.divIcon({
-          className: "mapv2-drawing-corner-icon",
-          html: `<span>${index + 1}</span>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
+      previewLayers.push(
+        L.marker(point, {
+          interactive: false,
+          icon: L.divIcon({
+            className: "mapv2-drawing-corner-icon",
+            html: `<span>${index + 1}</span>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          }),
         }),
-      }));
+      );
     });
     drawingPreview = L.layerGroup(previewLayers).addTo(map);
 
     const toolbarElement = createDrawingToolbar().getContainer();
     const count = points.length;
     setDrawingToolbarVisibility(true);
-    toolbarElement.querySelector("#drawingCompartmentStatus").textContent = count < 3
-      ? `${count} corner${count === 1 ? "" : "s"} added. Add ${3 - count} more.`
-      : `${count} corners added. Review the location and save when ready.`;
-    toolbarElement.querySelector("#undoCompartmentCorner").disabled = count === 0;
-    toolbarElement.querySelector("#reviewCompartmentBoundary").disabled = count < 3;
+    toolbarElement.querySelector("#drawingCompartmentStatus").textContent =
+      count < 3
+        ? `${count} corner${count === 1 ? "" : "s"} added. Add ${3 - count} more.`
+        : `${count} corners added. Review the location and save when ready.`;
+    toolbarElement.querySelector("#undoCompartmentCorner").disabled =
+      count === 0;
+    toolbarElement.querySelector("#reviewCompartmentBoundary").disabled =
+      count < 3;
   }
 
   // Start a fresh drawing session from the details entered in the add modal.
   function beginCompartmentBoundaryDrawing(draft) {
-    if (!draft?.name || !Array.isArray(draft.species_mix) || !draft.species_mix.length) return;
+    if (
+      !draft?.name ||
+      !Array.isArray(draft.species_mix) ||
+      !draft.species_mix.length
+    )
+      return;
     clearDrawingPreview();
     drawingDraft = { ...draft, points: [] };
     refreshDrawingPreview();
-    showMapNotice("Click the map to mark the compartment corners. Review the location before saving.");
+    showMapNotice(
+      "Click the map to mark the compartment corners. Review the location before saving.",
+    );
     map.getContainer().focus({ preventScroll: true });
   }
 
@@ -510,7 +599,9 @@
     if (!drawingDraft || drawingDraft.points.length < 3) return;
     const speciesMix = draftSpeciesMix();
     if (typeof window.showCompartmentReviewModal !== "function") {
-      showMapNotice("The review dialog is unavailable. Refresh the page and try again.");
+      showMapNotice(
+        "The review dialog is unavailable. Refresh the page and try again.",
+      );
       return;
     }
     window.showCompartmentReviewModal({
@@ -538,11 +629,13 @@
 
   // Remove one compartment's visual layers before its boundary is rebuilt.
   function removeCompartmentLayers(id) {
-    [layers.polygons, layers.treeSpecies, layers.treeClusters].forEach((collection) => {
-      const layer = collection.get(id);
-      if (layer) map.removeLayer(layer);
-      collection.delete(id);
-    });
+    [layers.polygons, layers.treeSpecies, layers.treeClusters].forEach(
+      (collection) => {
+        const layer = collection.get(id);
+        if (layer) map.removeLayer(layer);
+        collection.delete(id);
+      },
+    );
   }
 
   // Build the toolbar used only while existing corners are being repositioned.
@@ -550,13 +643,20 @@
     if (editToolbar) return editToolbar;
     const control = L.control({ position: "topright" });
     control.onAdd = () => {
-      const element = L.DomUtil.create("section", "mapv2-drawing-toolbar mapv2-edit-toolbar");
+      const element = L.DomUtil.create(
+        "section",
+        "mapv2-drawing-toolbar mapv2-edit-toolbar",
+      );
       element.hidden = true;
       element.innerHTML = `<div><strong>Reposition compartment corners</strong><span id="editCompartmentStatus">Drag an existing corner to adjust the boundary.</span></div><div class="mapv2-drawing-actions"><button type="button" id="cancelCompartmentEdit">Cancel</button><button type="button" class="mapv2-drawing-review" id="saveCompartmentEdit">Save changes</button></div>`;
       L.DomEvent.disableClickPropagation(element);
       L.DomEvent.disableScrollPropagation(element);
-      element.querySelector("#cancelCompartmentEdit").addEventListener("click", cancelCompartmentEdit);
-      element.querySelector("#saveCompartmentEdit").addEventListener("click", saveCompartmentEdit);
+      element
+        .querySelector("#cancelCompartmentEdit")
+        .addEventListener("click", cancelCompartmentEdit);
+      element
+        .querySelector("#saveCompartmentEdit")
+        .addEventListener("click", saveCompartmentEdit);
       return element;
     };
     control.addTo(map);
@@ -610,8 +710,14 @@
   // Start edit mode with the saved boundary, allowing only the existing corners to move.
   function beginCompartmentEdit(draft) {
     const compartment = getCompartment(String(draft?.id));
-    if (!compartment || !Array.isArray(draft?.species_mix) || !draft.species_mix.length) {
-      showMapNotice("This compartment is unavailable for editing. Refresh the page and try again.");
+    if (
+      !compartment ||
+      !Array.isArray(draft?.species_mix) ||
+      !draft.species_mix.length
+    ) {
+      showMapNotice(
+        "This compartment is unavailable for editing. Refresh the page and try again.",
+      );
       return;
     }
     cancelCompartmentDrawing();
@@ -629,7 +735,9 @@
     createEditToolbar();
     setEditToolbarVisibility(true);
     map.fitBounds(L.latLngBounds(editDraft.boundary), { padding: [36, 36] });
-    showMapNotice("Drag an existing corner to reposition the compartment. New corners cannot be added here.");
+    showMapNotice(
+      "Drag an existing corner to reposition the compartment. New corners cannot be added here.",
+    );
   }
 
   // Restore the stored boundary when editing is cancelled.
@@ -664,7 +772,9 @@
     payload.append("date_started", editDraft.date_started);
     payload.append("species_mix", JSON.stringify(editDraft.species_mix));
     payload.append("boundary_geojson", editBoundaryGeoJson(editDraft.boundary));
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+    const csrf = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content");
     if (csrf) payload.append("csrf_token", csrf);
     try {
       const response = await fetch("actions/mapv2/update_compartment.php", {
@@ -674,7 +784,9 @@
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
-        throw new Error(result.error || "The compartment could not be updated.");
+        throw new Error(
+          result.error || "The compartment could not be updated.",
+        );
       }
       const compartment = getCompartment(editDraft.id);
       const savedDraft = editDraft;
@@ -689,11 +801,17 @@
         status: savedDraft.status,
         startedAt: savedDraft.date_started,
         year: savedDraft.date_started.slice(0, 4),
-        hectares: Number(result.gross_area_ha) || estimateBoundaryHectares(savedDraft.boundary.map(([lat, lng]) => ({ lat, lng }))),
+        hectares:
+          Number(result.gross_area_ha) ||
+          estimateBoundaryHectares(
+            savedDraft.boundary.map(([lat, lng]) => ({ lat, lng })),
+          ),
         speciesMix: editDraftSpeciesMix(),
         boundary: savedDraft.boundary.map((point) => [...point]),
-        barangay: result.barangay || matchedBarangayForBoundary(savedDraft.boundary),
+        barangay:
+          result.barangay || matchedBarangayForBoundary(savedDraft.boundary),
         updatedAt: result.updated_at || new Date().toISOString(),
+        updatedBy: result.updated_by || compartment.updatedBy || "Unknown user",
       });
       editDraft = null;
       addCompartmentLayers(compartment);
@@ -709,7 +827,8 @@
 
   // Save the reviewed boundary and species mix, then show the new compartment.
   async function saveReviewedCompartment() {
-    if (!drawingDraft || drawingDraft.points.length < 3 || creatingCompartment) return;
+    if (!drawingDraft || drawingDraft.points.length < 3 || creatingCompartment)
+      return;
     creatingCompartment = true;
     const boundary = getDrawingBoundary();
     const payload = new FormData();
@@ -719,16 +838,28 @@
     payload.append("species_mix", JSON.stringify(drawingDraft.species_mix));
     const geoJsonRing = boundary.map(([lat, lng]) => [lng, lat]);
     geoJsonRing.push([boundary[0][1], boundary[0][0]]);
-    payload.append("boundary_geojson", JSON.stringify({
-      type: "Polygon",
-      coordinates: [geoJsonRing],
-    }));
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+    payload.append(
+      "boundary_geojson",
+      JSON.stringify({
+        type: "Polygon",
+        coordinates: [geoJsonRing],
+      }),
+    );
+    const csrf = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content");
     if (csrf) payload.append("csrf_token", csrf);
     try {
-      const response = await fetch("actions/mapv2/create_compartment.php", { method: "POST", body: payload, headers: { Accept: "application/json" } });
+      const response = await fetch("actions/mapv2/create_compartment.php", {
+        method: "POST",
+        body: payload,
+        headers: { Accept: "application/json" },
+      });
       const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "The compartment could not be created.");
+      if (!response.ok || !result.success)
+        throw new Error(
+          result.error || "The compartment could not be created.",
+        );
       const draft = drawingDraft;
       const newCompartment = {
         id: String(result.compartment_id),
@@ -736,25 +867,35 @@
         startedAt: draft.date_started,
         year: draft.date_started.slice(0, 4),
         status: draft.status,
-        hectares: Number(result.gross_area_ha) || estimateBoundaryHectares(draft.points),
+        hectares:
+          Number(result.gross_area_ha) ||
+          estimateBoundaryHectares(draft.points),
         speciesMix: draftSpeciesMix(),
         photos: [],
         boundary,
         barangay: result.barangay || matchedBarangayForBoundary(boundary),
         updatedAt: result.updated_at || new Date().toISOString(),
+        updatedBy: result.updated_by || "Unknown user",
       };
       compartments.push(newCompartment);
       addCompartmentLayers(newCompartment);
       cancelCompartmentDrawing();
       refreshUI();
       selectCompartment(newCompartment.id);
-      showMapNotice("Compartment created. Its location was matched from the barangay boundary.");
+      showMapNotice(
+        "Compartment created. Its location was matched from the barangay boundary.",
+      );
     } catch (error) {
       showMapNotice(error.message || "The compartment could not be created.");
-      document.getElementById("compartmentReviewFrame")?.contentWindow?.postMessage(
-        { type: "mapv2:review-create-failed", message: error.message || "The compartment could not be created." },
-        window.location.origin,
-      );
+      document
+        .getElementById("compartmentReviewFrame")
+        ?.contentWindow?.postMessage(
+          {
+            type: "mapv2:review-create-failed",
+            message: error.message || "The compartment could not be created.",
+          },
+          window.location.origin,
+        );
     } finally {
       creatingCompartment = false;
     }
@@ -881,10 +1022,7 @@
         compartment.speciesMix,
       ).map(({ point, species, actualGridSpacingM, displayGridSpacingM }) =>
         L.circleMarker(point, treeSpeciesDotStyle(compartment.status))
-          .bindTooltip(
-            `${species.name} · ${style.label}`,
-            { direction: "top" },
-          )
+          .bindTooltip(`${species.name} · ${style.label}`, { direction: "top" })
           .on("click", () => selectCompartment(compartment.id)),
       ),
     );
@@ -938,16 +1076,25 @@
       const response = await fetch("actions/mapv2/get_compartments.php", {
         headers: { Accept: "application/json" },
       });
-      if (!response.ok) throw new Error("Saved compartments could not be loaded");
+      if (!response.ok)
+        throw new Error("Saved compartments could not be loaded");
       const payload = await response.json();
-      const existingIds = new Set(compartments.map((compartment) => String(compartment.id)));
+      const existingIds = new Set(
+        compartments.map((compartment) => String(compartment.id)),
+      );
       (payload.compartments || []).forEach((record) => {
-        if (existingIds.has(String(record.id)) || !Array.isArray(record.boundary) || record.boundary.length < 3) return;
+        if (
+          existingIds.has(String(record.id)) ||
+          !Array.isArray(record.boundary) ||
+          record.boundary.length < 3
+        )
+          return;
         const compartment = {
           id: String(record.id),
           name: record.name,
           startedAt: record.started_at,
           updatedAt: record.updated_at,
+          updatedBy: record.updated_by || "Unknown user",
           year: String(record.started_at || "").slice(0, 4),
           status: STATUS_STYLES[record.status] ? record.status : "planned",
           hectares: Number(record.hectares) || 0,
@@ -984,12 +1131,22 @@
       else map.removeLayer(polygon);
     });
     layers.treeSpecies.forEach((treeSpecies, id) => {
-      if (id !== editDraft?.id && visible.has(id) && treeSpeciesVisible && !useTreeClusters)
+      if (
+        id !== editDraft?.id &&
+        visible.has(id) &&
+        treeSpeciesVisible &&
+        !useTreeClusters
+      )
         treeSpecies.addTo(map);
       else map.removeLayer(treeSpecies);
     });
     layers.treeClusters.forEach((treeCluster, id) => {
-      if (id !== editDraft?.id && visible.has(id) && treeSpeciesVisible && useTreeClusters)
+      if (
+        id !== editDraft?.id &&
+        visible.has(id) &&
+        treeSpeciesVisible &&
+        useTreeClusters
+      )
         treeCluster.addTo(map);
       else map.removeLayer(treeCluster);
     });
@@ -1047,9 +1204,9 @@
       addCompartmentCard +
       (visible.length
         ? visible
-        .map((compartment) => {
-          const status = STATUS_STYLES[compartment.status];
-          return `
+            .map((compartment) => {
+              const status = STATUS_STYLES[compartment.status];
+              return `
                 <article class="mapv2-compartment-card" data-compartment-id="${compartment.id}" tabindex="0" onclick="window.selectMapV2Compartment(this.dataset.compartmentId)">
                     <div class="mapv2-tree-icon"><i class="fa-solid fa-tree" aria-hidden="true"></i></div>
                     <div class="mapv2-card-main">
@@ -1068,8 +1225,8 @@
                         <span class="mapv2-status-badge" style="--badge-color: ${status.color}; --badge-fill: ${status.fill}">${status.label}</span>
                     </div>
                 </article>`;
-        })
-        .join("")
+            })
+            .join("")
         : emptyState);
 
     list.querySelector("#addCompartmentCard")?.addEventListener("click", () => {
@@ -1086,31 +1243,38 @@
       list.querySelectorAll("[data-compartment-menu]").forEach((menu) => {
         closeDisclosure(menu);
       });
-      list.querySelectorAll("[data-compartment-menu-toggle]").forEach((button) => {
-        button.setAttribute("aria-expanded", "false");
-      });
+      list
+        .querySelectorAll("[data-compartment-menu-toggle]")
+        .forEach((button) => {
+          button.setAttribute("aria-expanded", "false");
+        });
     };
-    list.querySelectorAll("[data-compartment-menu-toggle]").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const menu = list.querySelector(
-          `[data-compartment-menu="${button.dataset.compartmentMenuToggle}"]`,
-        );
-        const isOpen = menu && !menu.hidden && menu.classList.contains("is-open");
-        closeCardMenus();
-        if (menu) {
-          if (!isOpen) openDisclosure(menu);
-          button.setAttribute("aria-expanded", String(!isOpen));
-        }
+    list
+      .querySelectorAll("[data-compartment-menu-toggle]")
+      .forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const menu = list.querySelector(
+            `[data-compartment-menu="${button.dataset.compartmentMenuToggle}"]`,
+          );
+          const isOpen =
+            menu && !menu.hidden && menu.classList.contains("is-open");
+          closeCardMenus();
+          if (menu) {
+            if (!isOpen) openDisclosure(menu);
+            button.setAttribute("aria-expanded", String(!isOpen));
+          }
+        });
       });
-    });
     list.querySelectorAll("[data-compartment-edit]").forEach((button) => {
       button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
         closeCardMenus();
-        window.showEditReforestationCompartmentModal?.(button.dataset.compartmentEdit);
+        window.showEditReforestationCompartmentModal?.(
+          button.dataset.compartmentEdit,
+        );
       });
     });
     list.querySelectorAll("[data-compartment-archive]").forEach((button) => {
@@ -1126,10 +1290,13 @@
   // Archive from the card menu while preserving its database record for later restore work.
   async function archiveCompartment(id) {
     const compartment = getCompartment(id);
-    if (!compartment || !window.confirm(`Archive \"${compartment.name}\"?`)) return;
+    if (!compartment || !window.confirm(`Archive \"${compartment.name}\"?`))
+      return;
     const payload = new FormData();
     payload.append("id", id);
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+    const csrf = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content");
     if (csrf) payload.append("csrf_token", csrf);
     try {
       const response = await fetch("actions/mapv2/archive_compartment.php", {
@@ -1138,7 +1305,10 @@
         headers: { Accept: "application/json" },
       });
       const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "The compartment could not be archived.");
+      if (!response.ok || !result.success)
+        throw new Error(
+          result.error || "The compartment could not be archived.",
+        );
       removeCompartmentLayers(id);
       compartments.splice(compartments.indexOf(compartment), 1);
       if (state.selectedId === id) state.selectedId = null;
@@ -1156,11 +1326,14 @@
     const photos = Array.isArray(compartment.photos) ? compartment.photos : [];
     const categoryOptions = Object.entries(STATUS_STYLES)
       .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
-      .join("") + '<option value="other">Other</option>';
+      .join("");
     const photoRowsMarkup = photos
       .map((photo, index) => {
-        if (photo.archived) return "";
-        return `<div class="mapv2-photo-row" role="row" data-photo-index="${index}" data-photo-category="${escapeHtml(photo.category.toLowerCase().replace(/\s+/g, "_"))}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><span class="mapv2-photo-actions" data-photo-menu="${index}" hidden><button type="button" data-photo-action="edit" data-photo-index="${index}">Edit</button><button type="button" data-photo-action="archive" data-photo-index="${index}">Archive</button></span></span></div>`;
+        const isArchived = Boolean(photo.archived);
+        const menuActions = isArchived
+          ? `<button type="button" data-photo-action="restore" data-photo-index="${index}">Restore</button>`
+          : `<button type="button" data-photo-action="edit" data-photo-index="${index}">Edit</button><button type="button" data-photo-action="archive" data-photo-index="${index}">Archive</button>`;
+        return `<div class="mapv2-photo-row" role="row" tabindex="0" aria-label="Preview ${escapeHtml(photo.name)}" data-photo-index="${index}" data-photo-archived="${isArchived}" data-photo-category="${escapeHtml(photo.category.toLowerCase().replace(/\s+/g, "_"))}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><span class="mapv2-photo-actions" data-photo-menu="${index}" hidden>${menuActions}</span></span></div>`;
       })
       .join("");
     detail.innerHTML = `
@@ -1191,10 +1364,10 @@
                 <h3>Species mix</h3>
                 ${compartment.speciesMix.map((species) => `<article class="mapv2-species-card"><div><strong>${escapeHtml(species.name)}</strong><em>${escapeHtml(species.scientificName)}</em></div><b>×${species.quantity}</b></article>`).join("")}
             </section>
-            <div class="mapv2-updated-at"><span>Updated at</span><p>${escapeHtml(formatUpdatedAt(compartment.updatedAt))}</p></div>
+              <div class="mapv2-detail-updated"><span>Updated at</span><p>${escapeHtml(formatCompartmentUpdate(compartment))}</p></div>
             <section class="mapv2-photos-section">
                 <h3>Photos</h3>
-                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All</option>${categoryOptions}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Sort photos"><option value="newest-to-oldest" selected>Newest to oldest</option><option value="oldest-to-newest">Oldest to newest</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" class="mapv2-photo-upload-button" id="uploadCompartmentPhotos" aria-label="Upload photos"><i class="fa-solid fa-plus" aria-hidden="true"></i></button><button type="button" id="clearPhotoFilters" hidden>Clear filters</button></div>
+                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All</option>${categoryOptions}<option value="archived">Archived</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Sort photos"><option value="newest-to-oldest" selected>Newest to oldest</option><option value="oldest-to-newest">Oldest to newest</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" class="mapv2-photo-upload-button" id="uploadCompartmentPhotos" aria-label="Upload photos"><i class="fa-solid fa-plus" aria-hidden="true"></i></button><button type="button" id="clearPhotoFilters" hidden>Clear filters</button></div>
                 <div class="mapv2-photo-table" id="photoDropTarget" role="table">
                     <div class="mapv2-photo-drag-state" id="photoDragState" hidden>
                     <strong>Upload photos or drag and drop
@@ -1214,181 +1387,310 @@
     bindSelectDisclosureIndicators(detail);
 
     try {
-    const photoRows = detail.querySelectorAll(
-      ".mapv2-photo-row[data-photo-category]",
-    );
-    const categoryFilter = document.getElementById("photoCategoryFilter");
-    const dateFilter = document.getElementById("photoDateFilter");
-    const dateCaption = document.getElementById("photoDateCaption");
-    const clearPhotoFilters = document.getElementById("clearPhotoFilters");
-    const photoTable = detail.querySelector(".mapv2-photo-table");
+      const photoRows = detail.querySelectorAll(
+        ".mapv2-photo-row[data-photo-category]",
+      );
+      const categoryFilter = document.getElementById("photoCategoryFilter");
+      const dateFilter = document.getElementById("photoDateFilter");
+      const dateCaption = document.getElementById("photoDateCaption");
+      const clearPhotoFilters = document.getElementById("clearPhotoFilters");
+      const photoTable = detail.querySelector(".mapv2-photo-table");
 
-    const updateClearButton = () => {
-      clearPhotoFilters.hidden =
-        categoryFilter.value === "all" && dateFilter.value === "newest-to-oldest";
-    };
-    // Group the newest-first result the same way notification lists group recent items.
-    const photoGroupForDate = (value) => {
-      const photoDay = new Date(`${value}T00:00:00`);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const daysAgo = Math.floor((today - photoDay) / 86400000);
-      if (daysAgo === 0) return "Today";
-      if (daysAgo > 0 && daysAgo < 7) return "This Week";
-      return "Older";
-    };
-    const arrangePhotoRows = () => {
-      photoTable.querySelectorAll("[data-photo-group-heading]").forEach((heading) => heading.remove());
-      const visibleRows = [...photoRows].filter((row) => !row.hidden);
-      const hiddenRows = [...photoRows].filter((row) => row.hidden);
-      const descending = dateFilter.value === "newest-to-oldest";
-      visibleRows.sort((left, right) => descending
-        ? right.dataset.photoDate.localeCompare(left.dataset.photoDate)
-        : left.dataset.photoDate.localeCompare(right.dataset.photoDate));
-      const groups = new Map();
-      visibleRows.forEach((row) => {
-        const label = photoGroupForDate(row.dataset.photoDate);
-        if (!groups.has(label)) groups.set(label, []);
-        groups.get(label).push(row);
-      });
-      if (!groups.size) {
-        dateCaption.textContent = "No photos found";
-        dateCaption.hidden = false;
-        photoTable.append(dateCaption, ...hiddenRows);
-        return;
-      }
-      let usesCaption = true;
-      groups.forEach((rows, label) => {
-        const heading = usesCaption ? dateCaption : document.createElement("p");
-        heading.className = "mapv2-photo-date";
-        heading.textContent = label;
-        heading.hidden = false;
-        if (!usesCaption) heading.dataset.photoGroupHeading = "true";
-        photoTable.append(heading, ...rows);
-        usesCaption = false;
-      });
-      photoTable.append(...hiddenRows);
-    };
-    const filterPhotoRows = () => {
-      const selectedCategory = categoryFilter.value;
-      photoRows.forEach((row) => {
-      row.hidden =
-        (selectedCategory !== "all" &&
-            row.dataset.photoCategory !== selectedCategory);
-      });
-      updateClearButton();
-      arrangePhotoRows();
-    };
-    categoryFilter.addEventListener("change", filterPhotoRows);
-    dateFilter.addEventListener("change", filterPhotoRows);
-    clearPhotoFilters.addEventListener("click", () => {
-      categoryFilter.value = "all";
-      dateFilter.value = "newest-to-oldest";
-      filterPhotoRows();
-    });
-    filterPhotoRows();
-
-    const closePhotoMenus = () => {
-      detail.querySelectorAll("[data-photo-menu]").forEach((menu) => {
-        closeDisclosure(menu);
-      });
-      detail.querySelectorAll("[data-photo-menu-toggle]").forEach((button) => {
-        button.setAttribute("aria-expanded", "false");
-      });
-    };
-    const openPhotoEditor = (index) => {
-      const photo = photos[index];
-      if (!photo || typeof window.showEditReforestationPhotoModal !== "function") return;
-      window.showEditReforestationPhotoModal({ ...photo, compartmentId: compartment.id, photoIndex: index });
-    };
-
-    detail.addEventListener("click", (event) => {
-      const menuToggle = event.target.closest("[data-photo-menu-toggle]");
-      if (menuToggle) {
-        const menu = detail.querySelector(`[data-photo-menu="${menuToggle.dataset.photoMenuToggle}"]`);
-        const willOpen = menu.hidden || !menu.classList.contains("is-open");
-        closePhotoMenus();
-        if (willOpen) openDisclosure(menu);
-        menuToggle.setAttribute("aria-expanded", String(willOpen));
-        return;
-      }
-      const action = event.target.closest("[data-photo-action]");
-      if (action) {
-        const photoIndex = Number(action.dataset.photoIndex);
-        closePhotoMenus();
-        if (action.dataset.photoAction === "edit") openPhotoEditor(photoIndex);
-        if (action.dataset.photoAction === "archive") {
-          photos[photoIndex].archived = true;
-          compartment.photos = photos;
-          renderDetail(compartment);
-        }
-        return;
-      }
-      if (!event.target.closest(".mapv2-photo-menu-wrap")) closePhotoMenus();
-    });
-
-    const photoDropTarget = document.getElementById("photoDropTarget");
-    const photoDragState = document.getElementById("photoDragState");
-    document.getElementById("uploadCompartmentPhotos").addEventListener("click", () =>
-      window.showUploadReforestationPhotoModal?.(compartment.id, { category: compartment.status }),
-    );
-    const hideDirectUploadState = () => {
-      photoDragState.hidden = true;
-      photoDropTarget.classList.remove("is-dragging", "is-uploading");
-    };
-    photoDropTarget.addEventListener("dragenter", (event) => {
-      event.preventDefault();
-      photoDragState.hidden = false;
-      photoDropTarget.classList.add("is-dragging");
-    });
-    photoDropTarget.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "copy";
-    });
-    photoDropTarget.addEventListener("dragleave", (event) => {
-      event.preventDefault();
-      if (!photoDropTarget.contains(event.relatedTarget)) hideDirectUploadState();
-    });
-    photoDropTarget.addEventListener("drop", async (event) => {
-      event.preventDefault();
-      const files = [...event.dataTransfer.files]
-        .filter((file) => ["image/jpeg", "image/png"].includes(file.type) && file.size <= 10 * 1024 * 1024)
-        .slice(0, 5);
-      if (!files.length) {
-        hideDirectUploadState();
-        showMapNotice("Drop PNG or JPG images up to 10 MB each.");
-        return;
-      }
-
-      // Direct table drops use the compartment status and never open the upload modal.
-      const category = ["planned", "planted", "monitored", "low_survival", "completed"].includes(compartment.status)
-        ? compartment.status
-        : "other";
-      photoDropTarget.classList.remove("is-dragging");
-      photoDropTarget.classList.add("is-uploading");
-      photoDragState.querySelector("strong").textContent = `Uploading ${files.length} photo${files.length === 1 ? "" : "s"}…`;
-      photoDragState.querySelector("small").textContent = `Category: ${STATUS_STYLES[compartment.status]?.label || "Other"}`;
-      try {
-        const payload = new FormData();
-        payload.append("compartment_id", compartment.id);
-        payload.append("category", category);
-        payload.append("csrf_token", document.querySelector('meta[name="csrf-token"]')?.content || "");
-        files.forEach((file) => payload.append("photos[]", file));
-        const response = await fetch("actions/mapv2/upload_compartment_photos.php", {
-          method: "POST",
-          body: payload,
-          headers: { Accept: "application/json" },
+      const updateClearButton = () => {
+        clearPhotoFilters.hidden =
+          categoryFilter.value === "all" &&
+          dateFilter.value === "newest-to-oldest";
+      };
+      // Group the newest-first result the same way notification lists group recent items.
+      const photoGroupForDate = (value) => {
+        const photoDay = new Date(`${value}T00:00:00`);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const daysAgo = Math.floor((today - photoDay) / 86400000);
+        if (daysAgo === 0) return "Today";
+        if (daysAgo > 0 && daysAgo < 7) return "This Week";
+        return "Older";
+      };
+      const arrangePhotoRows = () => {
+        photoTable
+          .querySelectorAll("[data-photo-group-heading]")
+          .forEach((heading) => heading.remove());
+        const visibleRows = [...photoRows].filter((row) => !row.hidden);
+        const hiddenRows = [...photoRows].filter((row) => row.hidden);
+        const descending = dateFilter.value === "newest-to-oldest";
+        visibleRows.sort((left, right) =>
+          descending
+            ? right.dataset.photoDate.localeCompare(left.dataset.photoDate)
+            : left.dataset.photoDate.localeCompare(right.dataset.photoDate),
+        );
+        const groups = new Map();
+        visibleRows.forEach((row) => {
+          const label = photoGroupForDate(row.dataset.photoDate);
+          if (!groups.has(label)) groups.set(label, []);
+          groups.get(label).push(row);
         });
-        const result = await response.json();
-        if (!response.ok || !result.success) throw new Error(result.error || "Photos could not be uploaded.");
-        compartment.photos.unshift(...(result.photos || []));
-        renderDetail(compartment);
-        showMapNotice(`${result.photos.length} photo${result.photos.length === 1 ? "" : "s"} uploaded.`);
-      } catch (error) {
-        hideDirectUploadState();
-        showMapNotice(error.message || "Photos could not be uploaded.");
-      }
-    });
+        if (!groups.size) {
+          dateCaption.textContent = "No photos found";
+          dateCaption.hidden = false;
+          photoTable.append(dateCaption, ...hiddenRows);
+          return;
+        }
+        let usesCaption = true;
+        groups.forEach((rows, label) => {
+          const heading = usesCaption
+            ? dateCaption
+            : document.createElement("p");
+          heading.className = "mapv2-photo-date";
+          heading.textContent = label;
+          heading.hidden = false;
+          if (!usesCaption) heading.dataset.photoGroupHeading = "true";
+          photoTable.append(heading, ...rows);
+          usesCaption = false;
+        });
+        photoTable.append(...hiddenRows);
+      };
+      const filterPhotoRows = () => {
+        const selectedCategory = categoryFilter.value;
+        photoRows.forEach((row) => {
+          const isArchived = row.dataset.photoArchived === "true";
+          row.hidden =
+            selectedCategory === "archived"
+              ? !isArchived
+              : isArchived ||
+                (selectedCategory !== "all" &&
+                  row.dataset.photoCategory !== selectedCategory);
+        });
+        updateClearButton();
+        arrangePhotoRows();
+      };
+      categoryFilter.addEventListener("change", filterPhotoRows);
+      dateFilter.addEventListener("change", filterPhotoRows);
+      clearPhotoFilters.addEventListener("click", () => {
+        categoryFilter.value = "all";
+        dateFilter.value = "newest-to-oldest";
+        filterPhotoRows();
+      });
+      filterPhotoRows();
+
+      const closePhotoMenus = () => {
+        detail.querySelectorAll("[data-photo-menu]").forEach((menu) => {
+          closeDisclosure(menu);
+        });
+        detail
+          .querySelectorAll("[data-photo-menu-toggle]")
+          .forEach((button) => {
+            button.setAttribute("aria-expanded", "false");
+          });
+      };
+      const openPhotoEditor = (index) => {
+        const photo = photos[index];
+        if (
+          !photo ||
+          typeof window.showEditReforestationPhotoModal !== "function"
+        )
+          return;
+        window.showEditReforestationPhotoModal({
+          ...photo,
+          compartmentId: compartment.id,
+          photoIndex: index,
+        });
+      };
+
+      detail.addEventListener("click", async (event) => {
+        const menuToggle = event.target.closest("[data-photo-menu-toggle]");
+        if (menuToggle) {
+          const menu = detail.querySelector(
+            `[data-photo-menu="${menuToggle.dataset.photoMenuToggle}"]`,
+          );
+          const willOpen = menu.hidden || !menu.classList.contains("is-open");
+          closePhotoMenus();
+          if (willOpen) openDisclosure(menu);
+          menuToggle.setAttribute("aria-expanded", String(willOpen));
+          return;
+        }
+        const photoRow = event.target.closest(
+          ".mapv2-photo-row[data-photo-index]",
+        );
+        if (photoRow && !event.target.closest(".mapv2-photo-menu-wrap")) {
+          openPhotoGallery(compartment, Number(photoRow.dataset.photoIndex));
+          return;
+        }
+        const action = event.target.closest("[data-photo-action]");
+        if (action) {
+          const photoIndex = Number(action.dataset.photoIndex);
+          closePhotoMenus();
+          if (action.dataset.photoAction === "edit")
+            openPhotoEditor(photoIndex);
+          if (action.dataset.photoAction === "archive") {
+            const photo = photos[photoIndex];
+            if (!photo?.id) return;
+            try {
+              const payload = new FormData();
+              payload.append("id", photo.id);
+              payload.append(
+                "csrf_token",
+                document.querySelector('meta[name="csrf-token"]')?.content ||
+                  "",
+              );
+              const response = await fetch(
+                "actions/mapv2/archive_compartment_photo.php",
+                {
+                  method: "POST",
+                  body: payload,
+                  headers: { Accept: "application/json" },
+                },
+              );
+              const result = await response.json();
+              if (!response.ok || !result.success)
+                throw new Error(
+                  result.error || "The photo could not be archived.",
+                );
+              photos[photoIndex].archived = true;
+              compartment.photos = photos;
+              renderDetail(compartment);
+              showMapNotice("Photo archived.");
+            } catch (error) {
+              showMapNotice(
+                error.message || "The photo could not be archived.",
+              );
+            }
+          }
+          if (action.dataset.photoAction === "restore") {
+            const photo = photos[photoIndex];
+            if (!photo?.id) return;
+            try {
+              const payload = new FormData();
+              payload.append("id", photo.id);
+              payload.append(
+                "csrf_token",
+                document.querySelector('meta[name="csrf-token"]')?.content ||
+                  "",
+              );
+              const response = await fetch(
+                "actions/mapv2/restore_compartment_photo.php",
+                {
+                  method: "POST",
+                  body: payload,
+                  headers: { Accept: "application/json" },
+                },
+              );
+              const result = await response.json();
+              if (!response.ok || !result.success)
+                throw new Error(
+                  result.error || "The photo could not be restored.",
+                );
+              photos[photoIndex].archived = false;
+              compartment.photos = photos;
+              renderDetail(compartment);
+              showMapNotice("Photo restored.");
+            } catch (error) {
+              showMapNotice(
+                error.message || "The photo could not be restored.",
+              );
+            }
+          }
+          return;
+        }
+        if (!event.target.closest(".mapv2-photo-menu-wrap")) closePhotoMenus();
+      });
+      detail.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const photoRow = event.target.closest(
+          ".mapv2-photo-row[data-photo-index]",
+        );
+        if (!photoRow || event.target.closest(".mapv2-photo-menu-wrap")) return;
+        event.preventDefault();
+        openPhotoGallery(compartment, Number(photoRow.dataset.photoIndex));
+      });
+
+      const photoDropTarget = document.getElementById("photoDropTarget");
+      const photoDragState = document.getElementById("photoDragState");
+      document
+        .getElementById("uploadCompartmentPhotos")
+        .addEventListener("click", () =>
+          window.showUploadReforestationPhotoModal?.(compartment.id, {
+            category: compartment.status,
+          }),
+        );
+      const hideDirectUploadState = () => {
+        photoDragState.hidden = true;
+        photoDropTarget.classList.remove("is-dragging", "is-uploading");
+      };
+      photoDropTarget.addEventListener("dragenter", (event) => {
+        event.preventDefault();
+        photoDragState.hidden = false;
+        photoDropTarget.classList.add("is-dragging");
+      });
+      photoDropTarget.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+      });
+      photoDropTarget.addEventListener("dragleave", (event) => {
+        event.preventDefault();
+        if (!photoDropTarget.contains(event.relatedTarget))
+          hideDirectUploadState();
+      });
+      photoDropTarget.addEventListener("drop", async (event) => {
+        event.preventDefault();
+        const files = [...event.dataTransfer.files]
+          .filter(
+            (file) =>
+              ["image/jpeg", "image/png"].includes(file.type) &&
+              file.size <= 10 * 1024 * 1024,
+          )
+          .slice(0, 5);
+        if (!files.length) {
+          hideDirectUploadState();
+          showMapNotice("Drop PNG or JPG images up to 10 MB each.");
+          return;
+        }
+
+        // Direct table drops use the compartment status and never open the upload modal.
+        const category = [
+          "planned",
+          "planted",
+          "monitored",
+          "low_survival",
+          "completed",
+        ].includes(compartment.status)
+          ? compartment.status
+          : "other";
+        photoDropTarget.classList.remove("is-dragging");
+        photoDropTarget.classList.add("is-uploading");
+        photoDragState.querySelector("strong").textContent =
+          `Uploading ${files.length} photo${files.length === 1 ? "" : "s"}…`;
+        photoDragState.querySelector("small").textContent =
+          `Category: ${STATUS_STYLES[compartment.status]?.label || "Other"}`;
+        try {
+          const payload = new FormData();
+          payload.append("compartment_id", compartment.id);
+          payload.append("category", category);
+          payload.append(
+            "csrf_token",
+            document.querySelector('meta[name="csrf-token"]')?.content || "",
+          );
+          files.forEach((file) => payload.append("photos[]", file));
+          const response = await fetch(
+            "actions/mapv2/upload_compartment_photos.php",
+            {
+              method: "POST",
+              body: payload,
+              headers: { Accept: "application/json" },
+            },
+          );
+          const result = await response.json();
+          if (!response.ok || !result.success)
+            throw new Error(result.error || "Photos could not be uploaded.");
+          compartment.photos.unshift(...(result.photos || []));
+          renderDetail(compartment);
+          showMapNotice(
+            `${result.photos.length} photo${result.photos.length === 1 ? "" : "s"} uploaded.`,
+          );
+        } catch (error) {
+          hideDirectUploadState();
+          showMapNotice(error.message || "Photos could not be uploaded.");
+        }
+      });
     } catch (error) {
       console.warn("Map V2 photo controls could not be initialized.", error);
     }
@@ -1427,9 +1729,15 @@
   function renderDetailFallback(compartment) {
     const detail = document.getElementById("compartmentDetailView");
     const photos = Array.isArray(compartment.photos) ? compartment.photos : [];
-    const photoRows = photos.filter((photo) => !photo.archived).map((photo) =>
-      `<div class="mapv2-photo-row" role="row"><span><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span>${escapeHtml(photo.uploadedBy)}</span><span>${escapeHtml(photo.category)}</span><span>${escapeHtml(photo.size)}</span><span>${formatPhotoDate(photo.uploadedAt)}</span></div>`,
-    ).join("") || '<p class="mapv2-empty-state">No photos have been added yet.</p>';
+    const photoRows =
+      photos
+        .filter((photo) => !photo.archived)
+        .map(
+          (photo) =>
+            `<div class="mapv2-photo-row" role="row"><span><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span>${escapeHtml(photo.uploadedBy)}</span><span>${escapeHtml(photo.category)}</span><span>${escapeHtml(photo.size)}</span><span>${formatPhotoDate(photo.uploadedAt)}</span></div>`,
+        )
+        .join("") ||
+      '<p class="mapv2-empty-state">No photos have been added yet.</p>';
     detail.innerHTML = `
       <header class="mapv2-detail-heading">
         <button type="button" class="mapv2-back-button" id="backToCompartments" aria-label="Back to compartment list"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
@@ -1438,22 +1746,36 @@
       <div class="mapv2-detail-scroll">
         <div class="mapv2-detail-stats"><div><span>Gross area</span><strong>${compartment.hectares.toFixed(2)} <small>ha</small></strong></div><div><span>Trees planted</span><strong>${plannedTreeCount(compartment)}</strong></div></div>
         <div class="mapv2-detail-field"><span>Location</span><p>${escapeHtml(locationReference(compartment))}</p></div>
-        <label class="mapv2-detail-field"><span>Status</span><div class="mapv2-filter-select"><select id="detailStatusSelect">${Object.entries(STATUS_STYLES).map(([key, item]) => `<option value="${key}" ${key === compartment.status ? "selected" : ""}>${item.label}</option>`).join("")}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div></label>
+        <label class="mapv2-detail-field"><span>Status</span><div class="mapv2-filter-select"><select id="detailStatusSelect">${Object.entries(
+          STATUS_STYLES,
+        )
+          .map(
+            ([key, item]) =>
+              `<option value="${key}" ${key === compartment.status ? "selected" : ""}>${item.label}</option>`,
+          )
+          .join(
+            "",
+          )}</select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div></label>
         <section class="mapv2-species-section"><h3>Species mix</h3>${compartment.speciesMix.map((species) => `<article class="mapv2-species-card"><div><strong>${escapeHtml(species.name)}</strong><em>${escapeHtml(species.scientificName)}</em></div><b>×${species.quantity}</b></article>`).join("")}</section>
-        <div class="mapv2-updated-at"><span>Updated at</span><p>${escapeHtml(formatUpdatedAt(compartment.updatedAt))}</p></div>
+        <div class="mapv2-detail-updated"><span>Updated at</span><p>${escapeHtml(formatCompartmentUpdate(compartment))}</p></div>
         <section class="mapv2-photos-section"><h3>Photos</h3><div class="mapv2-photo-table" role="table"><div class="mapv2-photo-row mapv2-photo-head" role="row"><span>Name</span><span>Uploaded by</span><span>Category</span><span>Size</span><span>Date</span></div>${photoRows}</div></section>
       </div>`;
     document.getElementById("compartmentListView").hidden = true;
     detail.hidden = false;
     bindSelectDisclosureIndicators(detail);
-    document.getElementById("backToCompartments").addEventListener("click", showList);
-    document.getElementById("detailStatusSelect").addEventListener("change", (event) =>
-      updateCompartmentStatus(compartment.id, event.target.value),
-    );
+    document
+      .getElementById("backToCompartments")
+      .addEventListener("click", showList);
+    document
+      .getElementById("detailStatusSelect")
+      .addEventListener("change", (event) =>
+        updateCompartmentStatus(compartment.id, event.target.value),
+      );
   }
 
   function showList() {
     state.selectedId = null;
+    closePhotoGallery();
     const detail = document.getElementById("compartmentDetailView");
     const list = document.getElementById("compartmentListView");
     if (detail.hidden) {
@@ -1488,26 +1810,38 @@
       const payload = new FormData();
       payload.append("id", id);
       payload.append("status", nextStatus);
-      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+      const csrf = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute("content");
       if (csrf) payload.append("csrf_token", csrf);
-      const response = await fetch("actions/mapv2/update_compartment_status.php", {
-        method: "POST",
-        body: payload,
-        headers: { Accept: "application/json" },
-      });
+      const response = await fetch(
+        "actions/mapv2/update_compartment_status.php",
+        {
+          method: "POST",
+          body: payload,
+          headers: { Accept: "application/json" },
+        },
+      );
       const result = await response.json();
       if (!response.ok || !result.success) {
-        throw new Error(result.error || "The compartment status could not be updated.");
+        throw new Error(
+          result.error || "The compartment status could not be updated.",
+        );
       }
       compartment.status = nextStatus;
       compartment.updatedAt = result.updated_at || new Date().toISOString();
+      compartment.updatedBy = result.updated_by || compartment.updatedBy || "Unknown user";
       const style = STATUS_STYLES[nextStatus];
-      layers.polygons.get(id)?.setStyle({ color: style.color, fillColor: style.fill });
+      layers.polygons
+        .get(id)
+        ?.setStyle({ color: style.color, fillColor: style.fill });
       rebuildTreeSpeciesLayers();
       renderDetail(compartment);
     } catch (error) {
       console.error("Map V2 compartment detail could not be rendered.", error);
-      showMapNotice(error.message || "The compartment status could not be updated.");
+      showMapNotice(
+        error.message || "The compartment status could not be updated.",
+      );
       if (statusSelect) {
         statusSelect.value = compartment.status;
         statusSelect.disabled = false;
@@ -1652,19 +1986,25 @@
         const compartment = getCompartment(String(payload.compartmentId));
         const photos = Array.isArray(payload.photos) ? payload.photos : [];
         if (!compartment || !photos.length) return;
-        compartment.photos = Array.isArray(compartment.photos) ? compartment.photos : [];
+        compartment.photos = Array.isArray(compartment.photos)
+          ? compartment.photos
+          : [];
         compartment.photos.unshift(...photos);
         if (state.selectedId === compartment.id) renderDetail(compartment);
-        showMapNotice(`${photos.length} photo${photos.length === 1 ? "" : "s"} uploaded.`);
-      } else if (event.data?.type === "mapv2:save-photo-edit-draft") {
+        showMapNotice(
+          `${photos.length} photo${photos.length === 1 ? "" : "s"} uploaded.`,
+        );
+      } else if (event.data?.type === "mapv2:photo-updated") {
         const payload = event.data.payload || {};
         const compartment = getCompartment(String(payload.compartmentId));
-        const photo = compartment?.photos?.[Number(payload.photoIndex)];
+        const photo = compartment?.photos?.find(
+          (item) => String(item.id) === String(payload.id),
+        );
         if (!photo) return;
         photo.name = String(payload.name || photo.name).trim() || photo.name;
-        photo.category = STATUS_STYLES[payload.category]?.label || photo.category;
+        photo.category = payload.category || photo.category;
         if (state.selectedId === compartment.id) renderDetail(compartment);
-        showMapNotice("Photo details updated for this browser session.");
+        showMapNotice("Photo details updated.");
       }
     });
   }
@@ -1674,7 +2014,9 @@
       window.showAddReforestationCompartmentModal();
       return;
     }
-    showMapNotice("The add-compartment dialog is unavailable. Refresh the page and try again.");
+    showMapNotice(
+      "The add-compartment dialog is unavailable. Refresh the page and try again.",
+    );
   };
   window.selectMapV2Compartment = selectCompartment;
 

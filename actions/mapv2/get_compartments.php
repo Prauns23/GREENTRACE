@@ -15,11 +15,13 @@ try {
     $compartments = [];
     $result = $conn->query(
         'SELECT rc.id, rc.name, rc.status, rc.date_started, rc.updated_at, rc.gross_area_ha,
+                COALESCE(NULLIF(TRIM(CONCAT_WS(" ", editor.fname, editor.lname)), ""), "Unknown user") AS updated_by_name,
                 ST_AsGeoJSON(rc.boundary) AS boundary_geojson,
                 b.id AS barangay_id, b.name AS barangay_name,
                 b.municipality_name, b.province_name
          FROM reforestation_compartments rc
          LEFT JOIN barangays b ON b.id = rc.barangay_id
+         LEFT JOIN users_tbl editor ON editor.id = COALESCE(rc.updated_by, rc.created_by)
          WHERE rc.archived = 0
          ORDER BY rc.created_at DESC, rc.id DESC'
     );
@@ -36,6 +38,7 @@ try {
             'status' => $row['status'],
             'started_at' => $row['date_started'],
             'updated_at' => $row['updated_at'],
+            'updated_by' => $row['updated_by_name'],
             'hectares' => (float) ($row['gross_area_ha'] ?? 0),
             'boundary' => array_map(static fn(array $point): array => [(float) $point[1], (float) $point[0]], $coordinates),
             'barangay' => $row['barangay_id'] ? [
@@ -69,16 +72,22 @@ try {
         // Photo metadata is optional to the map list. A photo problem must not hide compartments.
         try {
             $photoResult = $conn->query(
-                'SELECT cp.id, cp.compartment_id, COALESCE(NULLIF(cp.display_name, \'\'), cp.original_filename) AS name, cp.category, cp.storage_path, cp.file_size_bytes, cp.created_at
-                 FROM compartment_photos cp WHERE cp.compartment_id IN (' . $ids . ') AND cp.archived = 0 ORDER BY cp.created_at DESC, cp.id DESC'
+                'SELECT cp.id, cp.compartment_id, COALESCE(NULLIF(cp.display_name, \'\'), cp.original_filename) AS name,
+                        cp.category, cp.storage_path, cp.file_size_bytes, cp.created_at, cp.archived,
+                        COALESCE(NULLIF(TRIM(CONCAT_WS(" ", uploader.fname, uploader.lname)), ""), "Unknown user") AS uploaded_by_name
+                 FROM compartment_photos cp
+                 LEFT JOIN users_tbl uploader ON uploader.id = cp.uploaded_by
+                 WHERE cp.compartment_id IN (' . $ids . ')
+                 ORDER BY cp.archived ASC, cp.created_at DESC, cp.id DESC'
             );
             while ($photo = $photoResult->fetch_assoc()) {
                 $bytes = (int) $photo['file_size_bytes'];
                 $compartments[(int) $photo['compartment_id']]['photos'][] = [
-                    'id' => (string) $photo['id'], 'name' => $photo['name'], 'uploadedBy' => 'Administrator',
+                    'id' => (string) $photo['id'], 'name' => $photo['name'], 'uploadedBy' => $photo['uploaded_by_name'],
                     'category' => ucwords(str_replace('_', ' ', $photo['category'])),
                     'size' => $bytes >= 1048576 ? number_format($bytes / 1048576, 1) . ' MB' : max(1, (int) round($bytes / 1024)) . ' KB',
                     'uploadedAt' => substr($photo['created_at'], 0, 10), 'path' => $photo['storage_path'],
+                    'archived' => (bool) $photo['archived'],
                 ];
             }
         } catch (Throwable $photoException) {
