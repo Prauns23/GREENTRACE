@@ -3,3 +3,6 @@
 
 # Ephemeral field-note cache; regenerate it at runtime rather than commit it.
 /tmp/field-notes-cache/
+
+# User-uploaded files; keep these out of source control.
+/uploads/*
