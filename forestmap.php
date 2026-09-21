@@ -93,7 +93,7 @@ include 'header.php';
                 </section>
 
                 <div class="mapv2-metrics" aria-label="Map totals">
-                    <div><span>Net area</span><strong id="netArea">0</strong><small>ha</small></div>
+                    <div><span>Total Target Area</span><strong id="netArea">0</strong><small>ha</small></div>
                     <div><span>Forest plots</span><strong id="forestPlotCount">0</strong></div>
                 </div>
 

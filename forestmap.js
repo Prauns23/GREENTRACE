@@ -269,7 +269,52 @@
     menu.style.right = "auto";
   }
 
+  function floatPhotoMenu(menu, toggle) {
+    if (!menu || !toggle || menu.dataset.photoMenuFloating === "true") return;
+    menu._photoMenuParent = menu.parentElement;
+    menu._photoMenuNextSibling = menu.nextSibling;
+    menu._photoMenuToggle = toggle;
+    menu.dataset.photoMenuToggle = toggle.dataset.photoMenuToggle;
+    document.body.appendChild(menu);
+    menu.dataset.photoMenuFloating = "true";
+    positionPhotoMenu(menu, toggle);
+  }
+
+  function photoMenuIsVisible(menu) {
+    const toggle =
+      menu?._photoMenuToggle ||
+      menu?.closest(".mapv2-photo-menu-wrap")?.querySelector(
+        "[data-photo-menu-toggle]",
+      );
+    const table = toggle?.closest(".mapv2-photo-table");
+    const row = toggle?.closest(".mapv2-photo-row[data-photo-index]");
+    if (!toggle || !table || !row) return false;
+
+    const viewport = { top: 0, bottom: window.innerHeight };
+    const tableBounds = table.getBoundingClientRect();
+    const rowBounds = row.getBoundingClientRect();
+    const toggleBounds = toggle.getBoundingClientRect();
+    const tableVisible =
+      tableBounds.bottom > viewport.top && tableBounds.top < viewport.bottom;
+    const rowVisible =
+      rowBounds.bottom > tableBounds.top && rowBounds.top < tableBounds.bottom;
+    const toggleVisible =
+      toggleBounds.bottom > viewport.top && toggleBounds.top < viewport.bottom;
+
+    return tableVisible && rowVisible && toggleVisible;
+  }
+
   function resetPhotoMenuPosition(menu) {
+    if (menu?.dataset.photoMenuFloating === "true") {
+      const parent = menu._photoMenuParent;
+      const nextSibling = menu._photoMenuNextSibling;
+      if (parent) parent.insertBefore(menu, nextSibling && nextSibling.parentNode === parent ? nextSibling : null);
+      delete menu._photoMenuParent;
+      delete menu._photoMenuNextSibling;
+      delete menu._photoMenuToggle;
+      delete menu.dataset.photoMenuFloating;
+      delete menu.dataset.photoMenuToggle;
+    }
     menu?.classList.remove("mapv2-photo-actions--floating");
     if (!menu) return;
     menu.style.top = "";
@@ -1384,7 +1429,7 @@
       .map((photo, index) => {
         const isArchived = Boolean(photo.archived);
         const menuActions = isArchived
-          ? `<button type="button" data-photo-action="restore" data-photo-index="${index}">Restore</button>`
+          ? `<button type="button" data-photo-action="restore" data-photo-index="${index}">Unarchive</button>`
           : `<button type="button" data-photo-action="edit" data-photo-index="${index}">Edit</button><button type="button" data-photo-action="archive" data-photo-index="${index}">Archive</button>`;
         return `<div class="mapv2-photo-row" role="row" tabindex="0" aria-label="Preview ${escapeHtml(photo.name)}" data-photo-index="${index}" data-photo-archived="${isArchived}" data-photo-category="${escapeHtml(photo.category.toLowerCase().replace(/\s+/g, "_"))}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><div class="mapv2-photo-actions" data-photo-menu="${index}" role="menu" hidden>${menuActions}</div></span></div>`;
       })
@@ -1396,7 +1441,7 @@
             </header>
               <div class="mapv2-detail-scroll">
             <div class="mapv2-detail-stats">
-                <div><span>Gross area</span><strong>${compartment.hectares.toFixed(2)} <small>ha</small></strong></div>
+                <div><span>Compartment Area</span><strong>${compartment.hectares.toFixed(2)} <small>ha</small></strong></div>
                 <div><span>Trees planted</span><strong>${plannedTreeCount(compartment)}</strong></div>
             </div>
             <div class="mapv2-detail-field"><span>Location</span><p>${escapeHtml(locationReference(compartment))}</p><small>Matched from the compartment's barangay boundary.</small></div>
@@ -1526,16 +1571,37 @@
       filterPhotoRows();
 
       const closePhotoMenus = () => {
-        detail.querySelectorAll("[data-photo-menu]").forEach((menu) => {
+        document.querySelectorAll("[data-photo-menu]").forEach((menu) => {
           closeDisclosure(menu);
           resetPhotoMenuPosition(menu);
         });
-        detail
+        document
           .querySelectorAll("[data-photo-menu-toggle]")
           .forEach((button) => {
             button.setAttribute("aria-expanded", "false");
           });
       };
+      detail.querySelectorAll("[data-photo-menu]").forEach((menu) => {
+        menu.addEventListener("click", (event) => {
+          const action = event.target.closest("[data-photo-action]");
+          if (!action) return;
+          detail.dispatchEvent(
+            new CustomEvent("mapv2:photo-action", {
+              detail: { action },
+            }),
+          );
+        });
+      });
+        const closePhotoMenusOutsideViewport = () => {
+          document.querySelectorAll("[data-photo-menu].is-open").forEach((menu) => {
+            if (!photoMenuIsVisible(menu)) closePhotoMenus();
+          });
+        };
+        if (detail.dataset.photoMenuScrollBound !== "true") {
+          detail.dataset.photoMenuScrollBound = "true";
+          detail.addEventListener("scroll", closePhotoMenusOutsideViewport, true);
+          window.addEventListener("scroll", closePhotoMenusOutsideViewport, true);
+        }
       const openPhotoEditor = (index) => {
         const photo = photos[index];
         if (
@@ -1550,17 +1616,18 @@
         });
       };
 
-      detail.addEventListener("click", async (event) => {
+      const handlePhotoAction = async (event) => {
         const menuToggle = event.target.closest("[data-photo-menu-toggle]");
         if (menuToggle) {
-          const menu = detail.querySelector(
+          const menu = document.querySelector(
             `[data-photo-menu="${menuToggle.dataset.photoMenuToggle}"]`,
           );
+          if (!menu) return;
           const willOpen = menu.hidden || !menu.classList.contains("is-open");
           closePhotoMenus();
           if (willOpen) {
             openDisclosure(menu);
-            positionPhotoMenu(menu, menuToggle);
+            floatPhotoMenu(menu, menuToggle);
           }
           menuToggle.setAttribute("aria-expanded", String(willOpen));
           return;
@@ -1569,10 +1636,14 @@
           ".mapv2-photo-row[data-photo-index]",
         );
         if (photoRow && !event.target.closest(".mapv2-photo-menu-wrap")) {
+          closePhotoMenus();
           openPhotoGallery(compartment, Number(photoRow.dataset.photoIndex));
           return;
         }
-        const action = event.target.closest("[data-photo-action]");
+        const action =
+          event.type === "mapv2:photo-action"
+            ? event.detail.action
+            : event.target.closest("[data-photo-action]");
         if (action) {
           const photoIndex = Number(action.dataset.photoIndex);
           closePhotoMenus();
@@ -1649,7 +1720,9 @@
           return;
         }
         if (!event.target.closest(".mapv2-photo-menu-wrap")) closePhotoMenus();
-      });
+      };
+      detail.addEventListener("click", handlePhotoAction);
+      detail.addEventListener("mapv2:photo-action", handlePhotoAction);
       detail.addEventListener("keydown", (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
         const photoRow = event.target.closest(
@@ -1801,7 +1874,7 @@
         <div><h2>${escapeHtml(compartment.name)}</h2><p>${escapeHtml(locationReference(compartment))}</p></div>
       </header>
       <div class="mapv2-detail-scroll">
-        <div class="mapv2-detail-stats"><div><span>Gross area</span><strong>${compartment.hectares.toFixed(2)} <small>ha</small></strong></div><div><span>Trees planted</span><strong>${plannedTreeCount(compartment)}</strong></div></div>
+        <div class="mapv2-detail-stats"><div><span>Total Area</span><strong>${compartment.hectares.toFixed(2)} <small>ha</small></strong></div><div><span>Trees planted</span><strong>${plannedTreeCount(compartment)}</strong></div></div>
         <div class="mapv2-detail-field"><span>Location</span><p>${escapeHtml(locationReference(compartment))}</p></div>
         <label class="mapv2-detail-field"><span>Status</span><div class="mapv2-filter-select"><select id="detailStatusSelect">${Object.entries(
           STATUS_STYLES,

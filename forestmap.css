@@ -1252,7 +1252,7 @@
 }
 .mapv2-photo-actions--floating {
   position: fixed;
-  z-index: 4000;
+  z-index: 10000;
   width: 112px;
 }
 .mapv2-photo-actions button {
