@@ -329,7 +329,7 @@
     const gallery = document.getElementById("mapv2PhotoGallery");
     const photo = compartment.photos?.[photoIndex];
     if (!gallery || !photo?.path) {
-      showMapNotice("This pohot preview is unavailable.");
+      showMapNotice("This photo preview is unavailable.");
       return;
     }
 
@@ -338,12 +338,14 @@
     const currentFilter = categoryFilter ? categoryFilter.value : "all";
     const galleryPhotos = compartment.photos.filter((item) => {
       if (!item.path) return false;
-      const normalizedCategory = item.category.toLowerCase().replace(/\s+/g, "_");
+      const normalizedCategory = item.category
+        .toLowerCase()
+        .replace(/\s+/g, "_");
       if (currentFilter === "archived") return Boolean(item.archived);
-      if (currentFilter == "all") return !item.archived;
+      if (currentFilter === "all") return !item.archived;
       return !item.archived && normalizedCategory === currentFilter;
     });
-    
+
     const index = galleryPhotos.findIndex(
       (item) => String(item.id) === String(photo.id),
     );
@@ -1511,10 +1513,15 @@
                   ${tableHeader}
                   <p class="mapv2-photo-date" id="photoDateCaption">Current month</p>
                   ${photoRowsMarkup}
-                  <p class="mapv2-empty-state" id="photoFilterEmpty" hidden>
-                      <span>No photos match your filter.</span>
-                  </p>
+                  <div class="mapv2-photo-empty-state" id="photoNoPhotos" hidden>
+                      <img src="components/icons/photos.svg" alt="" aria-hidden="true" class="mapv2-photo-empty-illustration">
+                      <strong>No photos attached</strong>
+                      <span>Upload a photo to start documenting this compartment.</span>
+                  </div>
               </div>
+              <p class="mapv2-empty-state" id="photoFilterEmpty" hidden>
+                  <span>No photos match your filter.</span>
+              </p>
           </section>
               </div>
             `;
@@ -1532,7 +1539,12 @@
       const dateFilter = document.getElementById("photoDateFilter");
       const dateCaption = document.getElementById("photoDateCaption");
       const filterEmpty = document.getElementById("photoFilterEmpty");
+      const noPhotos = document.getElementById("photoNoPhotos");
       const clearPhotoFilters = document.getElementById("clearPhotoFilters");
+      // Declared before any function that reads it.
+      const photoDragState = document.getElementById("photoDragState");
+
+      const hasPhotos = photos.length > 0;
 
       const updateClearButton = () => {
         clearPhotoFilters.hidden =
@@ -1561,18 +1573,32 @@
         const hiddenRows = photoRows.filter((row) => row.hidden);
         const descending = dateFilter.value === "newest-to-oldest";
 
-        // No matches → hide the whole table chrome and show the empty state.
+        // Case 1: No photos attached at all.
+        if (!hasPhotos) {
+          filterEmpty.hidden = true;
+          noPhotos.hidden = false;
+          if (header) header.hidden = true;
+          dateCaption.hidden = true;
+          return;
+        }
+
+        // Photos exist — make sure the table is shown.
+        photoTable.hidden = false;
+        noPhotos.hidden = true;
+
+        // Case 2: Photos exist, but the current filter hides every row.
         if (!visibleRows.length) {
           if (header) header.hidden = true;
           dateCaption.hidden = true;
           filterEmpty.hidden = false;
-          photoTable.append(filterEmpty, ...hiddenRows);
+          photoTable.append(...hiddenRows);
           return;
         }
 
-        // Matches found → show the header again and re-sort the rows.
-        if (header) header.hidden = false;
+        // Case 3: Normal rendering with rows visible.
         filterEmpty.hidden = true;
+        if (header) header.hidden = false;
+        dateCaption.hidden = false;
 
         visibleRows.sort((left, right) =>
           descending
@@ -1629,7 +1655,7 @@
       });
       filterPhotoRows();
 
-      // --- Menu + action handling (unchanged shape, same behaviour) ---
+      // --- Menu + action handling ---
       const closePhotoMenus = () => {
         document.querySelectorAll("[data-photo-menu]").forEach((menu) => {
           closeDisclosure(menu);
@@ -1759,7 +1785,6 @@
       });
 
       // --- Drag & drop upload target ---
-      const photoDragState = document.getElementById("photoDragState");
       document
         .getElementById("uploadCompartmentPhotos")
         .addEventListener("click", () =>
@@ -1772,6 +1797,7 @@
         photoDragState.hidden = true;
         photoTable.classList.remove("is-dragging", "is-uploading");
       };
+
       photoTable.addEventListener("dragenter", (event) => {
         event.preventDefault();
         photoDragState.hidden = false;
@@ -1785,6 +1811,7 @@
         event.preventDefault();
         if (!photoTable.contains(event.relatedTarget)) hideDirectUploadState();
       });
+
       photoTable.addEventListener("drop", async (event) => {
         event.preventDefault();
         const files = [...event.dataTransfer.files]

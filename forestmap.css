@@ -640,6 +640,10 @@
   display: none !important;
 }
 
+.mapv2-photo-table:has(.mapv2-photo-empty-state:not([hidden])) {
+  min-height: 220px;
+}
+
 @keyframes mapv2-detail-slide-in {
   from {
     opacity: 0;
@@ -1129,11 +1133,51 @@
   background: #c7eec9b2;
 }
 
+.mapv2-photo-drag-illustration {
+  width: 120px;
+  max-width: 55%;
+  height: auto;
+  margin-bottom: 6px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 .mapv2-photo-table.is-uploading {
   min-height: 180px;
   border: 1px dashed #80c283;
   border-radius: 9px;
   background: #e4f5e5;
+}
+
+.mapv2-photo-empty-state {
+  display: grid;
+  min-height: 220px;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  margin: 14px 0 0;
+  color: #7d847e;
+  text-align: center;
+}
+
+.mapv2-photo-empty-illustration {
+  width: 180px;
+  max-width: 60%;
+  height: auto;
+  margin-bottom: 8px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.mapv2-photo-empty-state strong {
+  color: #4b524c;
+  font-size: 0.95rem;
+}
+
+.mapv2-photo-empty-state span {
+  font-size: 0.8rem;
+  max-width: 240px;
+  line-height: 1.5;
 }
 
 .mapv2-photo-table.is-dragging > :not(.mapv2-photo-drag-state),
