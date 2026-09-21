@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !in_array($_SESSION['role'] ?? '', 
     exit;
 }
 
-$id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 if (!$id) {
     http_response_code(422);
     echo json_encode(['success' => false, 'error' => 'A valid photo is required.']);
@@ -19,14 +19,30 @@ if (!$id) {
 }
 
 try {
-    $statement = $conn->prepare('UPDATE compartment_photos SET archived = 0, archived_at = NULL WHERE id = ? AND archived = 1');
-    $statement->bind_param('i', $id);
-    $statement->execute();
-    if ($statement->affected_rows !== 1) {
+    $check = $conn->prepare('SELECT archived FROM compartment_photos WHERE id = ? LIMIT 1');
+    $check->bind_param('i', $id);
+    $check->execute();
+    $row = $check->get_result()->fetch_assoc();
+    $check->close();
+
+    if (!$row) {
         http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'This archived photo is unavailable.']);
+        echo json_encode(['success' => false, 'error' => 'This photo could not be found.']);
         exit;
     }
+
+    if ((int) $row['archived'] === 0) {
+        echo json_encode(['success' => true, 'id' => (string) $id, 'already_restored' => true]);
+        exit;
+    }
+
+    $statement = $conn->prepare(
+        'UPDATE compartment_photos SET archived = 0, archived_at = NULL WHERE id = ? AND archived = 1'
+    );
+    $statement->bind_param('i', $id);
+    $statement->execute();
+    $statement->close();
+
     echo json_encode(['success' => true, 'id' => (string) $id]);
 } catch (Throwable $exception) {
     error_log('Map V2 photo restore failed: ' . $exception->getMessage());

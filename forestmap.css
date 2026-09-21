@@ -28,6 +28,10 @@
   color: var(--map-ink);
 }
 
+.mapv2-page [hidden] {
+  display: none !important;
+}
+
 .mapv2-heading {
   margin-bottom: 48px;
 }
@@ -1023,15 +1027,15 @@
 .mapv2-photo-filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
 }
 .mapv2-photo-filters select {
   width: auto;
-  min-width: 130px;
-  height: 40px;
-  padding: 0 38px 0 14px;
-  font-size: 0.85rem;
+  min-width: 94px;
+  height: 34px;
+  padding: 0 38px 0 10px;
+  font-size: 0.76rem;
   font-weight: 600;
   line-height: 1.2;
 }
@@ -1061,42 +1065,52 @@
   background: transparent;
   color: #555b58;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.76rem;
   font-weight: 600;
   font-family: "Inter", sans-serif;
-  margin-left: 10px;
+  margin-left: 0;
 }
+
 .mapv2-photo-filters .mapv2-filter-reset {
-  min-height: 40px;
-  margin-left: 2px;
-  padding: 0 10px;
-  border: 1px solid #bfc5c0;
-  border-radius: 6px;
-  background: #fff;
+  order: 3;
+  flex-basis: 100%;
+  min-height: 34px;
+  padding: 0;
   color: #555b58;
+  text-align: left;
 }
+
 .mapv2-photo-filters .mapv2-filter-reset:hover,
 .mapv2-photo-filters .mapv2-filter-reset:focus-visible {
   border-color: #43834b;
   color: #2e7d32;
 }
+
 .mapv2-photo-filters .mapv2-filter-reset[hidden] {
   display: none;
 }
+
 .mapv2-photo-filters .mapv2-photo-upload-button {
+  order: 2;
   display: inline-grid;
-  width: 36px;
-  height: 36px;
-  margin-left: 0;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
   place-items: center;
   border: 1px solid #43834b;
   border-radius: 6px;
   background: #43834b;
   color: #fff;
 }
+
+.mapv2-photo-filters .mapv2-scope-chevron {
+  right: 12px;
+}
+
 .mapv2-photo-filters .mapv2-photo-upload-button:hover {
   background: #36763d;
 }
+
 .mapv2-photo-table {
   position: relative;
   max-height: 250px;
@@ -1106,6 +1120,7 @@
   scrollbar-color: #c4ccc5 transparent;
   scrollbar-width: thin;
 }
+
 .mapv2-photo-table.is-dragging {
   min-height: 180px;
   border: 1px dashed #80c283;
@@ -1113,16 +1128,19 @@
   opacity: 0.9;
   background: #c7eec9b2;
 }
+
 .mapv2-photo-table.is-uploading {
   min-height: 180px;
   border: 1px dashed #80c283;
   border-radius: 9px;
   background: #e4f5e5;
 }
+
 .mapv2-photo-table.is-dragging > :not(.mapv2-photo-drag-state),
 .mapv2-photo-table.is-uploading > :not(.mapv2-photo-drag-state) {
   display: none !important;
 }
+
 .mapv2-photo-drag-state {
   display: grid;
   min-height: 176px;
@@ -1133,10 +1151,12 @@
   opacity: 0;
   text-align: center;
 }
+
 .mapv2-photo-table.is-dragging .mapv2-photo-drag-state,
 .mapv2-photo-table.is-uploading .mapv2-photo-drag-state {
   animation: mapv2-photo-drag-fade 180ms ease-out forwards;
 }
+
 @keyframes mapv2-photo-drag-fade {
   from {
     opacity: 0;

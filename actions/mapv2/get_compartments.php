@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -83,10 +84,13 @@ try {
             while ($photo = $photoResult->fetch_assoc()) {
                 $bytes = (int) $photo['file_size_bytes'];
                 $compartments[(int) $photo['compartment_id']]['photos'][] = [
-                    'id' => (string) $photo['id'], 'name' => $photo['name'], 'uploadedBy' => $photo['uploaded_by_name'],
+                    'id' => (string) $photo['id'],
+                    'name' => $photo['name'],
+                    'uploadedBy' => $photo['uploaded_by_name'],
                     'category' => ucwords(str_replace('_', ' ', $photo['category'])),
                     'size' => $bytes >= 1048576 ? number_format($bytes / 1048576, 1) . ' MB' : max(1, (int) round($bytes / 1024)) . ' KB',
-                    'uploadedAt' => substr($photo['created_at'], 0, 10), 'path' => $photo['storage_path'],
+                    'uploadedAt' => substr($photo['created_at'], 0, 10),
+                    'path' => $photo['storage_path'],
                     'archived' => (bool) $photo['archived'],
                 ];
             }

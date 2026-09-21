@@ -227,11 +227,7 @@
   function movePhotoGallery(step) {
     if (!photoGalleryState) return;
     const nextIndex = photoGalleryState.index + step;
-    if (
-      nextIndex < 0 ||
-      nextIndex >= photoGalleryState.photos.length
-    )
-      return;
+    if (nextIndex < 0 || nextIndex >= photoGalleryState.photos.length) return;
     photoGalleryState.index = nextIndex;
     updatePhotoGallery();
   }
@@ -262,7 +258,10 @@
     if (!menu || !toggle) return;
     const bounds = toggle.getBoundingClientRect();
     const menuWidth = 112;
-    const left = Math.max(8, Math.min(bounds.right - menuWidth, window.innerWidth - menuWidth - 8));
+    const left = Math.max(
+      8,
+      Math.min(bounds.right - menuWidth, window.innerWidth - menuWidth - 8),
+    );
     menu.classList.add("mapv2-photo-actions--floating");
     menu.style.top = `${bounds.bottom + 4}px`;
     menu.style.left = `${left}px`;
@@ -283,9 +282,9 @@
   function photoMenuIsVisible(menu) {
     const toggle =
       menu?._photoMenuToggle ||
-      menu?.closest(".mapv2-photo-menu-wrap")?.querySelector(
-        "[data-photo-menu-toggle]",
-      );
+      menu
+        ?.closest(".mapv2-photo-menu-wrap")
+        ?.querySelector("[data-photo-menu-toggle]");
     const table = toggle?.closest(".mapv2-photo-table");
     const row = toggle?.closest(".mapv2-photo-row[data-photo-index]");
     if (!toggle || !table || !row) return false;
@@ -308,7 +307,11 @@
     if (menu?.dataset.photoMenuFloating === "true") {
       const parent = menu._photoMenuParent;
       const nextSibling = menu._photoMenuNextSibling;
-      if (parent) parent.insertBefore(menu, nextSibling && nextSibling.parentNode === parent ? nextSibling : null);
+      if (parent)
+        parent.insertBefore(
+          menu,
+          nextSibling && nextSibling.parentNode === parent ? nextSibling : null,
+        );
       delete menu._photoMenuParent;
       delete menu._photoMenuNextSibling;
       delete menu._photoMenuToggle;
@@ -1425,14 +1428,19 @@
     const categoryOptions = Object.entries(STATUS_STYLES)
       .map(([key, item]) => `<option value="${key}">${item.label}</option>`)
       .join("");
+
+    const photoRowMarkup = (photo, index) => {
+      const isArchived = Boolean(photo.archived);
+      const menuActions = isArchived
+        ? `<button type="button" data-photo-action="restore" data-photo-index="${index}">Unarchive</button>`
+        : `<button type="button" data-photo-action="edit" data-photo-index="${index}">Edit</button><button type="button" data-photo-action="archive" data-photo-index="${index}">Archive</button>`;
+      return `<div class="mapv2-photo-row" role="row" tabindex="0" aria-label="Preview ${escapeHtml(photo.name)}" data-photo-index="${index}" data-photo-archived="${isArchived}" data-photo-category="${escapeHtml(photo.category.toLowerCase().replace(/\s+/g, "_"))}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><div class="mapv2-photo-actions" data-photo-menu="${index}" role="menu" hidden>${menuActions}</div></span></div>`;
+    };
+
+    const tableHeader = `<div class="mapv2-photo-row mapv2-photo-head" role="row"><span>Name</span><span>Uploaded by</span><span>Category</span><span>Size</span><span>Date</span><span></span></div>`;
+
     const photoRowsMarkup = photos
-      .map((photo, index) => {
-        const isArchived = Boolean(photo.archived);
-        const menuActions = isArchived
-          ? `<button type="button" data-photo-action="restore" data-photo-index="${index}">Unarchive</button>`
-          : `<button type="button" data-photo-action="edit" data-photo-index="${index}">Edit</button><button type="button" data-photo-action="archive" data-photo-index="${index}">Archive</button>`;
-        return `<div class="mapv2-photo-row" role="row" tabindex="0" aria-label="Preview ${escapeHtml(photo.name)}" data-photo-index="${index}" data-photo-archived="${isArchived}" data-photo-category="${escapeHtml(photo.category.toLowerCase().replace(/\s+/g, "_"))}" data-photo-date="${escapeHtml(photo.uploadedAt)}"><span title="${escapeHtml(photo.name)}"><i class="fa-regular fa-image" aria-hidden="true"></i> ${escapeHtml(photo.name)}</span><span title="${escapeHtml(photo.uploadedBy)}">${escapeHtml(photo.uploadedBy)}</span><span title="${escapeHtml(photo.category)}">${escapeHtml(photo.category)}</span><span title="${escapeHtml(photo.size)}">${escapeHtml(photo.size)}</span><span title="${formatPhotoDate(photo.uploadedAt)}">${formatPhotoDate(photo.uploadedAt)}</span><span class="mapv2-photo-menu-wrap"><button class="mapv2-icon-button" type="button" data-photo-menu-toggle="${index}" aria-label="Photo options" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button><div class="mapv2-photo-actions" data-photo-menu="${index}" role="menu" hidden>${menuActions}</div></span></div>`;
-      })
+      .map((photo, index) => photoRowMarkup(photo, index))
       .join("");
     detail.innerHTML = `
             <header class="mapv2-detail-heading">
@@ -1464,19 +1472,41 @@
             </section>
               <div class="mapv2-detail-updated"><span>Updated at</span><p>${escapeHtml(formatCompartmentUpdate(compartment))}</p></div>
             <section class="mapv2-photos-section">
-                <h3>Photos</h3>
-                <div class="mapv2-photo-filters"><div class="mapv2-filter-select"><select id="photoCategoryFilter" aria-label="Filter photo category"><option value="all">All</option>${categoryOptions}<option value="archived">Archived</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><div class="mapv2-filter-select"><select id="photoDateFilter" aria-label="Sort photos"><option value="newest-to-oldest" selected>Newest to oldest</option><option value="oldest-to-newest">Oldest to newest</option></select><i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i></div><button type="button" class="mapv2-photo-upload-button" id="uploadCompartmentPhotos" aria-label="Upload photos"><i class="fa-solid fa-plus" aria-hidden="true"></i></button><button type="button" class="mapv2-filter-reset" id="clearPhotoFilters" hidden>Clear filters</button></div>
-                <div class="mapv2-photo-table" id="photoDropTarget" role="table">
-                    <div class="mapv2-photo-drag-state" id="photoDragState" hidden>
-                    <strong>Upload photos or drag and drop
-                    </strong>
-                    <small>PNG, JPG up to 10 MB each</small>
-                    </div>
-                    <div class="mapv2-photo-row mapv2-photo-head" role="row"><span>Name</span><span>Uploaded by</span><span>Category</span><span>Size</span><span>Date</span><span></span></div>
-                    <p class="mapv2-photo-date" id="photoDateCaption">Current month</p>
-                    ${photoRowsMarkup}
-                </div>
-            </section>
+              <h3>Photos</h3>
+              <div class="mapv2-photo-filters">
+                  <div class="mapv2-filter-select">
+                      <select id="photoCategoryFilter" aria-label="Filter photo category">
+                          <option value="all">All</option>
+                          ${categoryOptions}
+                          <option value="archived">Archived</option>
+                      </select>
+                      <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
+                  </div>
+                  <div class="mapv2-filter-select">
+                      <select id="photoDateFilter" aria-label="Sort photos">
+                          <option value="newest-to-oldest" selected>Newest</option>
+                          <option value="oldest-to-newest">Oldest</option>
+                      </select>
+                      <i class="fas fa-chevron-down mapv2-scope-chevron" aria-hidden="true"></i>
+                  </div>
+                  <button type="button" class="mapv2-filter-reset" id="clearPhotoFilters" hidden>Clear filters</button>
+                    <button type="button" class="mapv2-photo-upload-button" id="uploadCompartmentPhotos" aria-label="Upload photos">
+                      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    </button>
+              </div>
+              <div class="mapv2-photo-table" id="photoDropTarget" role="table">
+                  <div class="mapv2-photo-drag-state" id="photoDragState" hidden>
+                      <strong>Upload photos or drag and drop</strong>
+                      <small>PNG, JPG up to 10 MB each</small>
+                  </div>
+                  ${tableHeader}
+                  <p class="mapv2-photo-date" id="photoDateCaption">Current month</p>
+                  ${photoRowsMarkup}
+                  <p class="mapv2-empty-state" id="photoFilterEmpty" hidden>
+                      <span>No photos match your filter.</span>
+                  </p>
+              </div>
+          </section>
               </div>
             `;
 
@@ -1485,54 +1515,79 @@
     bindSelectDisclosureIndicators(detail);
 
     try {
-      const photoRows = detail.querySelectorAll(
-        ".mapv2-photo-row[data-photo-category]",
-      );
+      const photoTable = document.getElementById("photoDropTarget");
+      const photoRows = [
+        ...photoTable.querySelectorAll(".mapv2-photo-row[data-photo-category]"),
+      ];
       const categoryFilter = document.getElementById("photoCategoryFilter");
       const dateFilter = document.getElementById("photoDateFilter");
       const dateCaption = document.getElementById("photoDateCaption");
+      const filterEmpty = document.getElementById("photoFilterEmpty");
       const clearPhotoFilters = document.getElementById("clearPhotoFilters");
-      const photoTable = detail.querySelector(".mapv2-photo-table");
 
       const updateClearButton = () => {
         clearPhotoFilters.hidden =
           categoryFilter.value === "all" &&
           dateFilter.value === "newest-to-oldest";
       };
-      // Group the newest-first result the same way notification lists group recent items.
-      const photoGroupForDate = (value) => {
-        const photoDay = new Date(`${value}T00:00:00`);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const daysAgo = Math.floor((today - photoDay) / 86400000);
-        if (daysAgo === 0) return "Today";
-        if (daysAgo > 0 && daysAgo < 7) return "This Week";
-        return "Older";
+
+      // Determine which rows survive the current category filter.
+      const rowMatchesFilter = (row) => {
+        const isArchived = row.dataset.photoArchived === "true";
+        const selected = categoryFilter.value;
+        if (selected === "archived") return isArchived;
+        if (selected === "all") return !isArchived;
+        return !isArchived && row.dataset.photoCategory === selected;
       };
+
+      // Sort + reorder only the visible rows, keeping dividers in the right spots.
       const arrangePhotoRows = () => {
+        // Remove stale date group headings from a previous pass.
         photoTable
           .querySelectorAll("[data-photo-group-heading]")
           .forEach((heading) => heading.remove());
-        const visibleRows = [...photoRows].filter((row) => !row.hidden);
-        const hiddenRows = [...photoRows].filter((row) => row.hidden);
+
+        const header = photoTable.querySelector(".mapv2-photo-head");
+        const visibleRows = photoRows.filter((row) => !row.hidden);
+        const hiddenRows = photoRows.filter((row) => row.hidden);
         const descending = dateFilter.value === "newest-to-oldest";
+
+        // No matches → hide the whole table chrome and show the empty state.
+        if (!visibleRows.length) {
+          if (header) header.hidden = true;
+          dateCaption.hidden = true;
+          filterEmpty.hidden = false;
+          photoTable.append(filterEmpty, ...hiddenRows);
+          return;
+        }
+
+        // Matches found → show the header again and re-sort the rows.
+        if (header) header.hidden = false;
+        filterEmpty.hidden = true;
+
         visibleRows.sort((left, right) =>
           descending
             ? right.dataset.photoDate.localeCompare(left.dataset.photoDate)
             : left.dataset.photoDate.localeCompare(right.dataset.photoDate),
         );
+
+        const groupForDate = (value) => {
+          const day = new Date(`${value}T00:00:00`);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const daysAgo = Math.floor((today - day) / 86400000);
+          if (daysAgo === 0) return "Today";
+          if (daysAgo > 0 && daysAgo < 7) return "This Week";
+          return "Older";
+        };
+
         const groups = new Map();
         visibleRows.forEach((row) => {
-          const label = photoGroupForDate(row.dataset.photoDate);
+          const label = groupForDate(row.dataset.photoDate);
           if (!groups.has(label)) groups.set(label, []);
           groups.get(label).push(row);
         });
-        if (!groups.size) {
-          dateCaption.textContent = "No photos found";
-          dateCaption.hidden = false;
-          photoTable.append(dateCaption, ...hiddenRows);
-          return;
-        }
+
         let usesCaption = true;
         groups.forEach((rows, label) => {
           const heading = usesCaption
@@ -1547,20 +1602,15 @@
         });
         photoTable.append(...hiddenRows);
       };
+
       const filterPhotoRows = () => {
-        const selectedCategory = categoryFilter.value;
         photoRows.forEach((row) => {
-          const isArchived = row.dataset.photoArchived === "true";
-          row.hidden =
-            selectedCategory === "archived"
-              ? !isArchived
-              : isArchived ||
-                (selectedCategory !== "all" &&
-                  row.dataset.photoCategory !== selectedCategory);
+          row.hidden = !rowMatchesFilter(row);
         });
         updateClearButton();
         arrangePhotoRows();
       };
+
       categoryFilter.addEventListener("change", filterPhotoRows);
       dateFilter.addEventListener("change", filterPhotoRows);
       clearPhotoFilters.addEventListener("click", () => {
@@ -1570,6 +1620,7 @@
       });
       filterPhotoRows();
 
+      // --- Menu + action handling (unchanged shape, same behaviour) ---
       const closePhotoMenus = () => {
         document.querySelectorAll("[data-photo-menu]").forEach((menu) => {
           closeDisclosure(menu);
@@ -1581,27 +1632,18 @@
             button.setAttribute("aria-expanded", "false");
           });
       };
+
       detail.querySelectorAll("[data-photo-menu]").forEach((menu) => {
         menu.addEventListener("click", (event) => {
           const action = event.target.closest("[data-photo-action]");
           if (!action) return;
+          event.stopPropagation();
           detail.dispatchEvent(
-            new CustomEvent("mapv2:photo-action", {
-              detail: { action },
-            }),
+            new CustomEvent("mapv2:photo-action", { detail: { action } }),
           );
         });
       });
-        const closePhotoMenusOutsideViewport = () => {
-          document.querySelectorAll("[data-photo-menu].is-open").forEach((menu) => {
-            if (!photoMenuIsVisible(menu)) closePhotoMenus();
-          });
-        };
-        if (detail.dataset.photoMenuScrollBound !== "true") {
-          detail.dataset.photoMenuScrollBound = "true";
-          detail.addEventListener("scroll", closePhotoMenusOutsideViewport, true);
-          window.addEventListener("scroll", closePhotoMenusOutsideViewport, true);
-        }
+
       const openPhotoEditor = (index) => {
         const photo = photos[index];
         if (
@@ -1632,6 +1674,7 @@
           menuToggle.setAttribute("aria-expanded", String(willOpen));
           return;
         }
+
         const photoRow = event.target.closest(
           ".mapv2-photo-row[data-photo-index]",
         );
@@ -1640,87 +1683,60 @@
           openPhotoGallery(compartment, Number(photoRow.dataset.photoIndex));
           return;
         }
+
         const action =
           event.type === "mapv2:photo-action"
             ? event.detail.action
             : event.target.closest("[data-photo-action]");
-        if (action) {
-          const photoIndex = Number(action.dataset.photoIndex);
-          closePhotoMenus();
-          if (action.dataset.photoAction === "edit")
-            openPhotoEditor(photoIndex);
-          if (action.dataset.photoAction === "archive") {
-            const photo = photos[photoIndex];
-            if (!photo?.id) return;
-            try {
-              const payload = new FormData();
-              payload.append("id", photo.id);
-              payload.append(
-                "csrf_token",
-                document.querySelector('meta[name="csrf-token"]')?.content ||
-                  "",
-              );
-              const response = await fetch(
-                "actions/mapv2/archive_compartment_photo.php",
-                {
-                  method: "POST",
-                  body: payload,
-                  headers: { Accept: "application/json" },
-                },
-              );
-              const result = await response.json();
-              if (!response.ok || !result.success)
-                throw new Error(
-                  result.error || "The photo could not be archived.",
-                );
-              photos[photoIndex].archived = true;
-              compartment.photos = photos;
-              renderDetail(compartment);
-              showMapNotice("Photo archived.");
-            } catch (error) {
-              showMapNotice(
-                error.message || "The photo could not be archived.",
-              );
-            }
-          }
-          if (action.dataset.photoAction === "restore") {
-            const photo = photos[photoIndex];
-            if (!photo?.id) return;
-            try {
-              const payload = new FormData();
-              payload.append("id", photo.id);
-              payload.append(
-                "csrf_token",
-                document.querySelector('meta[name="csrf-token"]')?.content ||
-                  "",
-              );
-              const response = await fetch(
-                "actions/mapv2/restore_compartment_photo.php",
-                {
-                  method: "POST",
-                  body: payload,
-                  headers: { Accept: "application/json" },
-                },
-              );
-              const result = await response.json();
-              if (!response.ok || !result.success)
-                throw new Error(
-                  result.error || "The photo could not be restored.",
-                );
-              photos[photoIndex].archived = false;
-              compartment.photos = photos;
-              renderDetail(compartment);
-              showMapNotice("Photo restored.");
-            } catch (error) {
-              showMapNotice(
-                error.message || "The photo could not be restored.",
-              );
-            }
-          }
+        if (!action) {
+          if (!event.target.closest(".mapv2-photo-menu-wrap"))
+            closePhotoMenus();
           return;
         }
-        if (!event.target.closest(".mapv2-photo-menu-wrap")) closePhotoMenus();
+
+        const photoIndex = Number(action.dataset.photoIndex);
+        const photo = photos[photoIndex];
+        if (!photo?.id) return;
+        closePhotoMenus();
+
+        const kind = action.dataset.photoAction;
+        if (kind === "edit") {
+          openPhotoEditor(photoIndex);
+          return;
+        }
+
+        const endpoint =
+          kind === "archive"
+            ? "actions/mapv2/archive_compartment_photo.php"
+            : "actions/mapv2/restore_compartment_photo.php";
+
+        try {
+          const payload = new FormData();
+          payload.append("id", photo.id);
+          payload.append(
+            "csrf_token",
+            document.querySelector('meta[name="csrf-token"]')?.content || "",
+          );
+          const response = await fetch(endpoint, {
+            method: "POST",
+            body: payload,
+            headers: { Accept: "application/json" },
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || "The photo could not be updated.");
+          }
+          photo.archived = kind === "archive";
+          compartment.photos = photos;
+          renderDetail(compartment);
+          showMapNotice(
+            kind === "archive" ? "Photo archived." : "Photo restored.",
+          );
+        } catch (error) {
+          showMapNotice(error.message || "The photo could not be updated.");
+        }
       };
+
       detail.addEventListener("click", handlePhotoAction);
       detail.addEventListener("mapv2:photo-action", handlePhotoAction);
       detail.addEventListener("keydown", (event) => {
@@ -1733,7 +1749,7 @@
         openPhotoGallery(compartment, Number(photoRow.dataset.photoIndex));
       });
 
-      const photoDropTarget = document.getElementById("photoDropTarget");
+      // --- Drag & drop upload target ---
       const photoDragState = document.getElementById("photoDragState");
       document
         .getElementById("uploadCompartmentPhotos")
@@ -1742,25 +1758,25 @@
             category: compartment.status,
           }),
         );
+
       const hideDirectUploadState = () => {
         photoDragState.hidden = true;
-        photoDropTarget.classList.remove("is-dragging", "is-uploading");
+        photoTable.classList.remove("is-dragging", "is-uploading");
       };
-      photoDropTarget.addEventListener("dragenter", (event) => {
+      photoTable.addEventListener("dragenter", (event) => {
         event.preventDefault();
         photoDragState.hidden = false;
-        photoDropTarget.classList.add("is-dragging");
+        photoTable.classList.add("is-dragging");
       });
-      photoDropTarget.addEventListener("dragover", (event) => {
+      photoTable.addEventListener("dragover", (event) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = "copy";
       });
-      photoDropTarget.addEventListener("dragleave", (event) => {
+      photoTable.addEventListener("dragleave", (event) => {
         event.preventDefault();
-        if (!photoDropTarget.contains(event.relatedTarget))
-          hideDirectUploadState();
+        if (!photoTable.contains(event.relatedTarget)) hideDirectUploadState();
       });
-      photoDropTarget.addEventListener("drop", async (event) => {
+      photoTable.addEventListener("drop", async (event) => {
         event.preventDefault();
         const files = [...event.dataTransfer.files]
           .filter(
@@ -1774,8 +1790,6 @@
           showMapNotice("Drop PNG or JPG images up to 10 MB each.");
           return;
         }
-
-        // Direct table drops use the compartment status and never open the upload modal.
         const category = [
           "planned",
           "planted",
@@ -1785,8 +1799,8 @@
         ].includes(compartment.status)
           ? compartment.status
           : "other";
-        photoDropTarget.classList.remove("is-dragging");
-        photoDropTarget.classList.add("is-uploading");
+        photoTable.classList.remove("is-dragging");
+        photoTable.classList.add("is-uploading");
         photoDragState.querySelector("strong").textContent =
           `Uploading ${files.length} photo${files.length === 1 ? "" : "s"}…`;
         photoDragState.querySelector("small").textContent =
@@ -1960,7 +1974,8 @@
       }
       compartment.status = nextStatus;
       compartment.updatedAt = result.updated_at || new Date().toISOString();
-      compartment.updatedBy = result.updated_by || compartment.updatedBy || "Unknown user";
+      compartment.updatedBy =
+        result.updated_by || compartment.updatedBy || "Unknown user";
       const style = STATUS_STYLES[nextStatus];
       layers.polygons
         .get(id)

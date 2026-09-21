@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -17,13 +18,15 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_a
     exit;
 }
 
-function fail(string $message, int $status = 422): void {
+function fail(string $message, int $status = 422): void
+{
     http_response_code($status);
     echo json_encode(['success' => false, 'error' => $message]);
     exit;
 }
 
-function polygonAreaSquareMetres(array $ring): float {
+function polygonAreaSquareMetres(array $ring): float
+{
     $latitude = array_sum(array_column($ring, 1)) / count($ring);
     $longitudeOrigin = $ring[0][0];
     $latitudeOrigin = $ring[0][1];
