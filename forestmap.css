@@ -272,6 +272,8 @@
   color: var(--map-ink);
   text-align: left;
   cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
 }
 
 .mapv2-popover button:hover {
@@ -604,6 +606,161 @@
   transform: translateY(0);
 }
 
+/* Report cards (right panel) */
+.mapv2-report-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.mapv2-report-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 11px;
+  align-items: stretch;
+  padding: 14px 11px;
+  border: 1px solid #f0d0d0;
+  border-radius: 9px;
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.mapv2-report-card:hover,
+.mapv2-report-card:focus-visible {
+  border-color: #e57373;
+}
+
+.mapv2-report-card.is-active {
+  border-color: #e53935;
+  background: #fff5f5;
+}
+
+.mapv2-report-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  background: #ffebee;
+  color: #e53935;
+  font-size: 1rem;
+}
+
+.mapv2-report-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mapv2-report-main h3 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapv2-report-main p {
+  margin: 4px 0;
+  color: #777d79;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.mapv2-report-main small {
+  margin-top: auto;
+  color: #7e8580;
+  font-size: 0.8rem;
+}
+
+.mapv2-report-actions {
+  display: flex;
+  min-height: 72px;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.mapv2-report-status {
+  order: 2;
+  padding: 4px 9px;
+  border-radius: 99px;
+  background: var(--status-fill);
+  color: var(--status-color);
+  font-size: 0.61rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mapv2-report-actions .mapv2-card-menu-wrap {
+  order: 1;
+}
+
+/* Map markers for reports */
+.mapv2-report-marker-icon {
+  display: grid;
+  place-items: center;
+}
+
+.mapv2-report-marker {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--report-color);
+  color: #fff;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Report photo rows reuse the compartment table look,
+   but only need two columns (name + preview icon). */
+.mapv2-photo-row.report-photo {
+  grid-template-columns: minmax(0, 1fr) 24px;
+  min-width: 0;
+}
+
+.mapv2-photo-row.report-photo .mapv2-report-photo-preview-icon {
+  display: grid;
+  place-items: center;
+  color: #43834b;
+  font-size: 0.75rem;
+}
+
+/* Description block inside report detail */
+.mapv2-report-description-section {
+  margin-top: 22px;
+}
+
+.mapv2-report-description-section h3 {
+  margin: 0 0 10px;
+  color: #5c615e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.mapv2-report-description {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #bfc5c0;
+  border-radius: 6px;
+  background: rgba(234, 234, 234, 0.35);
+  color: #4b524c;
+  font-size: 0.83rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .mapv2-compartments {
   display: flex;
   flex-direction: column;
@@ -632,11 +789,22 @@
   flex-direction: column;
   animation: mapv2-detail-slide-in 240ms ease-out both;
 }
+#reportDetailView:not([hidden]):not(.is-leaving) {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  animation: mapv2-detail-slide-in 240ms ease-out both;
+}
 #compartmentDetailView.is-leaving {
   animation: mapv2-detail-slide-out 240ms ease-in both;
 }
+#reportDetailView.is-leaving {
+  animation: mapv2-detail-slide-out 240ms ease-in both;
+}
 #compartmentListView[hidden],
-#compartmentDetailView[hidden] {
+#compartmentDetailView[hidden],
+#reportDetailView[hidden] {
   display: none !important;
 }
 
@@ -668,7 +836,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   #compartmentDetailView:not([hidden]),
-  #compartmentDetailView.is-leaving {
+  #compartmentDetailView.is-leaving,
+  #reportDetailView:not([hidden]),
+  #reportDetailView.is-leaving {
     animation: none;
   }
 }
@@ -1370,6 +1540,7 @@
   background: #fff;
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
 }
+
 .mapv2-photo-gallery__header {
   display: flex;
   align-items: center;
@@ -1377,6 +1548,7 @@
   padding: 12px 16px;
   border-bottom: 1px solid #e1e6e1;
 }
+
 .mapv2-photo-gallery__header p {
   min-width: 0;
   margin: 0;
@@ -1387,12 +1559,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .mapv2-photo-gallery__header span {
   margin-left: auto;
   color: #737775;
   font-size: 0.8rem;
   font-weight: 500;
 }
+
 .mapv2-photo-gallery__header button {
   min-height: 32px;
   padding: 0 10px;
@@ -1401,8 +1575,11 @@
   background: #fff;
   color: #414442;
   cursor: pointer;
-  font: 600 0.78rem "Inter", sans-serif;
+  font:
+    600 0.78rem "Inter",
+    sans-serif;
 }
+
 .mapv2-photo-gallery__content {
   position: relative;
   display: grid;
@@ -1411,6 +1588,7 @@
   padding: 24px 64px;
   background: #f5f7f5;
 }
+
 .mapv2-photo-gallery__content img {
   display: block;
   width: auto;
@@ -1420,6 +1598,7 @@
   object-fit: contain;
   border-radius: 12px;
 }
+
 .mapv2-photo-gallery__nav {
   position: absolute;
   top: 50%;
@@ -1575,15 +1754,18 @@
     500 0.82rem "Inter",
     sans-serif;
 }
+
 .mapv2-drawing-toolbar[hidden] {
   display: none !important;
 }
+
 .mapv2-drawing-corner-icon {
   display: grid;
   width: 24px;
   height: 24px;
   place-items: center;
 }
+
 .mapv2-drawing-corner-icon span {
   display: grid;
   width: 24px;

@@ -15,7 +15,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'super_a
 try {
     $compartments = [];
     $result = $conn->query(
-        'SELECT rc.id, rc.name, rc.status, rc.date_started, rc.updated_at, rc.gross_area_ha,
+        'SELECT rc.id, rc.name, rc.status, rc.date_started, rc.updated_at, rc.gross_area_ha, rc.archived,
                 COALESCE(NULLIF(TRIM(CONCAT_WS(" ", editor.fname, editor.lname)), ""), "Unknown user") AS updated_by_name,
                 ST_AsGeoJSON(rc.boundary) AS boundary_geojson,
                 b.id AS barangay_id, b.name AS barangay_name,
@@ -23,7 +23,6 @@ try {
          FROM reforestation_compartments rc
          LEFT JOIN barangays b ON b.id = rc.barangay_id
          LEFT JOIN users_tbl editor ON editor.id = COALESCE(rc.updated_by, rc.created_by)
-         WHERE rc.archived = 0
          ORDER BY rc.created_at DESC, rc.id DESC'
     );
 
@@ -40,6 +39,7 @@ try {
             'started_at' => $row['date_started'],
             'updated_at' => $row['updated_at'],
             'updated_by' => $row['updated_by_name'],
+            'archived' => (int) $row['archived'],
             'hectares' => (float) ($row['gross_area_ha'] ?? 0),
             'boundary' => array_map(static fn(array $point): array => [(float) $point[1], (float) $point[0]], $coordinates),
             'barangay' => $row['barangay_id'] ? [

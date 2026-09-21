@@ -21,6 +21,7 @@
 
   const state = {
     scope: "all",
+    archivedOnly: false,
     status: "all",
     year: "all",
     search: "",
@@ -476,12 +477,13 @@
   // Apply the current search, status, year, and scope filters.
   function visibleCompartments() {
     const search = state.search.trim().toLowerCase();
-    if (state.scope === "reports" || state.scope === "archived") return [];
+    if (state.scope === "reports") return [];
 
     return compartments.filter((compartment) => {
       const haystack =
         `${compartment.name} ${locationReference(compartment)}`.toLowerCase();
       return (
+        Boolean(compartment.archived) === state.archivedOnly &&
         (state.status === "all" || compartment.status === state.status) &&
         (state.year === "all" || compartment.year === state.year) &&
         (!search || haystack.includes(search))
@@ -727,9 +729,10 @@
 
   function addCompartmentLayers(compartment) {
     const style = STATUS_STYLES[compartment.status] || STATUS_STYLES.planned;
+    const isArchived = Boolean(compartment.archived);
     const polygon = L.polygon(compartment.boundary, {
-      color: style.color,
-      fillColor: style.fill,
+      color: isArchived ? "#757575" : style.color,
+      fillColor: isArchived ? "#e0e0e0" : style.fill,
       fillOpacity: 0.45,
       weight: 2,
       dashArray: "8 6",
@@ -1209,6 +1212,7 @@
           updatedBy: record.updated_by || "Unknown user",
           year: String(record.started_at || "").slice(0, 4),
           status: STATUS_STYLES[record.status] ? record.status : "planned",
+              archived: Boolean(record.archived),
           hectares: Number(record.hectares) || 0,
           boundary: record.boundary,
           barangay: record.barangay || null,
@@ -1288,6 +1292,24 @@
     document.getElementById("forestPlotCount").textContent = visible.length;
   }
 
+  function updateArchiveFilterLabel() {
+    const option = document.querySelector("#mapFilterMenu [data-map-scope]");
+    if (!option) return;
+    const archived = state.archivedOnly;
+    const compartmentTitle = document.getElementById("compartmentPanelTitle");
+    const reportTitle = document.getElementById("reportPanelTitle");
+    if (compartmentTitle) {
+      compartmentTitle.textContent = archived
+        ? "Archived Compartments"
+        : "Compartments";
+    }
+    if (reportTitle) {
+      reportTitle.textContent = archived ? "Archived Reports" : "Reported Areas";
+    }
+    option.dataset.mapScope = archived ? "active" : "archived";
+    option.textContent = archived ? "Active" : "Archived";
+  }
+
   // Render the add card, compartment cards, and clean empty states on the right.
   function renderList() {
     const list = document.getElementById("compartmentList");
@@ -1298,12 +1320,9 @@
         '<p class="mapv2-empty-state">No reported issues yet.</p>';
       return;
     }
-    if (state.scope === "archived") {
-      list.innerHTML =
-        '<p class="mapv2-empty-state">Archived compartments are not loaded in this view.</p>';
-      return;
-    }
-    const addCompartmentCard = `
+    const addCompartmentCard = state.archivedOnly
+      ? ""
+      : `
             <button type="button" class="mapv2-add-compartment-card" id="addCompartmentCard" aria-label="Add compartment">
                 <i class="fa-solid fa-plus" aria-hidden="true"></i>
             </button>`;
@@ -1330,8 +1349,8 @@
                         <div class="mapv2-card-menu-wrap">
                           <button class="mapv2-icon-button mapv2-card-menu" type="button" data-compartment-menu-toggle="${compartment.id}" aria-label="Actions for ${escapeHtml(compartment.name)}" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
                           <div class="mapv2-card-menu-options" data-compartment-menu="${compartment.id}" hidden>
-                            <button type="button" data-compartment-edit="${compartment.id}">Edit</button>
-                            <button type="button" data-compartment-archive="${compartment.id}">Archive</button>
+                            ${state.archivedOnly ? "" : `<button type="button" data-compartment-edit="${compartment.id}">Edit</button>`}
+                            <button type="button" data-compartment-archive="${compartment.id}" data-compartment-restore="${state.archivedOnly}">${state.archivedOnly ? "Restore" : "Archive"}</button>
                           </div>
                         </div>
                         <span class="mapv2-status-badge" style="--badge-color: ${status.color}; --badge-fill: ${status.fill}">${status.label}</span>
@@ -1394,15 +1413,15 @@
         event.preventDefault();
         event.stopPropagation();
         closeCardMenus();
-        archiveCompartment(button.dataset.compartmentArchive);
+        const isArchived = button.dataset.compartmentRestore === "true";
+        updateCompartmentArchive(button.dataset.compartmentArchive, isArchived);
       });
     });
   }
 
-  // Archive from the card menu while preserving its database record for later restore work.
-  async function archiveCompartment(id) {
+  async function updateCompartmentArchive(id, restore) {
     const compartment = getCompartment(id);
-    if (!compartment || !window.confirm(`Archive \"${compartment.name}\"?`))
+    if (!compartment || !window.confirm(`${restore ? "Restore" : "Archive"} \"${compartment.name}\"?`))
       return;
     const payload = new FormData();
     payload.append("id", id);
@@ -1411,23 +1430,27 @@
       ?.getAttribute("content");
     if (csrf) payload.append("csrf_token", csrf);
     try {
-      const response = await fetch("actions/mapv2/archive_compartment.php", {
+      const response = await fetch(
+        restore
+          ? "actions/mapv2/restore_compartment.php"
+          : "actions/mapv2/archive_compartment.php",
+        {
         method: "POST",
         body: payload,
         headers: { Accept: "application/json" },
-      });
+        },
+      );
       const result = await response.json();
       if (!response.ok || !result.success)
         throw new Error(
-          result.error || "The compartment could not be archived.",
+          result.error || `The compartment could not be ${restore ? "restored" : "archived"}.`,
         );
-      removeCompartmentLayers(id);
-      compartments.splice(compartments.indexOf(compartment), 1);
+      compartment.archived = restore ? false : true;
       if (state.selectedId === id) state.selectedId = null;
       refreshUI();
-      showMapNotice("Compartment archived.");
+      showMapNotice(`Compartment ${restore ? "restored" : "archived"}.`);
     } catch (error) {
-      showMapNotice(error.message || "The compartment could not be archived.");
+      showMapNotice(error.message || `The compartment could not be ${restore ? "restored" : "archived"}.`);
     }
   }
 
@@ -2072,28 +2095,116 @@
     }, 180);
   }
 
+  function applyScope(scope) {
+    state.scope = scope;
+    const isReports = scope === "reports";
+
+    // Swap right panels.
+    document
+      .getElementById("compartmentPanel")
+      ?.toggleAttribute("hidden", isReports);
+    document
+      .getElementById("reportPanel")
+      ?.toggleAttribute("hidden", !isReports);
+
+    // Swap sidebar sections.
+    document
+      .getElementById("metricsCompartments")
+      ?.toggleAttribute("hidden", isReports);
+    document
+      .getElementById("metricsReports")
+      ?.toggleAttribute("hidden", !isReports);
+    document
+      .getElementById("layersSection")
+      ?.toggleAttribute("hidden", isReports);
+    document
+      .getElementById("legendCompartments")
+      ?.toggleAttribute("hidden", isReports);
+    document
+      .getElementById("legendReports")
+      ?.toggleAttribute("hidden", !isReports);
+
+    // Swap filter labels and status options.
+    const label = document.getElementById("filterYearLabel");
+    if (label) label.textContent = isReports ? "Date Reported" : "Year Planted";
+
+    const statusFilter = document.getElementById("statusFilter");
+    if (statusFilter) {
+      statusFilter.innerHTML = isReports
+        ? `
+        <option value="all">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="reviewed">Reviewed</option>
+        <option value="resolved">Resolved</option>
+        <option value="dismissed">Dismissed</option>
+      `
+        : `
+        <option value="all">All statuses</option>
+        <option value="planned">Planned</option>
+        <option value="planted">Planted</option>
+        <option value="monitored">Monitored</option>
+        <option value="low_survival">Low survival</option>
+        <option value="completed">Completed</option>
+      `;
+    }
+
+    // Clear the search field so a stale query never carries over.
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) searchInput.value = "";
+
+    if (isReports) {
+      state.archivedOnly = false;
+      updateArchiveFilterLabel();
+      state.search = "";
+      window.ReportMap?.setArchived(false);
+      window.ReportMap?.setStatus("all");
+      window.ReportMap?.setSearch("");
+      // RefreshMapLayers hides compartment layers because visibleCompartments
+      // returns [] when scope === "reports".
+      refreshMapLayers();
+      window.ReportMap?.setVisible(true);
+    } else {
+      state.archivedOnly = false;
+      updateArchiveFilterLabel();
+      state.status = "all";
+      window.ReportMap?.setArchived(false);
+      refreshMapLayers();
+      window.ReportMap?.setVisible(false);
+      showList();
+      refreshUI();
+    }
+  }
+
   // Connect filters, layer switches, menus, and base map buttons to the map.
   function bindControls() {
     bindSelectDisclosureIndicators();
     document
       .getElementById("searchInput")
       .addEventListener("input", (event) => {
-        state.search = event.target.value;
-        refreshUI();
+        const value = event.target.value;
+        if (state.scope === "reports") {
+          window.ReportMap?.setSearch(value);
+        } else {
+          state.search = value;
+          refreshUI();
+        }
       });
     document
       .getElementById("mapScopeSelect")
       .addEventListener("change", (event) => {
-        state.scope = event.target.value;
-        showList();
-        refreshUI();
+        applyScope(event.target.value);
       });
     document
       .getElementById("statusFilter")
       .addEventListener("change", (event) => {
-        state.status = event.target.value;
-        showList();
-        refreshUI();
+        const value = event.target.value;
+        if (state.scope === "reports") {
+          window.ReportMap?.setStatus(value);
+        } else {
+          state.status = value;
+          showList();
+          refreshUI();
+        }
       });
     document
       .getElementById("yearFilter")
@@ -2133,11 +2244,14 @@
     menu.addEventListener("click", (event) => {
       const option = event.target.closest("[data-map-scope]");
       if (!option) return;
-      state.scope = option.dataset.mapScope;
-      document.getElementById("mapScopeSelect").value = "all";
+      state.archivedOnly = option.dataset.mapScope === "archived";
+      state.scope = document.getElementById("mapScopeSelect").value;
+      updateArchiveFilterLabel();
+      window.ReportMap?.setArchived(state.archivedOnly);
       closeDisclosure(menu);
       menuButton.setAttribute("aria-expanded", "false");
       showList();
+      refreshMapLayers();
       refreshUI();
     });
     document.addEventListener("click", (event) => {
@@ -2204,6 +2318,9 @@
   // Start the map only after its page elements are available.
   document.addEventListener("DOMContentLoaded", () => {
     initializeMap();
+
+    window.ReportMap?.init(map);
+
     let resizeTimer;
     window.addEventListener("resize", () => {
       window.clearTimeout(resizeTimer);
@@ -2217,6 +2334,11 @@
     bindPhotoGalleryControls();
     bindCompartmentCreation();
     refreshUI();
+
+    const scopeSelect = document.getElementById("mapScopeSelect");
+    const initialScope = scopeSelect ? scopeSelect.value : "forests";
+    applyScope(initialScope);
+    
     loadBarangayBoundaries();
     loadTreeSpeciesSpacing();
     loadSavedCompartments();

@@ -27,18 +27,15 @@ include 'header.php';
 
     <div class="mapv2-layout">
 
-        <!-- Left panel: find compartments and change what the map shows. -->
-
         <aside class="mapv2-sidebar" aria-label="Map filters">
             <div class="mapv2-search-field">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                <input type="search" id="searchInput" placeholder="Search locations..." aria-label="Search compartments">
+                <input type="search" id="searchInput" placeholder="Search locations..." aria-label="Search">
             </div>
 
             <div class="mapv2-scope-row">
                 <div class="mapv2-scope-select">
                     <select id="mapScopeSelect" aria-label="Map content">
-                        <option value="all">All</option>
                         <option value="forests">Reforestation</option>
                         <option value="reports">Reported</option>
                     </select>
@@ -71,7 +68,7 @@ include 'header.php';
                         </div>
                     </label>
                     <label>
-                        <span>Year planted</span>
+                        <span id="filterYearLabel">Year Planted</span>
                         <div class="mapv2-filter-select">
                             <select id="yearFilter">
                                 <option value="all">All years</option>
@@ -92,12 +89,19 @@ include 'header.php';
                     </div>
                 </section>
 
-                <div class="mapv2-metrics" aria-label="Map totals">
+                <!-- Compartment metrics (visible in Reforestation scope) -->
+                <div class="mapv2-metrics" id="metricsCompartments" aria-label="Map totals">
                     <div><span>Total Target Area</span><strong id="netArea">0</strong><small>ha</small></div>
                     <div><span>Forest plots</span><strong id="forestPlotCount">0</strong></div>
                 </div>
 
-                <section class="mapv2-control-section mapv2-layers">
+                <!-- Report metrics (visible in Reported scope) -->
+                <div class="mapv2-metrics" id="metricsReports" aria-label="Report totals" hidden>
+                    <div><span>Active Reports</span><strong id="activeReports">0</strong></div>
+                    <div><span>Total Reports</span><strong id="totalReports">0</strong></div>
+                </div>
+
+                <section class="mapv2-control-section mapv2-layers" id="layersSection">
                     <h2>Layers</h2>
                     <label class="mapv2-layer-toggle">
                         <span>Tree species</span>
@@ -123,7 +127,8 @@ include 'header.php';
                     <p class="mapv2-helper-text">A visual greenness proxy from satellite imagery, not measured NDVI.</p>
                 </section>
 
-                <section class="mapv2-control-section mapv2-legend">
+                <!-- Compartment legend -->
+                <section class="mapv2-control-section mapv2-legend" id="legendCompartments">
                     <h2>Legend</h2>
                     <span><i class="status-dot status-planned"></i> Planned</span>
                     <span><i class="status-dot status-planted"></i> Planted</span>
@@ -131,35 +136,53 @@ include 'header.php';
                     <span><i class="status-dot status-low-survival"></i> Low survival</span>
                     <span><i class="status-dot status-completed"></i> Completed</span>
                 </section>
+
+                <!-- Report legend -->
+                <section class="mapv2-control-section mapv2-legend" id="legendReports" hidden>
+                    <h2>Legend</h2>
+                    <span><i class="status-dot" style="background:#e53935;"></i> Pending</span>
+                    <span><i class="status-dot" style="background:#fb8c00;"></i> Reviewed</span>
+                    <span><i class="status-dot" style="background:#43a047;"></i> Resolved</span>
+                    <span><i class="status-dot" style="background:#757575;"></i> Dismissed</span>
+                </section>
             </div>
         </aside>
 
-        <!-- Middle panel: Leaflet renders boundaries, seedlings, and map tools here. -->
         <section class="mapv2-map-panel" aria-label="Forest map">
             <div id="forestMap"></div>
-            <!-- Short map feedback appears here, then dismisses itself. -->
             <div class="mapv2-toast" id="mapToast" role="status" aria-live="polite" hidden></div>
         </section>
 
-
-        <!-- Right panel: start a new compartment or inspect the selected one. -->
+        <!-- Compartment panel -->
         <aside class="mapv2-compartments" id="compartmentPanel" aria-live="polite">
             <section id="compartmentListView">
                 <header class="mapv2-panel-heading">
-                    <h2>Compartments</h2>
+                    <h2 id="compartmentPanelTitle">Compartments</h2>
                     <p>Select a compartment on the map or create a compartment by clicking the plus card.</p>
                 </header>
                 <div class="mapv2-compartments-scroll">
                     <div id="compartmentList" class="mapv2-compartment-list"></div>
                 </div>
             </section>
-
             <section id="compartmentDetailView" hidden></section>
+        </aside>
+
+        <!-- Report panel -->
+        <aside class="mapv2-compartments" id="reportPanel" aria-live="polite" hidden>
+            <section id="reportListView">
+                <header class="mapv2-panel-heading">
+                    <h2 id="reportPanelTitle">Reported Areas</h2>
+                    <p>Select a report from the map or from the list to see its details.</p>
+                </header>
+                <div class="mapv2-compartments-scroll">
+                    <div id="reportList" class="mapv2-report-list"></div>
+                </div>
+            </section>
+            <section id="reportDetailView" hidden></section>
         </aside>
     </div>
 </main>
 
-<!-- The compartment photo viewer stays in the map page and supports gallery navigation. -->
 <section class="mapv2-photo-gallery" id="mapv2PhotoGallery" role="dialog" aria-modal="true" aria-labelledby="mapv2GalleryName" aria-hidden="true" hidden>
     <div class="mapv2-photo-gallery__dialog">
         <header class="mapv2-photo-gallery__header">
@@ -176,6 +199,7 @@ include 'header.php';
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="forestmap.js?v=mapv2-photo-gallery-25"></script>
+<script src="reports-map.js?v=1"></script>
+<script src="forestmap.js?v=mapv2-photo-gallery-26"></script>
 
 <?php include 'footer.php'; ?>
