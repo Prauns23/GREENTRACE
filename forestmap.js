@@ -329,12 +329,21 @@
     const gallery = document.getElementById("mapv2PhotoGallery");
     const photo = compartment.photos?.[photoIndex];
     if (!gallery || !photo?.path) {
-      showMapNotice("This photo preview is unavailable.");
+      showMapNotice("This pohot preview is unavailable.");
       return;
     }
-    const galleryPhotos = compartment.photos.filter(
-      (item) => !item.archived && item.path,
-    );
+
+    // Mirror whatever the category dropdown is currently showing.
+    const categoryFilter = document.getElementById("photoCategoryFilter");
+    const currentFilter = categoryFilter ? categoryFilter.value : "all";
+    const galleryPhotos = compartment.photos.filter((item) => {
+      if (!item.path) return false;
+      const normalizedCategory = item.category.toLowerCase().replace(/\s+/g, "_");
+      if (currentFilter === "archived") return Boolean(item.archived);
+      if (currentFilter == "all") return !item.archived;
+      return !item.archived && normalizedCategory === currentFilter;
+    });
+    
     const index = galleryPhotos.findIndex(
       (item) => String(item.id) === String(photo.id),
     );
