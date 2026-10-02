@@ -90,6 +90,13 @@ function treeGrowthWateringCount(mysqli $conn, int $progressId): int
     return $count;
 }
 
+function treeGrowthWateringDay(DateTimeImmutable $now): DateTimeImmutable
+{
+    $manilaNow = $now->setTimezone(new DateTimeZone('Asia/Manila'));
+    $wateringDay = $manilaNow->setTime(0, 0);
+    return (int) $manilaNow->format('G') < 5 ? $wateringDay->modify('-1 day') : $wateringDay;
+}
+
 function treeGrowthMaturedCount(mysqli $conn, int $userId): int
 {
     $stmt = $conn->prepare(
@@ -106,7 +113,10 @@ function treeGrowthMaturedCount(mysqli $conn, int $userId): int
 
 function treeGrowthState(mysqli $conn, ?int $userId): array
 {
-    $today = new DateTimeImmutable('today', new DateTimeZone('Asia/Manila'));
+    $timezone = new DateTimeZone('Asia/Manila');
+    $now = new DateTimeImmutable('now', $timezone);
+    $today = $now->setTime(0, 0);
+    $wateringDay = treeGrowthWateringDay($now);
     $progress = $userId ? treeGrowthFetchProgress($conn, $userId, true) : null;
 
     if ($progress) {
@@ -124,7 +134,7 @@ function treeGrowthState(mysqli $conn, ?int $userId): array
     $hasTree = isset($progress['progress_id']);
     $wateringCount = $hasTree ? treeGrowthWateringCount($conn, (int) $progress['progress_id']) : 0;
     $status = $hasTree ? (string) $progress['status'] : 'available';
-    $wateredToday = $hasTree && ($progress['last_watered_on'] ?? null) === $today->format('Y-m-d');
+    $wateredToday = $hasTree && ($progress['last_watered_on'] ?? null) === $wateringDay->format('Y-m-d');
 
     if ($status === 'matured') {
         $day = $duration;
@@ -134,14 +144,16 @@ function treeGrowthState(mysqli $conn, ?int $userId): array
 
     $isAuthenticated = $userId !== null;
     $canWater = $isAuthenticated && $status !== 'matured' && !$wateredToday;
-    $nextWaterAt = $wateredToday ? $today->modify('+1 day')->format(DateTimeInterface::ATOM) : null;
+    $nextWaterAt = $wateredToday
+        ? $wateringDay->modify('+1 day')->setTime(5, 0)->format(DateTimeInterface::ATOM)
+        : null;
 
     if (!$isAuthenticated) {
         $message = 'Sign in to begin tending a tree.';
     } elseif ($status === 'matured') {
         $message = 'This tree is fully mature. Choose a new tree to continue.';
     } elseif ($wateredToday) {
-        $message = 'Tree already watered today. Come back tomorrow.';
+        $message = 'Tree already watered. Come back after 5:00 AM Manila time.';
     } elseif (!$hasTree) {
         $message = 'Water this tree to begin growing.';
     } else {

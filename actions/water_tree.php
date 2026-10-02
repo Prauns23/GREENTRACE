@@ -21,8 +21,11 @@ if ($userId < 1) {
     exit;
 }
 
-$today = new DateTimeImmutable('today', new DateTimeZone('Asia/Manila'));
+$timezone = new DateTimeZone('Asia/Manila');
+$now = new DateTimeImmutable('now', $timezone);
+$today = $now->setTime(0, 0);
 $todayString = $today->format('Y-m-d');
+$wateringDayString = treeGrowthWateringDay($now)->format('Y-m-d');
 $advanced = false;
 $maturedNow = false;
 
@@ -70,7 +73,7 @@ try {
                 (user_id, tree_species_id, growth_duration_days, started_on, matures_on, last_watered_on)
              VALUES (?, ?, ?, ?, ?, ?)"
         );
-        $stmt->bind_param('iiisss', $userId, $speciesId, $duration, $todayString, $maturesOn, $todayString);
+        $stmt->bind_param('iiisss', $userId, $speciesId, $duration, $todayString, $maturesOn, $wateringDayString);
         $stmt->execute();
         $progressId = (int) $conn->insert_id;
         $stmt->close();
@@ -78,7 +81,7 @@ try {
         $stmt = $conn->prepare(
             'INSERT INTO user_tree_watering_logs (user_tree_progress_id, watered_on) VALUES (?, ?)'
         );
-        $stmt->bind_param('is', $progressId, $todayString);
+        $stmt->bind_param('is', $progressId, $wateringDayString);
         $stmt->execute();
         $stmt->close();
         $advanced = true;
@@ -109,7 +112,7 @@ try {
             $advanced = true;
             $maturedNow = true;
             $message = $progress['name'] . ' is fully mature. You earned its badge!';
-        } elseif (($progress['last_watered_on'] ?? null) === $todayString) {
+        } elseif (($progress['last_watered_on'] ?? null) === $wateringDayString) {
             $conn->rollback();
             http_response_code(409);
             echo json_encode([
@@ -122,12 +125,12 @@ try {
             $stmt = $conn->prepare(
                 'INSERT INTO user_tree_watering_logs (user_tree_progress_id, watered_on) VALUES (?, ?)'
             );
-            $stmt->bind_param('is', $progressId, $todayString);
+            $stmt->bind_param('is', $progressId, $wateringDayString);
             $stmt->execute();
             $stmt->close();
 
             $stmt = $conn->prepare('UPDATE user_tree_progress SET last_watered_on = ? WHERE id = ?');
-            $stmt->bind_param('si', $todayString, $progressId);
+            $stmt->bind_param('si', $wateringDayString, $progressId);
             $stmt->execute();
             $stmt->close();
             $advanced = true;

@@ -284,196 +284,196 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- Progressive history timeline ---
-  const historyTimeline = document.querySelector(".history-timeline");
-  if (historyTimeline) {
-    const milestones = Array.from(
-      historyTimeline.querySelectorAll(".history-milestone"),
-    );
-    let latestRevealedIndex = 0;
-
-    historyTimeline.classList.add("history-timeline--interactive");
-
-    const updateHistoryProgress = () => {
-      milestones.forEach((milestone, index) => {
-        const marker = milestone.querySelector(".history-milestone__marker");
-        const year = milestone.querySelector("time")?.textContent.trim() || "History";
-        const isRevealed = index <= latestRevealedIndex;
-        const isCurrent = index === latestRevealedIndex + 1;
-
-        milestone.classList.toggle("is-revealed", isRevealed);
-        milestone.classList.toggle("is-current", isCurrent);
-        milestone.classList.toggle("is-locked", !isRevealed && !isCurrent);
-        milestone.classList.toggle("is-complete", index < latestRevealedIndex);
-        milestone.setAttribute("aria-expanded", isRevealed ? "true" : "false");
-
-        if (!marker) return;
-        marker.removeAttribute("aria-hidden");
-        marker.setAttribute("role", "button");
-        marker.tabIndex = isCurrent ? 0 : -1;
-        marker.setAttribute("aria-disabled", isCurrent ? "false" : "true");
-        marker.setAttribute(
-          "aria-label",
-          isCurrent
-            ? `Reveal the ${year} milestone`
-            : isRevealed
-              ? `${year} milestone revealed`
-              : `Reveal earlier milestones before ${year}`,
-        );
-      });
-    };
-
-    const revealNextMilestone = (marker, moveFocus = false) => {
-      const milestone = marker.closest(".history-milestone");
-      const index = milestones.indexOf(milestone);
-      if (index !== latestRevealedIndex + 1) return;
-
-      latestRevealedIndex = index;
-      updateHistoryProgress();
-
-      if (moveFocus) {
-        milestones[index + 1]
-          ?.querySelector(".history-milestone__marker")
-          ?.focus();
-      }
-    };
-
-    historyTimeline.addEventListener("click", (event) => {
-      const marker = event.target.closest(".history-milestone__marker");
-      if (marker) revealNextMilestone(marker);
-    });
-
-    historyTimeline.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      const marker = event.target.closest(".history-milestone__marker");
-      if (!marker) return;
-      event.preventDefault();
-      revealNextMilestone(marker, true);
-    });
-
-    updateHistoryProgress();
-  }
-
-  // --- Search and category filters ---
-  const searchInput = document.getElementById("searchInput");
-  const searchForm = document.getElementById("searchForm");
-  const categoryFilter = document.getElementById("categoryFilter");
-  const categorySelect = document.getElementById("categorySelect");
-  let debounceTimer;
-
-  if (searchInput && searchForm) {
-    searchInput.addEventListener("input", function () {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        searchForm.submit();
-      }, 400);
-    });
-  }
-
-  if (categoryFilter && categorySelect) {
-    categorySelect.addEventListener("change", () => categoryFilter.submit());
-  }
-
-  // --- Species status filter (Active / Archived) ---
-  function applySpeciesStatusFilter(status, updateUrl = false) {
-    const filter = document.querySelector(".species-status-filter");
-    const grid = document.querySelector(".species-grid");
-    if (!filter || !grid) return;
-
-    filter.dataset.active = status;
-    filter.querySelectorAll("a[data-status]").forEach((link) => {
-      const isActive = link.dataset.status === status;
-      link.classList.toggle("active", isActive);
-      link.setAttribute("aria-selected", isActive ? "true" : "false");
-      if (isActive) {
-        link.setAttribute("aria-current", "page");
-      } else {
-        link.removeAttribute("aria-current");
-      }
-    });
-
-    let visibleCards = 0;
-    grid.querySelectorAll(".species-card").forEach((card) => {
-      const isVisible =
-        card.dataset.archived === (status === "archived" ? "1" : "0");
-      card.hidden = !isVisible;
-      if (isVisible) visibleCards++;
-    });
-
-    const addCard = grid.querySelector(".species-add-card");
-    const hasSearch =
-      document.getElementById("searchInput")?.value.trim() !== "";
-    if (addCard)
-      addCard.hidden = status === "archived" || hasSearch || visibleCards === 0;
-
-    let emptyState = grid.querySelector("[data-species-empty]");
-    if (!emptyState) {
-      emptyState = document.createElement("div");
-      emptyState.className = "no-results";
-      emptyState.dataset.speciesEmpty = "";
-      emptyState.innerHTML =
-        '<img src="pages/no-results.svg" alt="" class="no-result-img"><h3>No species found</h3><p></p>';
-      grid.appendChild(emptyState);
-    }
-    emptyState.querySelector("p").textContent =
-      status === "archived"
-        ? "There are no archived species for this category."
-        : "There are no active species for this category.";
-    emptyState.hidden = visibleCards > 0;
-
-    const pageStatus = document.getElementById("species-page-status");
-    if (pageStatus) {
-      pageStatus.textContent =
-        status === "archived"
-          ? "Archived species are hidden from the public catalog and AR selection."
-          : "";
-    }
-
-    document
-      .querySelectorAll('form input[name="archived"]')
-      .forEach((input) => {
-        input.disabled = status !== "archived";
-      });
-
-    if (updateUrl) {
-      const url = new URL(
-        filter.querySelector(`a[data-status="${status}"]`).href,
-        window.location.href,
+    // --- Progressive history timeline ---
+    const historyTimeline = document.querySelector(".history-timeline");
+    if (historyTimeline) {
+      const milestones = Array.from(
+        historyTimeline.querySelectorAll(".history-milestone"),
       );
-      window.history.pushState({}, "", url);
-    }
-  }
+      let latestRevealedIndex = 0;
 
-  const speciesStatusFilter = document.querySelector(".species-status-filter");
-  if (speciesStatusFilter) {
-    speciesStatusFilter.querySelectorAll("a[data-status]").forEach((link) => {
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        applySpeciesStatusFilter(link.dataset.status, true);
+      historyTimeline.classList.add("history-timeline--interactive");
+
+      const updateHistoryProgress = () => {
+        milestones.forEach((milestone, index) => {
+          const marker = milestone.querySelector(".history-milestone__marker");
+          const year = milestone.querySelector("time")?.textContent.trim() || "History";
+          const isRevealed = index <= latestRevealedIndex;
+          const isCurrent = index === latestRevealedIndex + 1;
+
+          milestone.classList.toggle("is-revealed", isRevealed);
+          milestone.classList.toggle("is-current", isCurrent);
+          milestone.classList.toggle("is-locked", !isRevealed && !isCurrent);
+          milestone.classList.toggle("is-complete", index < latestRevealedIndex);
+          milestone.setAttribute("aria-expanded", isRevealed ? "true" : "false");
+
+          if (!marker) return;
+          marker.removeAttribute("aria-hidden");
+          marker.setAttribute("role", "button");
+          marker.tabIndex = isCurrent ? 0 : -1;
+          marker.setAttribute("aria-disabled", isCurrent ? "false" : "true");
+          marker.setAttribute(
+            "aria-label",
+            isCurrent
+              ? `Reveal the ${year} milestone`
+              : isRevealed
+                ? `${year} milestone revealed`
+                : `Reveal earlier milestones before ${year}`,
+          );
+        });
+      };
+
+      const revealNextMilestone = (marker, moveFocus = false) => {
+        const milestone = marker.closest(".history-milestone");
+        const index = milestones.indexOf(milestone);
+        if (index !== latestRevealedIndex + 1) return;
+
+        latestRevealedIndex = index;
+        updateHistoryProgress();
+
+        if (moveFocus) {
+          milestones[index + 1]
+            ?.querySelector(".history-milestone__marker")
+            ?.focus();
+        }
+      };
+
+      historyTimeline.addEventListener("click", (event) => {
+        const marker = event.target.closest(".history-milestone__marker");
+        if (marker) revealNextMilestone(marker);
       });
-    });
-    // Apply initial state
-    applySpeciesStatusFilter(speciesStatusFilter.dataset.active);
-    // Handle back/forward navigation
-    window.addEventListener("popstate", () => {
-      const status = new URLSearchParams(window.location.search).has("archived")
-        ? "archived"
-        : "active";
-      applySpeciesStatusFilter(status);
-    });
-  }
 
-  // --- Species detail view (click on card) ---
-  document.querySelectorAll(".species-card").forEach((card) => {
-    card.addEventListener("click", (event) => {
-      if (event.target.closest(".species-actions")) return;
-      const id = card.dataset.id;
-      if (id && window.showSpeciesDetail) {
-        window.showSpeciesDetail(id);
+      historyTimeline.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const marker = event.target.closest(".history-milestone__marker");
+        if (!marker) return;
+        event.preventDefault();
+        revealNextMilestone(marker, true);
+      });
+
+      updateHistoryProgress();
+    }
+
+    // --- Search and category filters ---
+    const searchInput = document.getElementById("searchInput");
+    const searchForm = document.getElementById("searchForm");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const categorySelect = document.getElementById("categorySelect");
+    let debounceTimer;
+
+    if (searchInput && searchForm) {
+      searchInput.addEventListener("input", function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          searchForm.submit();
+        }, 400);
+      });
+    }
+
+    if (categoryFilter && categorySelect) {
+      categorySelect.addEventListener("change", () => categoryFilter.submit());
+    }
+
+    // --- Species status filter (Active / Archived) ---
+    function applySpeciesStatusFilter(status, updateUrl = false) {
+      const filter = document.querySelector(".species-status-filter");
+      const grid = document.querySelector(".species-grid");
+      if (!filter || !grid) return;
+
+      filter.dataset.active = status;
+      filter.querySelectorAll("a[data-status]").forEach((link) => {
+        const isActive = link.dataset.status === status;
+        link.classList.toggle("active", isActive);
+        link.setAttribute("aria-selected", isActive ? "true" : "false");
+        if (isActive) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+
+      let visibleCards = 0;
+      grid.querySelectorAll(".species-card").forEach((card) => {
+        const isVisible =
+          card.dataset.archived === (status === "archived" ? "1" : "0");
+        card.hidden = !isVisible;
+        if (isVisible) visibleCards++;
+      });
+
+      const addCard = grid.querySelector(".species-add-card");
+      const hasSearch =
+        document.getElementById("searchInput")?.value.trim() !== "";
+      if (addCard)
+        addCard.hidden = status === "archived" || hasSearch || visibleCards === 0;
+
+      let emptyState = grid.querySelector("[data-species-empty]");
+      if (!emptyState) {
+        emptyState = document.createElement("div");
+        emptyState.className = "no-results";
+        emptyState.dataset.speciesEmpty = "";
+        emptyState.innerHTML =
+          '<img src="pages/no-results.svg" alt="" class="no-result-img"><h3>No species found</h3><p></p>';
+        grid.appendChild(emptyState);
       }
+      emptyState.querySelector("p").textContent =
+        status === "archived"
+          ? "There are no archived species for this category."
+          : "There are no active species for this category.";
+      emptyState.hidden = visibleCards > 0;
+
+      const pageStatus = document.getElementById("species-page-status");
+      if (pageStatus) {
+        pageStatus.textContent =
+          status === "archived"
+            ? "Archived species are hidden from the public catalog and AR selection."
+            : "";
+      }
+
+      document
+        .querySelectorAll('form input[name="archived"]')
+        .forEach((input) => {
+          input.disabled = status !== "archived";
+        });
+
+      if (updateUrl) {
+        const url = new URL(
+          filter.querySelector(`a[data-status="${status}"]`).href,
+          window.location.href,
+        );
+        window.history.pushState({}, "", url);
+      }
+    }
+
+    const speciesStatusFilter = document.querySelector(".species-status-filter");
+    if (speciesStatusFilter) {
+      speciesStatusFilter.querySelectorAll("a[data-status]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          applySpeciesStatusFilter(link.dataset.status, true);
+        });
+      });
+      // Apply initial state
+      applySpeciesStatusFilter(speciesStatusFilter.dataset.active);
+      // Handle back/forward navigation
+      window.addEventListener("popstate", () => {
+        const status = new URLSearchParams(window.location.search).has("archived")
+          ? "archived"
+          : "active";
+        applySpeciesStatusFilter(status);
+      });
+    }
+
+    // --- Species detail view (click on card) ---
+    document.querySelectorAll(".species-card").forEach((card) => {
+      card.addEventListener("click", (event) => {
+        if (event.target.closest(".species-actions")) return;
+        const id = card.dataset.id;
+        if (id && window.showSpeciesDetail) {
+          window.showSpeciesDetail(id);
+        }
+      });
     });
   });
-});
 
 function showGroveCard(animatePhase = false) {
   const container = document.getElementById("floatingGroveCardContainer");
