@@ -68,33 +68,45 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
         </div>
 
         <div class="filters">
-            <div class="species-filter-left">
-                <div class="search-bar">
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                    <form method="get" action="" id="searchForm">
-                        <input type="hidden" name="category" value="<?php echo htmlspecialchars($category); ?>">
-                        <input type="hidden" name="status" value="<?php echo htmlspecialchars($speciesStatus); ?>">
-                        <input type="text" name="search" id="searchInput" placeholder="Search species" value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
-                    </form>
-                </div>
-                <div class="species-filter-controls">
-                    <div class="category-filter-wrapper species-category-filter">
-                        <button type="button" class="category-filter-toggle" id="categoryFilterToggle" aria-haspopup="true" aria-expanded="false">
-                            <span><?= ucfirst(htmlspecialchars($category)); ?></span><i class="fas fa-chevron-down filter-chevron" aria-hidden="true"></i>
-                        </button>
-                        <div class="category-filter-dropdown" id="categoryFilterDropdown" role="menu" hidden>
-                            <?php foreach (['all' => 'All', 'native' => 'Native', 'introduced' => 'Introduced'] as $value => $label): ?>
-                                <a class="filter-btn <?= $category === $value ? 'active' : '' ?>" role="menuitem" aria-current="<?= $category === $value ? 'true' : 'false' ?>" href="?category=<?= $value ?>&status=<?= $speciesStatus ?><?= $search ? '&search=' . urlencode($search) : '' ?>"><?= $label ?></a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
+            <div class="search-bar">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <form method="get" action="" id="searchForm">
+                    <input type="hidden" name="category" value="<?php echo htmlspecialchars($category); ?>">
+                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($speciesStatus); ?>">
+                    <input type="text" name="search" id="searchInput" placeholder="Search species" value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
+                </form>
+            </div>
+            <div class="category-filter-wrapper">
+                <button type="button" class="category-filter-toggle" id="categoryFilterToggle" aria-haspopup="true" aria-controls="categoryFilterDropdown" aria-expanded="false">
+                    <span id="categoryFilterLabel"><?= ucfirst(htmlspecialchars($category)); ?></span>
+                    <i class="fas fa-chevron-down filter-chevron" aria-hidden="true"></i>
+                </button>
+                <div class="category-filter-dropdown" id="categoryFilterDropdown" role="menu" hidden>
+                    <?php foreach (['all' => 'All', 'native' => 'Native', 'introduced' => 'Introduced'] as $value => $label): ?>
+                        <a class="filter-btn <?= $category === $value ? 'active' : '' ?>" role="menuitem" aria-current="<?= $category === $value ? 'true' : 'false' ?>" href="?category=<?= $value ?>&status=<?= $speciesStatus ?><?= $search ? '&search=' . urlencode($search) : '' ?>"><?= $label ?></a>
+                    <?php endforeach; ?>
                 </div>
             </div>
             <?php if ($canManageSpecies): ?>
-                <div class="species-status-toggle" role="tablist" aria-label="Tree species status">
+                <div class="species-status-menu" data-active="<?= htmlspecialchars($speciesStatus, ENT_QUOTES) ?>">
+                    <button type="button" class="species-status-menu__toggle" id="speciesStatusMenuBtn" aria-label="More species filters. <?= ucfirst(htmlspecialchars($speciesStatus, ENT_QUOTES)) ?> selected." aria-haspopup="menu" aria-controls="speciesStatusMenu" aria-expanded="false">
+                        <i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>
+                    </button>
+                    <div class="species-status-menu__options" id="speciesStatusMenu" role="menu" aria-label="Tree species status" hidden>
                     <?php foreach (['active' => 'Active', 'archived' => 'Archived'] as $value => $label): ?>
-                        <a role="tab" aria-selected="<?= $speciesStatus === $value ? 'true' : 'false' ?>" class="<?= $speciesStatus === $value ? 'active' : '' ?>" href="?category=<?= urlencode($category) ?>&status=<?= $value ?><?= $search ? '&search=' . urlencode($search) : '' ?>"><?= $label ?></a>
+                        <?php $statusUrl = '?' . http_build_query(array_filter([
+                            'category' => $category,
+                            'status' => $value,
+                            'search' => $search,
+                        ], static fn($item): bool => $item !== '')); ?>
+                        <button type="button"
+                            class="species-status-menu__option<?= $speciesStatus === $value ? ' is-active' : '' ?>"
+                            role="menuitemradio"
+                            aria-checked="<?= $speciesStatus === $value ? 'true' : 'false' ?>"
+                            data-status-url="<?= htmlspecialchars($statusUrl, ENT_QUOTES) ?>"
+                            <?= $speciesStatus === $value ? 'disabled aria-disabled="true"' : 'aria-disabled="false"' ?>><?= $label ?></button>
                     <?php endforeach; ?>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
@@ -142,7 +154,7 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
             <?php endif; ?>
         </div>
 
-        <section class="grow-tree-container" aria-labelledby="grow-tree-title" data-tree-growth-root data-tree-empty="<?= !empty($treeGrowth['empty']) ? 'true' : 'false' ?>" data-tree-status="<?= htmlspecialchars((string)($treeGrowth['status'] ?? '')) ?>" data-tree-day="<?= (int)($treeGrowth['day'] ?? 0) ?>" data-tree-duration="<?= max(1, (int)($treeGrowth['duration'] ?? 1)) ?>" data-tree-category="<?= htmlspecialchars((string)($treeGrowth['category'] ?? '')) ?>" data-next-water-at="<?= htmlspecialchars((string)($treeGrowth['nextWaterAt'] ?? ''), ENT_QUOTES) ?>" data-tree-fact="<?= htmlspecialchars((string)($treeGrowth['funFact'] ?? 'Each watering day helps your tree reach maturity.')) ?>" data-authenticated="<?= !empty($treeGrowth['authenticated']) ? 'true' : 'false' ?>" data-water-endpoint="actions/water_tree.php" data-start-endpoint="actions/start_tree.php">
+        <section class="grow-tree-container" aria-labelledby="grow-tree-title" data-tree-growth-root data-tree-empty="<?= !empty($treeGrowth['empty']) ? 'true' : 'false' ?>" data-tree-status="<?= htmlspecialchars((string)($treeGrowth['status'] ?? '')) ?>" data-tree-day="<?= (int)($treeGrowth['day'] ?? 0) ?>" data-tree-duration="<?= max(1, (int)($treeGrowth['duration'] ?? 1)) ?>" data-tree-category="<?= htmlspecialchars((string)($treeGrowth['category'] ?? '')) ?>" data-current-tree-species-id="<?= (int)($treeGrowth['speciesId'] ?? 0) ?>" data-next-water-at="<?= htmlspecialchars((string)($treeGrowth['nextWaterAt'] ?? ''), ENT_QUOTES) ?>" data-tree-fact="<?= htmlspecialchars((string)($treeGrowth['funFact'] ?? 'Each watering day helps your tree reach maturity.')) ?>" data-authenticated="<?= !empty($treeGrowth['authenticated']) ? 'true' : 'false' ?>" data-water-endpoint="actions/water_tree.php" data-start-endpoint="actions/start_tree.php">
             <header class="grow-header">
                 <div>
                     <h2 id="grow-tree-title">Grow a Tree</h2>
@@ -154,11 +166,11 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                     <div class="grow-grid-left">
                         <article class="tree-grove-card" data-tree-card>
                             <header class="tree-grove-card__header"><span>Your Grove</span><span data-tree-day-label><?= !empty($treeGrowth['empty']) ? '' : 'Day ' . (int)$treeGrowth['day'] . ' of ' . (int)$treeGrowth['duration'] ?></span></header>
-                            <div class="tree-grove-card__phase <?= !empty($treeGrowth['empty']) ? 'tree-grove-card__phase--empty' : '' ?>" data-tree-phase-action data-tree-illustration-host role="button" tabindex="0" aria-label="View <?= htmlspecialchars((string)($treeGrowth['name'] ?? 'tree')) ?> details"><span class="tree-ambient-glow" aria-hidden="true"></span><span class="tree-leaf-layer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="tree-soil-motes" aria-hidden="true"><i></i><i></i><i></i></span><span class="tree-root-rise" aria-hidden="true"><i></i><i></i><i></i></span><span class="tree-waterfall" aria-hidden="true"><i></i><i></i><i></i></span><span class="tree-growth-flash" aria-hidden="true"></span><?php if (empty($treeGrowth['empty'])): ?><?= treeGrowthIllustrationSvg((int)$treeGrowth['day'], (string)($treeGrowth['assetKey'] ?? 'narra-v1'), 'tree-growth-illustration', (int)($treeGrowth['duration'] ?? 7)) ?><?php endif; ?></div>
+                            <div class="tree-grove-card__phase <?= !empty($treeGrowth['empty']) ? 'tree-grove-card__phase--empty' : '' ?>" data-tree-phase-action data-tree-illustration-host role="button" tabindex="0" aria-label="<?= !empty($treeGrowth['empty']) ? (!empty($treeGrowth['authenticated']) ? 'Select a tree to start planting' : 'Sign in to select and plant a tree') : 'View ' . htmlspecialchars((string)($treeGrowth['name'] ?? 'tree')) . ' details' ?>"><span class="tree-ambient-glow" aria-hidden="true"></span><span class="tree-leaf-layer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="tree-soil-motes" aria-hidden="true"><i></i><i></i><i></i></span><span class="tree-root-rise" aria-hidden="true"><i></i><i></i><i></i></span><span class="tree-growth-flash" aria-hidden="true"></span><?php if (!empty($treeGrowth['empty'])): ?><img class="tree-empty-soil" src="assets/empty_soil.png" alt="Empty soil ready for planting"><?php else: ?><?= treeGrowthIllustrationSvg((int)$treeGrowth['day'], (string)($treeGrowth['assetKey'] ?? 'narra-v1'), 'tree-growth-illustration', (int)($treeGrowth['duration'] ?? 7)) ?><?php endif; ?></div>
                             <footer class="tree-grove-card__footer">
                                 <div>
-                                    <h3 data-tree-name><?= !empty($treeGrowth['empty']) ? '' : htmlspecialchars((string)$treeGrowth['name']) ?></h3>
-                                    <p data-tree-species-meta><span data-tree-scientific><?= !empty($treeGrowth['empty']) ? '' : htmlspecialchars((string)$treeGrowth['scientificName']) ?></span><?= !empty($treeGrowth['empty']) ? '' : ' · ' ?><span data-tree-category><?= !empty($treeGrowth['empty']) ? '' : htmlspecialchars((string)$treeGrowth['category']) ?></span></p>
+                                    <h3 data-tree-name><?= !empty($treeGrowth['empty']) ? 'No Tree' : htmlspecialchars((string)$treeGrowth['name']) ?></h3>
+                                    <p data-tree-species-meta><span data-tree-scientific><?= !empty($treeGrowth['empty']) ? 'Select a tree' : htmlspecialchars((string)$treeGrowth['scientificName']) ?></span> · <span data-tree-category><?= !empty($treeGrowth['empty']) ? 'Start' : htmlspecialchars((string)$treeGrowth['category']) ?></span></p>
                                 </div>
                                 <button type="button" class="tree-water-button" data-tree-water <?= !empty($treeGrowth['empty']) ? 'hidden' : '' ?> data-watered-today="<?= !empty($treeGrowth['wateredToday']) ? 'true' : 'false' ?>" aria-disabled="<?= !empty($treeGrowth['canWater']) ? 'false' : 'true' ?>" aria-label="<?= htmlspecialchars(!empty($treeGrowth['canWater']) ? 'Water ' . (string)($treeGrowth['name'] ?? 'tree') : (string)($treeGrowth['message'] ?? 'This tree is unavailable.')) ?>" data-tooltip="<?= htmlspecialchars(!empty($treeGrowth['canWater']) ? 'Click to water' : (string)($treeGrowth['message'] ?? 'This tree is unavailable.')) ?>">
                                     <i class="fa-solid fa-heart" aria-hidden="true"></i>
@@ -178,8 +190,12 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                                 <p>Available when your current tree finishes growing.</p>
                             </div>
                             <div class="tree-selection__choices" data-tree-species-choices aria-label="Choose a tree species">
-                                <?php foreach (($treeGrowth['speciesOptions'] ?? []) as $option): $isCurrentTree = ($treeGrowth['status'] ?? '') === 'growing' && strcasecmp((string)($treeGrowth['name'] ?? ''), (string)($option['name'] ?? '')) === 0; ?>
-                                    <button type="button" class="tree-choice<?= $isCurrentTree ? ' tree-choice--current' : '' ?>" data-tree-species-choice data-tree-species-id="<?= (int)$option['id'] ?>" aria-pressed="<?= $isCurrentTree ? 'true' : 'false' ?>" <?= $speciesPickerLocked ? 'disabled' : '' ?>>
+                                <?php foreach (($treeGrowth['speciesOptions'] ?? []) as $option):
+                                    $optionId = (int)($option['id'] ?? 0);
+                                    $isCurrentTree = ($treeGrowth['status'] ?? '') === 'growing' && (int)($treeGrowth['speciesId'] ?? 0) === $optionId;
+                                    $isMaturedCurrentTree = ($treeGrowth['status'] ?? '') === 'matured' && (int)($treeGrowth['speciesId'] ?? 0) === $optionId;
+                                ?>
+                                    <button type="button" class="tree-choice<?= $isCurrentTree ? ' tree-choice--current' : '' ?>" data-tree-species-choice data-tree-species-id="<?= $optionId ?>" data-tree-matured-current="<?= $isMaturedCurrentTree ? 'true' : 'false' ?>" aria-pressed="<?= $isCurrentTree ? 'true' : 'false' ?>" <?= $speciesPickerLocked ? 'disabled' : '' ?>>
                                         <strong><?= htmlspecialchars((string)$option['name']) ?></strong>
                                         <span><?= (int)$option['duration'] ?> days · <?= htmlspecialchars(ucfirst((string)$option['category'])) ?></span>
                                     </button>
@@ -190,7 +206,7 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                             </select>
                             <div class="tree-selection__actions">
                                 <button type="button" class="tree-species-start" data-tree-species-start <?= $speciesPickerLocked ? 'disabled' : '' ?>>Start selected tree</button>
-                                <button type="button" class="tree-history-open tree-history-open--panel" data-tree-history-open>View grown trees</button>
+                                <button type="button" class="tree-history-open tree-history-open--panel" data-tree-history-open>View detail</button>
                             </div>
                         </article>
                     </div>
@@ -416,7 +432,28 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
             };
 
             document.addEventListener('click', event => {
-                const filterLink = event.target.closest('.category-filter-dropdown a, .species-status-toggle a');
+                const statusMenuButton = event.target.closest('#speciesStatusMenuBtn');
+                if (statusMenuButton) {
+                    const statusMenu = document.getElementById('speciesStatusMenu');
+                    const isOpen = statusMenuButton.getAttribute('aria-expanded') === 'true';
+                    document.getElementById('categoryFilterToggle')?.setAttribute('aria-expanded', 'false');
+                    const categoryDropdown = document.getElementById('categoryFilterDropdown');
+                    if (categoryDropdown) categoryDropdown.hidden = true;
+                    statusMenuButton.setAttribute('aria-expanded', String(!isOpen));
+                    if (statusMenu) statusMenu.hidden = isOpen;
+                    return;
+                }
+
+                const statusOption = event.target.closest('.species-status-menu__option[data-status-url]');
+                if (statusOption && !statusOption.disabled) {
+                    document.getElementById('speciesStatusMenuBtn')?.setAttribute('aria-expanded', 'false');
+                    const statusMenu = document.getElementById('speciesStatusMenu');
+                    if (statusMenu) statusMenu.hidden = true;
+                    loadSpeciesSection(statusOption.dataset.statusUrl);
+                    return;
+                }
+
+                const filterLink = event.target.closest('.category-filter-dropdown a');
                 if (filterLink) {
                     event.preventDefault();
                     loadSpeciesSection(filterLink.href);
@@ -427,6 +464,27 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                     const dropdown = document.getElementById('categoryFilterDropdown');
                     if (dropdown) dropdown.hidden = true;
                 }
+                if (!event.target.closest('.species-status-menu')) {
+                    document.getElementById('speciesStatusMenuBtn')?.setAttribute('aria-expanded', 'false');
+                    const statusMenu = document.getElementById('speciesStatusMenu');
+                    if (statusMenu) statusMenu.hidden = true;
+                }
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key !== 'Escape') return;
+                const categoryToggle = document.getElementById('categoryFilterToggle');
+                const categoryWasOpen = categoryToggle?.getAttribute('aria-expanded') === 'true';
+                categoryToggle?.setAttribute('aria-expanded', 'false');
+                const categoryDropdown = document.getElementById('categoryFilterDropdown');
+                if (categoryDropdown) categoryDropdown.hidden = true;
+
+                const statusToggle = document.getElementById('speciesStatusMenuBtn');
+                const statusWasOpen = statusToggle?.getAttribute('aria-expanded') === 'true';
+                document.getElementById('speciesStatusMenuBtn')?.setAttribute('aria-expanded', 'false');
+                const statusMenu = document.getElementById('speciesStatusMenu');
+                if (statusMenu) statusMenu.hidden = true;
+                if (categoryWasOpen) categoryToggle?.focus();
+                else if (statusWasOpen) statusToggle?.focus();
             });
             window.addEventListener('popstate', () => loadSpeciesSection(window.location.href, false));
             bindFilters();
@@ -576,11 +634,21 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
             window.setTimeout(() => detailArt?.classList.remove('is-detail-entering'), 520);
         };
         window.openCurrentTreeDetail = openCurrentTreeDetail;
-        treePhaseAction?.addEventListener('click', openCurrentTreeDetail);
+        const handleTreePhaseAction = () => {
+            const root = document.querySelector('[data-tree-growth-root]');
+            if (root?.dataset.treeEmpty === 'true' && root.dataset.authenticated !== 'true') {
+                if (typeof window.showSignIn === 'function') window.showSignIn();
+                else if (typeof window.showLogin === 'function') window.showLogin();
+                else if (typeof window.showSignUp === 'function') window.showSignUp();
+                return;
+            }
+            openCurrentTreeDetail();
+        };
+        treePhaseAction?.addEventListener('click', handleTreePhaseAction);
         treePhaseAction?.addEventListener('keydown', (event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return;
             event.preventDefault();
-            openCurrentTreeDetail();
+            handleTreePhaseAction();
         });
         treeHistoryOpen?.addEventListener('click', openCurrentTreeDetail);
         treeDetailModal?.querySelectorAll('[data-tree-detail-close]').forEach((element) => element.addEventListener('click', closeTreeDetail));
@@ -802,7 +870,11 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                             phase?.classList.remove('is-transforming', 'is-watering', 'is-awaiting-artwork');
                             phase?.classList.add('is-revealing');
                         }
-                        const matured = Boolean(payload.matured);
+                        const matured = Boolean(
+                            payload.matured ??
+                            payload.maturedNow ??
+                            payload.state?.status === 'matured'
+                        );
                         if (matured) {
                             root.dataset.treeStatus = 'matured';
                             root.dataset.nextWaterAt = '';
@@ -815,6 +887,7 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                                 choice.disabled = false;
                                 choice.classList.remove('tree-choice--current');
                                 choice.setAttribute('aria-pressed', 'false');
+                                choice.dataset.treeMaturedCurrent = choice.dataset.treeSpeciesId === root.dataset.currentTreeSpeciesId ? 'true' : 'false';
                             });
                         }
                         await waitForGrowthMoment(420);
@@ -904,6 +977,7 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                 };
                 const folder = folderByAssetKey[option.dataset.treeAssetKey] || 'narra';
                 phase?.querySelectorAll('.tree-growth-illustration').forEach((artwork) => artwork.remove());
+                phase?.querySelector('.tree-empty-soil')?.remove();
                 let preview = null;
                 if (phase) {
                     preview = createSpeciesPreview(folder, option.dataset.treeName || 'Tree');
@@ -921,7 +995,15 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
             });
             speciesStart?.addEventListener('click', async () => {
                 const speciesId = speciesSelect?.value;
-                if (!speciesId || speciesStart.disabled) return;
+                if (speciesStart.disabled) return;
+                if (!speciesId) {
+                    if (typeof window.showToast === 'function') window.showToast('Choose a tree to plant first.', 3500, 'error');
+                    return;
+                }
+                if (root.dataset.treeStatus === 'matured' && speciesId === root.dataset.currentTreeSpeciesId) {
+                    if (typeof window.showToast === 'function') window.showToast('Tree selected is already matured', 3500, 'error');
+                    return;
+                }
                 speciesStart.disabled = true;
                 const phase = root.querySelector('[data-tree-illustration-host]');
                 const waitForStartMoment = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
@@ -986,6 +1068,7 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                         }
                         if (tree.illustrationSvg) replaceTreeSvg(tree.illustrationSvg, false);
                         root.dataset.treeStatus = 'growing';
+                        root.dataset.currentTreeSpeciesId = String(tree.speciesId || speciesId);
                         updateGrowthState(day, duration);
                         button.hidden = false;
                         setWaterButtonState(true);
@@ -993,6 +1076,10 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                         speciesStart.disabled = true;
                         speciesChoices?.querySelectorAll('[data-tree-species-choice]').forEach((choice) => {
                             choice.disabled = true;
+                            const isCurrent = choice.dataset.treeSpeciesId === root.dataset.currentTreeSpeciesId;
+                            choice.classList.toggle('tree-choice--current', isCurrent);
+                            choice.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
+                            choice.dataset.treeMaturedCurrent = 'false';
                         });
                         void phase?.offsetWidth;
                         phase?.classList.remove('is-planting');

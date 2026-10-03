@@ -43,7 +43,7 @@ body {
 
 .filters {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
@@ -52,14 +52,13 @@ body {
 
 .search-bar form {
   display: flex;
+  flex: 1;
   gap: 0.5rem;
   border: none;
 }
 
 .search-bar input {
   padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
   width: 250px;
   font-size: 0.9rem;
   border: none;
@@ -141,9 +140,6 @@ body {
 }
 
 /* Tree Species catalog styling merged from GREENTRACE-main(6). */
-.filters {
-  justify-content: space-between;
-}
 .search-bar {
   display: flex;
   align-items: center;
@@ -155,27 +151,11 @@ body {
   border-radius: 8px;
   background: #fff;
 }
-.search-bar form {
-  flex: 1;
-}
-.search-bar input {
-  width: 100%;
-  padding: 10px 0;
-}
 .category-filter-wrapper {
   position: relative;
 }
-.species-filter-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.species-filter-controls {
-  display: flex;
-}
 .category-filter-toggle {
-  min-width: 104px;
+  min-width: 150px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -185,10 +165,11 @@ body {
   border-radius: 8px;
   background: #dddddd50;
   color: #333;
-  font:
-    500 0.9rem "Inter",
-    sans-serif;
+  font: 500 0.9rem "Inter", sans-serif;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 .category-filter-toggle:hover,
 .category-filter-toggle[aria-expanded="true"] {
@@ -213,7 +194,7 @@ body {
   border: 1px solid #d5d9df;
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: information-filter-disclosure 180ms ease-out;
 }
 .category-filter-dropdown[hidden] {
   display: none;
@@ -243,32 +224,89 @@ body {
   color: #2e7d32;
   font-weight: 600;
 }
-.species-status-toggle {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px;
-  border: 1px solid #c9cdca;
-  border-radius: 999px;
-  background: #f5f6f5;
+.species-status-menu {
+  position: relative;
+  margin-left: 0;
 }
-.species-status-toggle a {
-  min-width: 66px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  color: #687068;
-  font-size: 0.78rem;
-  font-weight: 500;
-  text-align: center;
-  text-decoration: none;
+.species-status-menu__toggle {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #56605a;
+  cursor: pointer;
+  font-size: 1rem;
 }
-.species-status-toggle a:hover {
+.species-status-menu__toggle:hover,
+.species-status-menu__toggle:focus-visible,
+.species-status-menu__toggle[aria-expanded="true"] {
+  outline: 0;
+  background: #edf2ed;
+}
+.species-status-menu__options {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 150px;
+  overflow: hidden;
+  border: 1px solid #d5d9d5;
+  border-radius: 8px;
+  background: #fff;
+  animation: information-filter-disclosure 180ms ease-out;
+}
+.species-status-menu__options[hidden] {
+  display: none;
+}
+.species-status-menu__option {
+  display: block;
+  width: 100%;
+  padding: 11px 14px;
+  border: 0;
+  background: #fff;
+  color: #414742;
+  cursor: pointer;
+  font: 500 0.86rem "Inter", sans-serif;
+  text-align: left;
+}
+.species-status-menu__option:hover {
+  background: #f2f7f1;
+}
+.species-status-menu__option:focus-visible {
+  outline: 0;
+  background: #f2f7f1;
+}
+.species-status-menu__option.is-active,
+.species-status-menu__option:disabled {
+  background: #e8f5e9;
   color: #2e7d32;
+  cursor: default;
+  font-weight: 700;
+  opacity: 1;
 }
-.species-status-toggle a.active {
-  background: #d9f2da;
-  color: #2e7d32;
-  font-weight: 600;
-  box-shadow: inset 0 0 0 1px #a9d5ac;
+
+@keyframes information-filter-disclosure {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scaleY(0.96);
+    transform-origin: top;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    transform-origin: top;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-filter-dropdown,
+  .species-status-menu__options {
+    animation: none;
+  }
 }
 .information-page .species-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -337,18 +375,12 @@ body {
   .information-page .species-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  .filters {
-    justify-content: flex-start;
-  }
-  .species-filter-left {
-    width: 100%;
-  }
   .search-bar {
     max-width: none;
     flex: 1;
   }
-  .species-status-toggle {
-    margin-left: auto;
+  .species-status-menu {
+    margin-left: 0;
   }
 }
 
@@ -908,6 +940,7 @@ body {
   color: #b9d8bf;
   font-size: 0.85rem;
 }
+
 .tree-grove-card__phase {
   min-height: 230px;
   display: grid;
@@ -919,11 +952,14 @@ body {
     transparent 55%
   );
 }
+
 .tree-grove-card__phase {
   position: relative;
   overflow: hidden;
   isolation: isolate;
+  cursor: pointer;
 }
+
 .tree-growth-illustration {
   position: relative;
   z-index: 1;
@@ -1372,13 +1408,16 @@ body {
   font-weight: 700;
   cursor: pointer;
 }
+
 .tree-water-button:disabled {
   opacity: 0.55;
-  cursor: not-allowed;
+  cursor: pointer;
 }
+
 .tree-water-button.is-loading {
   animation: tree-pulse 0.65s ease-in-out infinite;
 }
+
 .tree-species-picker {
   display: grid;
   gap: 9px;
@@ -1386,6 +1425,7 @@ body {
   padding-top: 16px;
   border-top: 1px solid rgba(55, 98, 65, 0.16);
 }
+
 .tree-species-picker strong,
 .tree-species-picker span {
   display: block;
@@ -1471,6 +1511,7 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 8px 18px rgba(32, 104, 48, 0.22);
     filter: brightness(0.96);
+    cursor: pointer;
   }
   .tree-species-picker select:not(:disabled):hover,
   .tree-history-filter select:hover {
@@ -2348,6 +2389,7 @@ body {
 }
 .tree-grove-card__footer .tree-water-button {
   flex: 0 0 auto;
+  cursor: pointer;
 }
 .tree-stat-grid {
   gap: 27px;
@@ -2833,16 +2875,6 @@ body {
 }
 
 @media (max-width: 768px) {
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .search-bar form {
-    width: 100%;
-  }
-  .search-bar input {
-    width: 100%;
-  }
   .category-buttons {
     justify-content: center;
   }
@@ -2896,6 +2928,7 @@ body {
   .tree-water-button {
     width: min(100%, 310px);
     justify-content: center;
+    cursor: pointer;
   }
   .tree-species-picker {
     display: grid;
@@ -3034,7 +3067,7 @@ body {
   font-size: 15px;
 }
 .tree-water-button[aria-disabled="true"] {
-  cursor: not-allowed;
+  cursor: pointer;
   opacity: 0.55;
 }
 .tree-water-button:hover,
@@ -3593,6 +3626,106 @@ body {
 .tree-grove-card__footer > .tree-water-button {
   flex: 0 0 38px;
   margin-left: auto;
+  cursor: pointer;
+}
+
+.tree-grove-card__footer > .tree-water-button[hidden] {
+  display: none;
+}
+
+.tree-empty-soil {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(100%, 120px);
+  height: 120px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  transform: translateY(40px);
+}
+
+.tree-grove-card__phase--empty::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: calc(50% + 48px);
+  width: 112px;
+  height: 38px;
+  border: 2px solid rgba(210, 170, 123, 0.62);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: tree-empty-soil-radar 1.4s ease-out infinite;
+}
+
+@keyframes tree-empty-soil-radar {
+  0% {
+    opacity: 0.48;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.42);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tree-grove-card__phase--empty::before {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Keep every tree species on the same illustration canvas and effect baseline. */
+.tree-grove-card__phase,
+.tree-grove-card__phase.is-pulsing,
+.tree-grove-card__phase.is-transforming,
+.tree-grove-card__phase.is-awaiting-artwork,
+.tree-grove-card__phase.is-transforming.is-awaiting-artwork,
+.tree-grove-card__phase.is-pulse-complete {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tree-grove-card__phase.is-pulsing,
+.tree-grove-card__phase.is-transforming,
+.tree-grove-card__phase.is-awaiting-artwork,
+.tree-grove-card__phase.is-transforming.is-awaiting-artwork {
+  animation-name: none;
+}
+
+.tree-grove-card__phase .tree-growth-illustration--svg[data-tree-stage],
+.tree-detail-art .tree-growth-illustration--svg[data-tree-stage] {
+  width: min(100%, 180px);
+  height: 180px;
+  max-width: 180px;
+  max-height: 180px;
+  transform-origin: center bottom;
+}
+
+.tree-grove-card__phase .tree-soil-motes i,
+.tree-detail-art .tree-soil-motes i {
+  bottom: 24%;
+  width: 3px;
+  height: 3px;
+  background: #a77b4d;
+  animation-duration: 3.8s;
+}
+
+@keyframes tree-artwork-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(var(--tree-height-scale, 1)) translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.97;
+    transform: scale(var(--tree-height-scale, 1)) translateY(-2px);
+    filter: brightness(1.04);
+  }
 }
 
 /* Exact timeline replica from information.css. Kept last so older cPanel rules cannot override it. */
