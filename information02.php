@@ -166,13 +166,13 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                     <div class="grow-grid-left">
                         <article class="tree-grove-card" data-tree-card>
                             <header class="tree-grove-card__header"><span>Your Grove</span><span data-tree-day-label><?= !empty($treeGrowth['empty']) ? '' : 'Day ' . (int)$treeGrowth['day'] . ' of ' . (int)$treeGrowth['duration'] ?></span></header>
-                            <div class="tree-grove-card__phase <?= !empty($treeGrowth['empty']) ? 'tree-grove-card__phase--empty' : '' ?>" data-tree-phase-action data-tree-illustration-host role="button" tabindex="0" aria-label="<?= !empty($treeGrowth['empty']) ? (!empty($treeGrowth['authenticated']) ? 'Select a tree to start planting' : 'Sign in to select and plant a tree') : 'View ' . htmlspecialchars((string)($treeGrowth['name'] ?? 'tree')) . ' details' ?>"><span class="tree-ambient-glow" aria-hidden="true"></span><span class="tree-leaf-layer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="tree-soil-motes" aria-hidden="true"><i></i><i></i><i></i></span><span class="tree-root-rise" aria-hidden="true"><i></i><i></i><i></i></span><span class="tree-growth-flash" aria-hidden="true"></span><?php if (!empty($treeGrowth['empty'])): ?><img class="tree-empty-soil" src="assets/empty_soil.png" alt="Empty soil ready for planting"><?php else: ?><?= treeGrowthIllustrationSvg((int)$treeGrowth['day'], (string)($treeGrowth['assetKey'] ?? 'narra-v1'), 'tree-growth-illustration', (int)($treeGrowth['duration'] ?? 7)) ?><?php endif; ?></div>
+                            <div class="tree-grove-card__phase <?= !empty($treeGrowth['empty']) ? 'tree-grove-card__phase--empty' : '' ?>" data-tree-phase-action data-tree-illustration-host role="button" tabindex="0" aria-label="<?= !empty($treeGrowth['empty']) ? (!empty($treeGrowth['authenticated']) ? 'Select a tree to start planting' : 'Sign in to select and plant a tree') : 'View ' . htmlspecialchars((string)($treeGrowth['name'] ?? 'tree')) . ' details' ?>"><span class="tree-ambient-glow" aria-hidden="true"></span><span class="tree-leaf-layer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="tree-soil-motes" aria-hidden="true"><i></i><i></i><i></i></span><span class="tree-root-rise" aria-hidden="true"><i></i><i></i><i></i></span><?php if (!empty($treeGrowth['empty'])): ?><img class="tree-empty-soil" src="assets/empty_soil2.png" alt="Empty soil ready for planting"><?php else: ?><?= treeGrowthIllustrationSvg((int)$treeGrowth['day'], (string)($treeGrowth['assetKey'] ?? 'narra-v1'), 'tree-growth-illustration', (int)($treeGrowth['duration'] ?? 7)) ?><?php endif; ?></div>
                             <footer class="tree-grove-card__footer">
                                 <div>
                                     <h3 data-tree-name><?= !empty($treeGrowth['empty']) ? 'No Tree' : htmlspecialchars((string)$treeGrowth['name']) ?></h3>
                                     <p data-tree-species-meta><span data-tree-scientific><?= !empty($treeGrowth['empty']) ? 'Select a tree' : htmlspecialchars((string)$treeGrowth['scientificName']) ?></span> · <span data-tree-category><?= !empty($treeGrowth['empty']) ? 'Start' : htmlspecialchars((string)$treeGrowth['category']) ?></span></p>
                                 </div>
-                                <button type="button" class="tree-water-button" data-tree-water <?= !empty($treeGrowth['empty']) ? 'hidden' : '' ?> data-watered-today="<?= !empty($treeGrowth['wateredToday']) ? 'true' : 'false' ?>" aria-disabled="<?= !empty($treeGrowth['canWater']) ? 'false' : 'true' ?>" aria-label="<?= htmlspecialchars(!empty($treeGrowth['canWater']) ? 'Water ' . (string)($treeGrowth['name'] ?? 'tree') : (string)($treeGrowth['message'] ?? 'This tree is unavailable.')) ?>" data-tooltip="<?= htmlspecialchars(!empty($treeGrowth['canWater']) ? 'Click to water' : (string)($treeGrowth['message'] ?? 'This tree is unavailable.')) ?>">
+                                <button type="button" class="tree-water-button" data-tree-water <?= !empty($treeGrowth['empty']) ? 'hidden' : '' ?> <?= !empty($treeGrowth['canWater']) ? '' : 'disabled' ?> data-watered-today="<?= !empty($treeGrowth['wateredToday']) ? 'true' : 'false' ?>" aria-disabled="<?= !empty($treeGrowth['canWater']) ? 'false' : 'true' ?>" aria-label="<?= htmlspecialchars(!empty($treeGrowth['canWater']) ? 'Water ' . (string)($treeGrowth['name'] ?? 'tree') : (string)($treeGrowth['message'] ?? 'This tree is unavailable.')) ?>" data-tooltip="<?= htmlspecialchars(!empty($treeGrowth['canWater']) ? 'Click to water' : (string)($treeGrowth['message'] ?? 'This tree is unavailable.')) ?>">
                                     <i class="fa-solid fa-heart" aria-hidden="true"></i>
                                 </button>
                             </footer>
@@ -653,7 +653,29 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
         treeHistoryOpen?.addEventListener('click', openCurrentTreeDetail);
         treeDetailModal?.querySelectorAll('[data-tree-detail-close]').forEach((element) => element.addEventListener('click', closeTreeDetail));
         treeDetailModal?.querySelector('[data-tree-detail-water]')?.addEventListener('click', () => {
-            document.querySelector('[data-tree-water]')?.click();
+            const root = document.querySelector('[data-tree-growth-root]');
+            const waterButton = root?.querySelector('[data-tree-water]');
+            if (!root || !waterButton) return;
+
+            const alreadyWatered = waterButton.dataset.wateredToday === 'true' &&
+                root.dataset.treeStatus === 'growing';
+            if (alreadyWatered) {
+                const nextWaterAt = Date.parse(root.dataset.nextWaterAt || '');
+                const remainingMilliseconds = Number.isFinite(nextWaterAt) ?
+                    Math.max(0, nextWaterAt - Date.now()) : 0;
+                const totalMinutes = Math.max(1, Math.ceil(remainingMilliseconds / 60000));
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                const cooldown = [
+                    hours ? `${hours} hour${hours === 1 ? '' : 's'}` : '',
+                    minutes ? `${minutes} minute${minutes === 1 ? '' : 's'}` : ''
+                ].filter(Boolean).join(' and ') || '1 minute';
+                const message = `Tree already watered, comeback in ${cooldown}.`;
+                window.showToast?.(message, 4000, 'success');
+                return;
+            }
+
+            if (!waterButton.disabled) waterButton.click();
         });
         document.addEventListener('tree-growth-updated', () => {
             if (!treeDetailModal?.hidden) openCurrentTreeDetail();
@@ -669,6 +691,7 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
             const button = root?.querySelector('[data-tree-water]');
             if (!root || !button) return;
             const illustrationHost = root.querySelector('[data-tree-illustration-host]');
+            const GROWTH_PULSE_MS = 400;
             let cooldownTitleTimer;
             let cooldownExpiryTimer;
             const cooldownRemaining = () => {
@@ -684,18 +707,27 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                 if (minutes || !hours) parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`);
                 return parts.join(' ');
             };
-            // Keep the heart available for a click so unavailable watering can be explained with a toast.
+            // Keep the native disabled state and accessibility state synchronized.
             const setWaterButtonState = (canWater, unavailableMessage = '') => {
                 const treeName = root.querySelector('[data-tree-name]')?.textContent?.trim() || 'tree';
                 const label = canWater ? `Water ${treeName}` : unavailableMessage;
+                button.disabled = !canWater;
                 button.setAttribute('aria-disabled', canWater ? 'false' : 'true');
                 button.setAttribute('aria-label', label);
-                button.dataset.tooltip = canWater ? 'Click to water' : label;
+                const tooltip = canWater ? 'Click to water' : label;
+                button.dataset.tooltip = tooltip;
+                button.dataset.gtTooltip = canWater ? `Water ${treeName}` : label;
                 button.title = canWater ? `Water ${treeName}` : label;
                 button.dataset.wateredToday = canWater ? 'false' : 'true';
             };
             const updateCooldownTitle = () => {
                 if (button.dataset.wateredToday !== 'true' || root.dataset.treeStatus !== 'growing') return false;
+                const nextWaterAt = Date.parse(root.dataset.nextWaterAt || '');
+                if (!Number.isFinite(nextWaterAt)) {
+                    window.clearInterval(cooldownTitleTimer);
+                    window.clearTimeout(cooldownExpiryTimer);
+                    return false;
+                }
                 const remaining = cooldownRemaining();
                 if (!remaining) {
                     root.dataset.nextWaterAt = '';
@@ -704,9 +736,10 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                     setWaterButtonState(true);
                     return false;
                 }
-                const title = `Tree already watered. Available in ${remaining}.`;
+                const title = `Can be watered again in ${remaining}.`;
                 button.title = title;
                 button.dataset.tooltip = title;
+                button.dataset.gtTooltip = title;
                 return true;
             };
             const startCooldownTitleUpdates = () => {
@@ -722,7 +755,7 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                 const isWateringCooldown = button.dataset.wateredToday === 'true' && remaining;
                 if (typeof window.showToast !== 'function') return;
                 if (isWateringCooldown) {
-                    const message = `Tree already watered. Come back in ${remaining}.`;
+                    const message = `Can be watered again in ${remaining}.`;
                     window.showToast(message, 5000, 'success');
                     return;
                 }
@@ -796,7 +829,6 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                     Math.min(8, Math.max(1, day + 1));
                 let pulseCancelled = false;
                 let pulseTimer;
-                let brightStartedAt = 0;
                 let wateringCompleted = false;
                 phase?.classList.remove('is-revealing', 'is-transforming', 'is-pulsing', 'is-watering');
                 void phase?.offsetWidth;
@@ -808,11 +840,9 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                         if (!pulseCancelled) {
                             phase?.classList.remove('is-pulsing', 'is-watering');
                             phase?.classList.remove('is-pulse-complete');
-                            phase?.classList.add('is-transforming', 'is-awaiting-artwork');
-                            brightStartedAt = performance.now();
                         }
                         resolve();
-                    }, 1100);
+                    }, GROWTH_PULSE_MS);
                 });
                 try {
                     const response = await fetch(root.dataset.waterEndpoint, {
@@ -848,7 +878,6 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                         const artworkReady = nextArtwork ? preloadTreeSvg(nextArtwork) : Promise.resolve();
                         await pulseFinished;
                         await artworkReady;
-                        await waitForGrowthMoment(Math.max(0, 650 - (performance.now() - brightStartedAt)));
                         const stat = root.querySelector('[data-tree-progress-stat]');
                         if (stat) stat.textContent = day;
                         const height = Number(payload.state.current_height || 0);
@@ -924,7 +953,12 @@ $displayFieldNotes = array_slice($fieldNotes, 0, 6);
                     pulseCancelled = true;
                     window.clearTimeout(pulseTimer);
                     button.classList.remove('is-loading');
-                    if (!wateringCompleted && root.dataset.treeStatus !== 'matured') {
+                    if (wateringCompleted) {
+                        const completedMessage = root.dataset.treeStatus === 'matured' ?
+                            'This tree is fully mature. Choose a new tree to continue.' :
+                            'Tree already watered.';
+                        setWaterButtonState(false, completedMessage);
+                    } else if (root.dataset.treeStatus !== 'matured') {
                         window.setTimeout(() => setWaterButtonState(true), 250);
                     }
                 }
